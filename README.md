@@ -12,7 +12,7 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 3. Run BWCE application
 	* In Local Environment: In local enviornment, run BWCE application by mapping volume containing ear file to /bwapp volume in the container
 		e.g.  _docker run --name BWRESTAPP -d **-v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/bwapp/testrest_1.0.0.ear** -p 18080:8080 -p 17777:7777 **tibco/bwce:v1.1.0**_. [See docker for more info](https://docs.docker.com/engine/userguide/dockervolumes)
-	* On PAAS platforms: TODO
+	* On PAAS platforms: UNDER CONSTRUCTION
 
 ##Supported Features
 * **Application configuration through Environment Variables**: BWCE application can be configured with env variables. Use #ENV-VAR-NAME# token in the application profile. Only supported for default application profile (default.substvar). e.g. _docker run --name BWHTTPAPP **-e MESSAGE='BWCE Rocks on Docker'** -d -v /Users/vnalawad/docker-apps/docker.http.application_1.0.0.ear:/bwapp/docker.http.application_1.0.0.ear -p 18081:8080 tibco/bwce:v1.1.0_
