@@ -36,8 +36,9 @@ import javax.net.ssl.X509TrustManager;
  */
 public class ProfileTokenResolver {
 
-    static String TOKEN_DELIMITER = "#";
-    static String pattern         = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
+    static String TOKEN_DELIMITER  = "#";
+    static String pattern          = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
+    static String PROFILE_ROOT_DIR = "/bwapp";
 
     public static void main(String[] args) throws Throwable {
 
@@ -66,12 +67,12 @@ public class ProfileTokenResolver {
 
     private static void resolveTokens(Map<String, String> tokenMap) throws Exception {
 
-        Path source = Paths.get("/bwapp", "pcf.substvar");
+        Path source = Paths.get(PROFILE_ROOT_DIR, "pcf.substvar");
 
         File originalFile = source.toFile();
         // Construct the new file that will later be renamed to the original
         // filename.
-        Path target = Paths.get("/bwapp", "pcf_updated.substvar");
+        Path target = Paths.get(PROFILE_ROOT_DIR, "pcf_updated.substvar");
         File tempFile = target.toFile();
 
         try (PrintWriter writer = new PrintWriter(tempFile, StandardCharsets.UTF_8.toString());
@@ -80,11 +81,6 @@ public class ProfileTokenResolver {
             String line;
             while ((line = br.readLine()) != null) {
                 while (line.contains(TOKEN_DELIMITER)) {
-                    // Ensure that jdbc prefix is not configured in
-                    // ApplicationProperty
-                    if (line.contains("jdbc:")) {
-                        line.replaceAll("jdbc:", "");
-                    }
                     String oldLine = line;
                     Pattern p = Pattern.compile(pattern);
                     Matcher m = p.matcher(line);
@@ -93,9 +89,7 @@ public class ProfileTokenResolver {
                         String var = m.group(1);
                         String val = tokenMap.get(var);
                         if (val == null) {
-                            String errMessage = "Value not found for Token [" + var + "].";
-                            System.err.println(errMessage);
-                            throw new Exception(errMessage);
+                            throw new Exception("Value not found for Token [" + var + "]. Ensure environment variable is set.");
                         }
                         m.appendReplacement(sb, "");
                         sb.append(val);
