@@ -6,7 +6,6 @@ if [ ! -f /bwapp/pcf.substvar ];
 then
 	ln -s /bwapp/*.ear /bwapp/bwapp.ear
     unzip -qq /bwapp/bwapp.ear -d /tmp
-    ls /tmp
 	cp /tmp/META-INF/default.substvar /bwapp/pcf.substvar # Hardcoded to default profile
 	cd /java-code
 	/tibco.home/tibcojre64/1.*/bin/javac -cp .:/tibco.home/tibcojre64/1.*/lib:/tibco.home/tibcojre64/1.*/bin ProfileTokenResolver.java
