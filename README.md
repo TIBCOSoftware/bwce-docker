@@ -11,4 +11,4 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 	* On PAAS platforms: TODO
 
 ##Supported Features
-* Environment variable: BWCE application can be configured with env variable. Use #ENV-VAR-NAME# token in the application profile. Only supported for default application profile (default.substvar).
+* Environment variable: BWCE application can be configured with env variable. Use #ENV-VAR-NAME# token in the application profile. Only supported for default application profile (default.substvar). e.g. _docker run --name BWHTTPAPP **-e MESSAGE='BWCE Rocks on Docker'** -d -v /Users/vnalawad/docker-apps/docker.http.application_1.0.0.ear:/bwapp/docker.http.application_1.0.0.ear -p 18081:8080 tibco\bwce:v1.1.0.2_
