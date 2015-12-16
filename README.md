@@ -1,13 +1,13 @@
 ##Prerequiste
-	Install [Docker Engine](https://docs.docker.com/engine/installation/) , [Docker Machine](https://docs.docker.com/machine/install-machine/) .
+Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker Machine](https://docs.docker.com/machine/install-machine) .
 
 ##Create BWCE base docker Image
 1. Clone this repo
 2. Build docker image from repo folder e.g. 
  	_docker build  -t **tibco/bwce:v1.1.0** ._
 3. Run BWCE application
-	* Local Environment: In local enviornment, run BWCE application by mapping volume containing ear file to /bwapp folder
-		e.g.  _docker run --name BWRESTAPP -d **-v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/bwapp/testrest_1.0.0.ear** -p 18080:8080 -p 17777:7777 **tibco/bwce:v1.1.0.2**_
+	* Local Environment: In local enviornment, run BWCE application by mapping volume containing ear file to /bwapp volume in the container
+		e.g.  _docker run --name BWRESTAPP -d **-v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/bwapp/testrest_1.0.0.ear** -p 18080:8080 -p 17777:7777 **tibco/bwce:v1.1.0.2**_. [See docker for more info](https://docs.docker.com/engine/userguide/dockervolumes)
 	* On PAAS platforms: TODO
 
 ##Supported Features
