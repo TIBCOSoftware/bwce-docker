@@ -11,4 +11,4 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 	* On PAAS platforms: TODO
 
 ##Supported Features
-* Environment variable: BWCE application can be configured with env variable. Use #ENV-VAR-NAME# token in the application profile. Note that application profile name must be **[default]**.
+* Environment variable: BWCE application can be configured with env variable. Use #ENV-VAR-NAME# token in the application profile. Only supported for default application profile (default.substvar).
