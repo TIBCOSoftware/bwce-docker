@@ -16,3 +16,4 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 
 ##Supported Features
 * **Application configuration through Environment Variables**: BWCE application can be configured with env variables. Use #ENV-VAR-NAME# token in the application profile. Only supported for default application profile (default.substvar). e.g. _docker run --name BWHTTPAPP **-e MESSAGE='BWCE Rocks on Docker'** -d -v /Users/vnalawad/docker-apps/docker.http.application_1.0.0.ear:/bwapp/docker.http.application_1.0.0.ear -p 18081:8080 tibco/bwce:v1.1.0_
+* **Logging using Papertrail**: Run your BWCE application with  _--log-driver=syslog --log-opt syslog-address=udp://{your-papertrail-log-destination}_  e.g. docker run --name BWRESTAPP  **--log-driver=syslog --log-opt syslog-address=udp://logs3.papertrailapp.com:11111** -d -v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/bwapp/testrest_1.0.0.ear -p 18080:8080 -p 17777:7777 tibco/bwce:v1.1.0
