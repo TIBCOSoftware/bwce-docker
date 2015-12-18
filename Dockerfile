@@ -3,7 +3,6 @@ MAINTAINER Vijay Nalawade <vnalawad@tibco.com>
 ADD . /
 RUN \
    chmod 755 /scripts/bootstrap.sh && \
-   mkdir /bwapp && \
    apt-get update && \
    apt-get -y install unzip && \
    unzip -qq /resources/bwce-runtime/bwce.zip -d / && \
