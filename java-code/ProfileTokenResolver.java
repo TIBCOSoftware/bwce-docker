@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -69,6 +70,10 @@ public class ProfileTokenResolver {
 
         Path source = Paths.get(PROFILE_ROOT_DIR, "pcf.substvar");
 
+        if(Files.isSymbolicLink(source)) {
+            source = Files.readSymbolicLink(source);
+        }
+        
         File originalFile = source.toFile();
         // Construct the new file that will later be renamed to the original
         // filename.

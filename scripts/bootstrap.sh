@@ -4,9 +4,14 @@ export BW_KEYSTORE_DIR=/resources/addons/certs
 
 if [ ! -f /bwapp/pcf.substvar ];
 then
+	mkdir /bwapp
 	ln -s /*.ear /bwapp/bwapp.ear
-    unzip -qq /bwapp/bwapp.ear -d /tmp
-	ls -s /tmp/META-INF/default.substvar /bwapp/pcf.substvar # Hardcoded to default profile
+	if [ -f /*.substvar ]; then
+		ln -s /*.substvar /bwapp/pcf.substvar # User provided profile
+	else	
+    	unzip -qq /bwapp/bwapp.ear -d /tmp
+		ln -s /tmp/META-INF/default.substvar /bwapp/pcf.substvar # Hardcoded to default profile
+	fi	
 	cd /java-code
 	/tibco.home/tibcojre64/1.*/bin/javac -cp .:/tibco.home/tibcojre64/1.*/lib:/tibco.home/tibcojre64/1.*/bin ProfileTokenResolver.java
 fi
