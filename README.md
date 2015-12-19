@@ -13,7 +13,7 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 	* In Local Environment: In local enviornment, run BWCE application by mapping volume containing ear file to / volume in the container
 		e.g.  _docker run --name BWRESTAPP -d **-v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/testrest_1.0.0.ear** -p 18080:8080 -p 17777:7777 **tibco/bwce:v1.1.0**_. [See docker for more info](https://docs.docker.com/engine/userguide/dockervolumes)
 	* Build Application docker image: To run application on docker based PAAS platforms, create application docker image. 
-		* Build Image: Create application Dockerfile and ear [[Example](examples/HTTP)] and build image. _Ensure that application docker image is created using BWCE base image [[See](examples/HTTP/Dockerfile)]._ e.g. **docker build -t docker.http.application:1.0 .**. 
+		* Build Image: Create application Dockerfile and ear [[Example](examples/HTTP)] and build image. _Ensure that application docker image is created using BWCE base image [[Example](examples/HTTP/Dockerfile)]._ e.g. **docker build -t docker.http.application:1.0 .**. 
 		* Run application using application image e.g.  _docker run -e MESSAGE='Welcome to BWCE' --log-driver=syslog --log-opt syslog-address=udp://logs3.papertrailapp.com:39293 -d -P docker.http.application:1.0_
 
 ##Supported Features
