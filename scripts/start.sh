@@ -14,4 +14,4 @@ if [ $STATUS == "1" ]; then
     echo "ERROR: Failed to substitute properties in the application profile."
     exit 1 # terminate and indicate error
 fi
-exec /tibco.home/bwcf/1.*/bin/startBWAppNode.sh
+exec sh /tibco.home/bwcf/1.*/bin/startBWAppNode.sh
