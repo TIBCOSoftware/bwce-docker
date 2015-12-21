@@ -1,4 +1,5 @@
 #!/bin/bash
+export JACKSON_LIB_PATH=`echo /tibco.home/bwcf/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`
 unzip -qq /resources/bwce-runtime/bwce.zip -d /
 rm -rf /resources/bwce-runtime/bwce.zip
 chmod 755 /tibco.home/bwcf/1.*/bin/startBWAppNode.sh
@@ -14,4 +15,4 @@ else
 	ln -s /tmp/META-INF/default.substvar /bwapp/pcf.substvar # Hardcoded to default profile
 fi	
 cd /java-code
-/tibco.home/tibcojre64/1.*/bin/javac -cp .:/tibco.home/tibcojre64/1.*/lib:/tibco.home/tibcojre64/1.*/bin ProfileTokenResolver.java
+/tibco.home/tibcojre64/1.*/bin/javac -cp `echo /tibco.home/bwcf/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java

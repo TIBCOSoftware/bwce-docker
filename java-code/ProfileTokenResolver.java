@@ -2,6 +2,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +23,10 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.xml.bind.DatatypeConverter;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /*
  * Copyright 2015 TIBCO Software Inc.
@@ -50,6 +56,7 @@ public class ProfileTokenResolver {
 
         Map<String, String> tokenMap = new HashMap<String, String>();
         collectEnvVariables(tokenMap);
+        collectPropertiesFromConsul(tokenMap);
         resolveTokens(tokenMap);
     }
 
@@ -66,14 +73,72 @@ public class ProfileTokenResolver {
         }
     }
 
+    private static void collectPropertiesFromConsul(Map<String, String> valueMap) throws Exception {
+        String profileName = System.getenv("APP_CONFIG_PROFILE_NAME");
+        if (profileName == null) {
+            profileName = "default";
+        }
+        String consulServerUri = System.getenv("CONSUL_SERVER_URI");
+
+        if (consulServerUri == null && isConsulServerConfigured()) {
+            String consulPort = System.getenv("CONSUL_SERVER_PORT");
+            if (consulPort == null) {
+                consulPort = "8500";
+            }
+            consulServerUri = "http://consulserver" + ":" + consulPort + "/v1/kv/" + profileName + "?recurse";
+        } else {
+            if (!consulServerUri.endsWith("/")) {
+                consulServerUri = consulServerUri + "/";
+            }
+            if (!consulServerUri.endsWith("v1/")) {
+                consulServerUri = consulServerUri + "v1/";
+            }
+            consulServerUri = consulServerUri + "kv/" + profileName + "?recurse";
+        }
+
+        if (consulServerUri != null) {
+            System.out.println("Loading Key/Value from Consul [" + consulServerUri + "]");
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                URL springURL = new URL(consulServerUri);
+                URLConnection connection = springURL.openConnection();
+                connection.setReadTimeout(30000);
+                connection.setConnectTimeout(30000);
+                JsonNode response = mapper.readTree(connection.getInputStream());
+                if (response.isArray()) {
+                    for (int i = 0; i < response.size(); i++) {
+                        JsonNode propNode = response.get(i);
+                        String propName = propNode.get("Key").asText();
+                        propName = propName.replace(profileName + "/", "");
+                        if (!propName.isEmpty()) {
+                            String propValue = propNode.get("Value").asText();
+                            valueMap.put(propName, new String(DatatypeConverter.parseBase64Binary(propValue)));
+                            System.out.println("Key:" + propName);
+                            System.out.println("Value:" + valueMap.get(propName));
+                        }
+                    }
+                }
+            } catch (Throwable e) {
+                throw new Exception("Failed to load properties. Ensure that Consul URL [" + consulServerUri + "] is correct.", e);
+            }
+        }
+    }
+
+    /**
+     * @return
+     */
+    private static boolean isConsulServerConfigured() {
+        return System.getenv("CONSULSERVER_PORT") != null;
+    }
+
     private static void resolveTokens(Map<String, String> tokenMap) throws Exception {
 
         Path source = Paths.get(PROFILE_ROOT_DIR, "pcf.substvar");
 
-        if(Files.isSymbolicLink(source)) {
+        if (Files.isSymbolicLink(source)) {
             source = Files.readSymbolicLink(source);
         }
-        
+
         File originalFile = source.toFile();
         // Construct the new file that will later be renamed to the original
         // filename.

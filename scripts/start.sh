@@ -1,6 +1,7 @@
 #!/bin/bash
 #Set ENV Variables
 export BW_KEYSTORE_DIR=/resources/addons/certs
+export JACKSON_LIB_PATH=`echo /tibco.home/bwcf/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`
 
 if [ ! -f /bwapp/pcf.substvar ];
 then
@@ -8,7 +9,7 @@ then
 fi
 cd /java-code
 #Resolve Tokens in the profile
-/tibco.home/tibcojre64/1.*/bin/java -cp .:/tibco.home/tibcojre64/1.*/lib:/tibco.home/tibcojre64/1.*/bin ProfileTokenResolver
+/tibco.home/tibcojre64/1.*/bin/java -cp `echo /tibco.home/bwcf/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver
 STATUS=$?
 if [ $STATUS == "1" ]; then
     echo "ERROR: Failed to substitute properties in the application profile."
