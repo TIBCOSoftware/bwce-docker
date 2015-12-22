@@ -80,12 +80,14 @@ public class ProfileTokenResolver {
         }
         String consulServerUri = System.getenv("CONSUL_SERVER_URI");
 
-        if (consulServerUri == null && isConsulServerConfigured()) {
-            String consulPort = System.getenv("CONSUL_SERVER_PORT");
-            if (consulPort == null) {
-                consulPort = "8500";
+        if (consulServerUri == null) {
+            if (isConsulServerConfigured()) {
+                String consulPort = System.getenv("CONSUL_SERVER_PORT");
+                if (consulPort == null) {
+                    consulPort = "8500";
+                }
+                consulServerUri = "http://consulserver" + ":" + consulPort + "/v1/kv/" + profileName + "?recurse";
             }
-            consulServerUri = "http://consulserver" + ":" + consulPort + "/v1/kv/" + profileName + "?recurse";
         } else {
             if (!consulServerUri.endsWith("/")) {
                 consulServerUri = consulServerUri + "/";
