@@ -75,9 +75,10 @@ public class ProfileTokenResolver {
 
     private static void collectPropertiesFromConsul(Map<String, String> valueMap) throws Exception {
         String profileName = System.getenv("APP_CONFIG_PROFILE_NAME");
-        if (profileName == null) {
-            profileName = "default";
+        if (profileName == null || profileName.trim().isEmpty()) {
+            profileName = "";
         }
+        
         String consulServerUri = System.getenv("CONSUL_SERVER_URI");
 
         if (consulServerUri == null) {
@@ -99,7 +100,7 @@ public class ProfileTokenResolver {
         }
 
         if (consulServerUri != null) {
-            System.out.println("Loading Key/Value from Consul [" + consulServerUri + "]");
+            System.out.println("Loading properties from Consul [" + consulServerUri + "]");
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 URL springURL = new URL(consulServerUri);
@@ -115,8 +116,6 @@ public class ProfileTokenResolver {
                         if (!propName.isEmpty()) {
                             String propValue = propNode.get("Value").asText();
                             valueMap.put(propName, new String(DatatypeConverter.parseBase64Binary(propValue)));
-                            System.out.println("Key:" + propName);
-                            System.out.println("Value:" + valueMap.get(propName));
                         }
                     }
                 }
