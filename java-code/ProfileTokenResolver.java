@@ -112,7 +112,9 @@ public class ProfileTokenResolver {
                     for (int i = 0; i < response.size(); i++) {
                         JsonNode propNode = response.get(i);
                         String propName = propNode.get("Key").asText();
-                        propName = propName.replace(profileName + "/", "");
+                        if(!profileName.isEmpty()) {
+                            propName = propName.replace(profileName + "/", "");
+                        }
                         if (!propName.isEmpty()) {
                             String propValue = propNode.get("Value").asText();
                             valueMap.put(propName, new String(DatatypeConverter.parseBase64Binary(propValue)));
