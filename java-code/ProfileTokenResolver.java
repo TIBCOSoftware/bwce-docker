@@ -3,7 +3,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -142,10 +141,6 @@ public class ProfileTokenResolver {
             source = Files.readSymbolicLink(source);
         }
         
-        Path configPropsFile = Paths.get(System.getenv("HOME"), "appprops.properties");
-        Files.deleteIfExists(configPropsFile);
-        Files.createFile(configPropsFile);
-       
         List<String> contents = new ArrayList<>();
         File originalFile = source.toFile();
         // Construct the new file that will later be renamed to the original
@@ -198,7 +193,14 @@ public class ProfileTokenResolver {
         }
         
         if (!contents.isEmpty()) {
-            Files.write(configPropsFile, contents, Charset.forName("UTF-8"));
+            try {
+                Path configPropsFile = Paths.get(System.getenv("HOME"), "appprops.properties");
+                System.out.println("Writing to File:"+configPropsFile.toFile().getPath());
+                System.out.println("Number of Records:"+contents.size());
+                Files.write(configPropsFile, contents, StandardCharsets.UTF_8);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         // Delete the original file
