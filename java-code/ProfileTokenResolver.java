@@ -3,7 +3,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,8 +11,10 @@ import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,7 +56,7 @@ public class ProfileTokenResolver {
             disable_ssl_verification();
         }
 
-        Map<String, String> tokenMap = new HashMap<String, String>();
+        Map<String, Value> tokenMap = new HashMap<String, Value>();
         collectEnvVariables(tokenMap);
         collectPropertiesFromConsul(tokenMap);
         resolveTokens(tokenMap);
@@ -65,59 +67,41 @@ public class ProfileTokenResolver {
      * 
      * @param valueMap
      */
-    private static void collectEnvVariables(Map<String, String> valueMap) {
+    private static void collectEnvVariables(Map<String, Value> valueMap) {
         Iterator<String> sysPropsItr = System.getenv().keySet().iterator();
         while (sysPropsItr.hasNext()) {
             String varName = sysPropsItr.next();
-            valueMap.put(varName, System.getenv().get(varName));
+            valueMap.put(varName, new Value(System.getenv().get(varName),Type.ENV));
         }
     }
 
-    private static void collectPropertiesFromConsul(Map<String, String> valueMap) throws Exception {
+    /**
+     * 
+     */
+
+    private static void collectPropertiesFromConsul(Map<String, Value> valueMap) throws Exception {
         String profileName = System.getenv("APP_CONFIG_PROFILE_NAME");
         if (profileName == null || profileName.trim().isEmpty()) {
             profileName = "";
         }
-        
-        String consulServerUri = System.getenv("CONSUL_SERVER_URI");
 
-        if (consulServerUri == null) {
-            if (isConsulServerConfigured()) {
-                String consulPort = System.getenv("CONSUL_SERVER_PORT");
-                if (consulPort == null) {
-                    consulPort = "8500";
-                }
-                consulServerUri = "http://consulserver" + ":" + consulPort + "/v1/kv/" + profileName + "?recurse";
-            }
-        } else {
-            if (!consulServerUri.endsWith("/")) {
-                consulServerUri = consulServerUri + "/";
-            }
-            if (!consulServerUri.endsWith("v1/")) {
-                consulServerUri = consulServerUri + "v1/";
-            }
-            consulServerUri = consulServerUri + "kv/" + profileName + "?recurse";
-        }
-
+        String consulServerUri = getConsulAgentURI();
         if (consulServerUri != null) {
             System.out.println("Loading properties from Consul [" + consulServerUri + "]");
             try {
                 ObjectMapper mapper = new ObjectMapper();
-                URL springURL = new URL(consulServerUri);
-                URLConnection connection = springURL.openConnection();
-                connection.setReadTimeout(30000);
-                connection.setConnectTimeout(30000);
-                JsonNode response = mapper.readTree(connection.getInputStream());
+                URL endpointURL = new URL(consulServerUri + "kv/" + profileName + "?recurse");
+                JsonNode response = mapper.readTree(endpointURL);
                 if (response.isArray()) {
                     for (int i = 0; i < response.size(); i++) {
                         JsonNode propNode = response.get(i);
                         String propName = propNode.get("Key").asText();
-                        if(!profileName.isEmpty()) {
+                        if (!profileName.isEmpty()) {
                             propName = propName.replace(profileName + "/", "");
                         }
                         if (!propName.isEmpty()) {
                             String propValue = propNode.get("Value").asText();
-                            valueMap.put(propName, new String(DatatypeConverter.parseBase64Binary(propValue)));
+                            valueMap.put(propName, new Value(new String(DatatypeConverter.parseBase64Binary(propValue)), Type.APPCONFIG));
                         }
                     }
                 }
@@ -127,21 +111,42 @@ public class ProfileTokenResolver {
         }
     }
 
-    /**
-     * @return
-     */
-    private static boolean isConsulServerConfigured() {
-        return System.getenv("CONSULSERVER_PORT") != null;
+    private static String getConsulAgentURI() {
+        String consulServerUri = System.getenv("CONSUL_AGENT_URI");
+
+        if (consulServerUri == null) {
+            if (System.getenv("CONSULAGENT_PORT") != null) {
+                String consulPort = System.getenv("CONSUL_AGENT_PORT");
+                if (consulPort == null) {
+                    consulPort = "8500";
+                }
+                consulServerUri = "http://consulagent" + ":" + consulPort + "/v1/";
+            }
+        } else {
+            if (!consulServerUri.endsWith("/")) {
+                consulServerUri = consulServerUri + "/";
+            }
+            if (!consulServerUri.endsWith("v1/")) {
+                consulServerUri = consulServerUri + "v1/";
+            }
+        }
+
+        return consulServerUri;
     }
 
-    private static void resolveTokens(Map<String, String> tokenMap) throws Exception {
+    private static void resolveTokens(Map<String, Value> tokenMap) throws Exception {
 
         Path source = Paths.get(PROFILE_ROOT_DIR, "pcf.substvar");
 
         if (Files.isSymbolicLink(source)) {
             source = Files.readSymbolicLink(source);
         }
-
+        
+        Path configPropsFile = Paths.get(System.getenv("HOME"), "appprops.properties");
+        Files.deleteIfExists(configPropsFile);
+        Files.createFile(configPropsFile);
+       
+        List<String> contents = new ArrayList<>();
         File originalFile = source.toFile();
         // Construct the new file that will later be renamed to the original
         // filename.
@@ -152,7 +157,11 @@ public class ProfileTokenResolver {
                 BufferedReader br = new BufferedReader(new FileReader(originalFile))) {
 
             String line;
+            String appPropName = null;
             while ((line = br.readLine()) != null) {
+                if(line.contains("<name>")) {
+                    appPropName = line.trim().replace("<name>", "").replace("</name>", "");
+                }
                 while (line.contains(TOKEN_DELIMITER)) {
                     String oldLine = line;
                     Pattern p = Pattern.compile(pattern);
@@ -160,12 +169,15 @@ public class ProfileTokenResolver {
                     StringBuffer sb = new StringBuffer();
                     while (m.find()) {
                         String var = m.group(1);
-                        String val = tokenMap.get(var);
+                        Value val = tokenMap.get(var);
                         if (val == null) {
                             throw new Exception("Value not found for Token [" + var + "]. Ensure environment variable is set.");
                         }
                         m.appendReplacement(sb, "");
-                        sb.append(val);
+                        sb.append(val.value);
+                        if( m.groupCount() == 1 && val.type == Type.APPCONFIG) {
+                            contents.add(var+"="+appPropName);
+                        }
                     }
                     m.appendTail(sb);
                     line = sb.toString();
@@ -183,6 +195,10 @@ public class ProfileTokenResolver {
                 writer.println(line);
             }
             writer.flush();
+        }
+        
+        if (!contents.isEmpty()) {
+            Files.write(configPropsFile, contents, Charset.forName("UTF-8"));
         }
 
         // Delete the original file
@@ -242,5 +258,19 @@ public class ProfileTokenResolver {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+    
+    static class  Value {
+        String value;
+        Type type;
+        
+        public Value(String val, Type type) {
+            this.value = val;
+            this.type = type;
+        }
+    }
+    
+    enum Type {
+        ENV, APPCONFIG
     }
 }
