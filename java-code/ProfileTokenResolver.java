@@ -194,9 +194,7 @@ public class ProfileTokenResolver {
         
         if (!contents.isEmpty()) {
             try {
-                Path configPropsFile = Paths.get(System.getenv("HOME"), "appprops.properties");
-                System.out.println("Writing to File:"+configPropsFile.toFile().getPath());
-                System.out.println("Number of Records:"+contents.size());
+                Path configPropsFile = Paths.get(System.getenv("HOME"), "keys.properties");
                 Files.write(configPropsFile, contents, StandardCharsets.UTF_8);
             } catch (Exception e) {
                 e.printStackTrace();

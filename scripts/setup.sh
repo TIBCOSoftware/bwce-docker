@@ -8,7 +8,7 @@ chmod 755 /tibco.home/bwcf/1.*/bin/bwappnode
 chmod 755 /tibco.home/tibcojre64/1.*/bin/java
 chmod 755 /tibco.home/tibcojre64/1.*/bin/javac
 mkdir /bwapp
-touch $HOME/appprops.properties
+touch $HOME/keys.properties
 ln -s /*.ear /bwapp/bwapp.ear
 if [ -f /*.substvar ]; then
 	ln -s /*.substvar /bwapp/pcf.substvar # User provided profile
