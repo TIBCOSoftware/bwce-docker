@@ -1,5 +1,5 @@
 ##Caution
-Fon internal use only. **Must not be shared outside BW engineering**.
+For internal users only. **Must not be shared outside of BW engineering**.
 
 ##Prerequiste
 Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker Machine](https://docs.docker.com/machine/install-machine).
