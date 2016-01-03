@@ -32,4 +32,5 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 	* SERVICE_NAME - Name of service. This is mandatory configuration.
 	* SERVICE_PORT - Port on which service is running. Optional configuration. Default is set to 80
 	* SERVICE_ADDRESS - Service IP/HostName. Optional configuration. Default is set to IP address of the container.
+	e.g. docker run --name Dev-BWHTTP --link consul-server:consulagent --log-driver=syslog --log-opt syslog-address=udp://logs3.papertrailapp.com:39293 -d -v /Users/vnalawad/docker-apps/docker.http.application_1.0.0.ear:/docker.http.application_1.0.0.ear **-e SERVICE_NAME=demoservice -e SERVICE_ADDRESS=192.168.99.100 -e SERVICE_PORT=18081** -p 18081:8080 tibcobw/bwce
 
