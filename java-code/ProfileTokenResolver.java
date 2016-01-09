@@ -79,9 +79,9 @@ public class ProfileTokenResolver {
      */
 
     private static void collectPropertiesFromConsul(Map<String, Value> valueMap) throws Exception {
-        String profileName = System.getenv("APP_CONFIG_PROFILE_NAME");
-        if (profileName == null || profileName.trim().isEmpty()) {
-            profileName = "";
+        String profileName = System.getenv("APP_CONFIG_PROFILE");
+        if (profileName == null) {
+            return;
         }
 
         String consulServerUri = getConsulAgentURI();
