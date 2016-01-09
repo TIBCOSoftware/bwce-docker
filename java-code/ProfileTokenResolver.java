@@ -46,7 +46,7 @@ public class ProfileTokenResolver {
 
     static String TOKEN_DELIMITER  = "#";
     static String pattern          = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
-    static String PROFILE_ROOT_DIR = "/bwapp";
+    static String PROFILE_ROOT_DIR = System.getenv("HOME")+"/tmp";
 
     public static void main(String[] args) throws Throwable {
 
