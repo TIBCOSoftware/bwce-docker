@@ -59,6 +59,7 @@ public class ProfileTokenResolver {
         collectEnvVariables(tokenMap);
         collectPropertiesFromConsul(tokenMap);
         resolveTokens(tokenMap);
+        System.exit(0);
     }
 
     /**
