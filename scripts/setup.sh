@@ -43,7 +43,6 @@ if [ ! -d $HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce.zip -d $HOME
 	rm -rf /resources/bwce-runtime/bwce.zip
-	ls $HOME/tibco.home/bw*/*/bin/
 	chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
@@ -61,13 +60,13 @@ then
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
 
+checkProfile
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $HOME/tmp/pcf.substvar # User provided profile
 else	
 	if [ ! -f /tmp/META-INF/default.substvar ]; then
     	unzip -qq `echo $HOME/tibco.home/bw*/1.*/bin/bwapp.ear` -d /tmp
     fi
-    checkProfile
 	cp -f /tmp/META-INF/$BW_PROFILE $HOME/tmp/pcf.substvar
 fi
 
