@@ -9,7 +9,6 @@ bwAppNameHeader="Bundle-SymbolicName"
 bwEdition='bwcf'
 if [ -f ${manifest} ]; then
 	bwAppProfileStr=`grep -o $bwAppConfig.*.substvar ${manifest}`
-	bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`		
 	bwEditionHeaderStr=`grep -E $bwEdition ${manifest}`
 	res=$?
 	if [ ${res} -eq 0 ]; then
@@ -32,8 +31,7 @@ if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set 
 else 
 		case $BW_PROFILE in
  		*.substvar ) ;;
-		* ) BW_PROFILE="${BW_PROFILE}.substvar";;esac		
-    
+		* ) BW_PROFILE="${BW_PROFILE}.substvar";;esac
 		echo "BW_PROFILE is set to '$BW_PROFILE'";
 fi
 }
@@ -56,6 +54,7 @@ then
 	fi
 	ln -s /*.ear `echo $HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$HOME#g" $HOME/tibco.home/bw*/*/config/appnode_config.ini
+	unzip -qq `echo $HOME/tibco.home/bw*/1.*/bin/bwapp.ear` -d /tmp
 	cd /java-code
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
@@ -63,10 +62,7 @@ fi
 checkProfile
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $HOME/tmp/pcf.substvar # User provided profile
-else	
-	if [ ! -f /tmp/META-INF/default.substvar ]; then
-    	unzip -qq `echo $HOME/tibco.home/bw*/1.*/bin/bwapp.ear` -d /tmp
-    fi
+else
 	cp -f /tmp/META-INF/$BW_PROFILE $HOME/tmp/pcf.substvar
 fi
 
