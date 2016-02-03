@@ -46,7 +46,7 @@ public class ProfileTokenResolver {
 
     static String TOKEN_DELIMITER  = "#";
     static String pattern          = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
-    static String PROFILE_ROOT_DIR = System.getenv("HOME")+"/tmp";
+    static String PROFILE_ROOT_DIR = System.getenv("HOME") + "/tmp";
 
     public static void main(String[] args) throws Throwable {
 
@@ -71,7 +71,7 @@ public class ProfileTokenResolver {
         Iterator<String> sysPropsItr = System.getenv().keySet().iterator();
         while (sysPropsItr.hasNext()) {
             String varName = sysPropsItr.next();
-            valueMap.put(varName, new Value(System.getenv().get(varName),Type.ENV));
+            valueMap.put(varName, new Value(System.getenv().get(varName), Type.ENV));
         }
     }
 
@@ -115,12 +115,15 @@ public class ProfileTokenResolver {
         String consulServerUri = System.getenv("CONSUL_AGENT_URI");
 
         if (consulServerUri == null) {
-            if (System.getenv("CONSULAGENT_PORT") != null) {
-                String consulPort = System.getenv("CONSUL_AGENT_PORT");
-                if (consulPort == null) {
-                    consulPort = "8500";
+            String consulServiceName = System.getenv("CONSUL_SERVICE_NAME");
+            if (consulServiceName != null) {
+                consulServiceName = consulServiceName.replace("-", "_").toUpperCase();
+                String consulUri = System.getenv(consulServiceName + "_PORT");
+                if (consulUri == null) {
+                    System.out.println("The Consul Service[" + consulServiceName + "] not found in the environment.");
+                    return null;
                 }
-                consulServerUri = "http://consulagent" + ":" + consulPort + "/v1/";
+                return consulUri.replace("tcp", "http") + "/v1/";
             }
         } else {
             if (!consulServerUri.endsWith("/")) {
@@ -141,7 +144,7 @@ public class ProfileTokenResolver {
         if (Files.isSymbolicLink(source)) {
             source = Files.readSymbolicLink(source);
         }
-        
+
         List<String> contents = new ArrayList<>();
         File originalFile = source.toFile();
         // Construct the new file that will later be renamed to the original
@@ -155,7 +158,7 @@ public class ProfileTokenResolver {
             String line;
             String appPropName = null;
             while ((line = br.readLine()) != null) {
-                if(line.contains("<name>")) {
+                if (line.contains("<name>")) {
                     appPropName = line.trim().replace("<name>", "").replace("</name>", "");
                 }
                 while (line.contains(TOKEN_DELIMITER)) {
@@ -171,8 +174,8 @@ public class ProfileTokenResolver {
                         }
                         m.appendReplacement(sb, "");
                         sb.append(val.value);
-                        if( m.groupCount() == 1 && val.type == Type.APPCONFIG) {
-                            contents.add(var+"="+appPropName);
+                        if (m.groupCount() == 1 && val.type == Type.APPCONFIG) {
+                            contents.add(var + "=" + appPropName);
                         }
                     }
                     m.appendTail(sb);
@@ -192,7 +195,7 @@ public class ProfileTokenResolver {
             }
             writer.flush();
         }
-        
+
         if (!contents.isEmpty()) {
             try {
                 Path configPropsFile = Paths.get(System.getenv("HOME"), "keys.properties");
@@ -260,17 +263,17 @@ public class ProfileTokenResolver {
             e.printStackTrace();
         }
     }
-    
-    static class  Value {
+
+    static class Value {
         String value;
-        Type type;
-        
+        Type   type;
+
         public Value(String val, Type type) {
             this.value = val;
             this.type = type;
         }
     }
-    
+
     enum Type {
         ENV, APPCONFIG
     }
