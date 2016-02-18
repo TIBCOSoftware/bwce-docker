@@ -115,6 +115,7 @@ public class ProfileTokenResolver {
         String consulServerUri = System.getenv("CONSUL_AGENT_URI");
 
         if (consulServerUri == null) {
+            // For K8S
             String consulServiceName = System.getenv("CONSUL_SERVICE_NAME");
             if (consulServiceName != null) {
                 consulServiceName = consulServiceName.replace("-", "_").toUpperCase();
@@ -124,6 +125,15 @@ public class ProfileTokenResolver {
                     return null;
                 }
                 return consulUri.replace("tcp", "http") + "/v1/";
+            } else {
+                // For Docker
+                String consulAgentPort = System.getenv("CONSULAGENT_PORT");
+                if (consulAgentPort != null) {
+                    String consulUri = System.getenv("CONSULAGENT_PORT_" + consulAgentPort + "_TCP");
+                    if (consulUri != null) {
+                        return consulUri.replace("tcp", "http") + "/v1/";
+                    }
+                }
             }
         } else {
             if (!consulServerUri.endsWith("/")) {

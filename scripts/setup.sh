@@ -42,8 +42,9 @@ setRouteInterface()
 	appnodeConfigFile=$HOME/tibco.home/bw*/*/config/appnode_config.ini
 	printf '%s\n' "bwce.edition=bwce" >> $appnodeConfigFile
 	if [[ ${BW_SWAGGER_SERVICE} ]]; then
-		s_host=${BW_SWAGGER_SERVICE}_SERVICE_HOST
-		s_port=${BW_SWAGGER_SERVICE}_SERVICE_PORT
+		s_env_var_prefix=  echo ${BW_SWAGGER_SERVICE} | tr '[a-z]-' '[A-Z]_'
+		s_host=${s_env_var_prefix}_SERVICE_HOST
+		s_port=${s_env_var_prefix}_SERVICE_PORT
 		printf '%s\n' "bw.rest.docApi.reverseProxy.hostName=${!s_host}" >> $appnodeConfigFile
 		printf '%s\n' "bw.rest.docApi.reverseProxy.port=${!s_port}" >> $appnodeConfigFile
 	fi
