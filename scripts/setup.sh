@@ -36,6 +36,20 @@ else
 fi
 }
 
+
+setRouteInterface()
+{
+	appnodeConfigFile=$HOME/tibco.home/bw*/*/config/appnode_config.ini
+	printf '%s\n' "bwce.edition=bwce" >> $appnodeConfigFile
+	if [[ ${BW_SWAGGER_SERVICE} ]]; then
+		s_host=${BW_SWAGGER_SERVICE}_SERVICE_HOST
+		s_port=${BW_SWAGGER_SERVICE}_SERVICE_PORT
+		printf '%s\n' "bw.rest.docApi.reverseProxy.hostName=${!s_host}" >> $appnodeConfigFile
+		printf '%s\n' "bw.rest.docApi.reverseProxy.port=${!s_port}" >> $appnodeConfigFile
+	fi
+
+}
+
 export BW_KEYSTORE_DIR=/resources/addons/certs
 if [ ! -d $HOME/tibco.home ];
 then
@@ -59,6 +73,7 @@ then
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
 
+setRouteInterface
 checkProfile
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $HOME/tmp/pcf.substvar # User provided profile
