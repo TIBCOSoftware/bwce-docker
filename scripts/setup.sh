@@ -39,23 +39,19 @@ fi
 
 setRouteInterface()
 {
-	appnodeConfigFile=$HOME/tibco.home/bw*/*/config/appnode_config.ini
+	appnodeConfigFile=`echo $HOME/tibco.home/bw*/*/config/appnode_config.ini`
 	printf '%s\n' "bwce.edition=bwce" >> $appnodeConfigFile
-	if [[ ${BW_SWAGGER_SERVICE} ]]; then
-		s_env_var_prefix=  echo ${BW_SWAGGER_SERVICE} | tr '[a-z]-' '[A-Z]_'
-		s_host=${s_env_var_prefix}_SERVICE_HOST
-		s_port=${s_env_var_prefix}_SERVICE_PORT
-		printf '%s\n' "bw.rest.docApi.reverseProxy.hostName=${!s_host}" >> $appnodeConfigFile
-		printf '%s\n' "bw.rest.docApi.reverseProxy.port=${!s_port}" >> $appnodeConfigFile
+	if [[ ${BW_SWAGGER_HOST} ]]; then
+		printf '%s\n' "bw.rest.docApi.reverseProxy.hostName=${BW_SWAGGER_HOST}" >> $appnodeConfigFile
+		printf '%s\n' "bw.rest.docApi.reverseProxy.port=${BW_SWAGGER_PORT-80}" >> $appnodeConfigFile
 	fi
-
 }
 
 export BW_KEYSTORE_DIR=/resources/addons/certs
 if [ ! -d $HOME/tibco.home ];
 then
-	unzip -qq /resources/bwce-runtime/bwce.zip -d $HOME
-	rm -rf /resources/bwce-runtime/bwce.zip
+	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
+	rm -rf /resources/bwce-runtime/bwce*.zip
 	chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
@@ -70,11 +66,11 @@ then
 	ln -s /*.ear `echo $HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$HOME#g" $HOME/tibco.home/bw*/*/config/appnode_config.ini
 	unzip -qq `echo $HOME/tibco.home/bw*/1.*/bin/bwapp.ear` -d /tmp
+	setRouteInterface
 	cd /java-code
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
 
-setRouteInterface
 checkProfile
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $HOME/tmp/pcf.substvar # User provided profile
