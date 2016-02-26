@@ -47,6 +47,20 @@ setRouteInterface()
 	fi
 }
 
+setLogLevel()
+{
+	logback=$HOME/tibco.home/bw*/*/config/logback.xml
+	if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
+		if [ -e ${logback} ]; then
+			sed -i.bak "/<root/ s/\".*\"/\"$BW_LOGLEVEL\"/Ig" $logback
+			echo "The loglevel is set to $BW_LOGLEVEL level"
+		fi
+	else
+			sed -i.bak "/<root/ s/\".*\"/\"ERROR\"/Ig" $logback
+			#echo "The loglevel set to ERROR level"
+	fi
+}
+
 export BW_KEYSTORE_DIR=/resources/addons/certs
 if [ ! -d $HOME/tibco.home ];
 then
@@ -67,6 +81,7 @@ then
 	sed -i.bak "s#_APPDIR_#$HOME#g" $HOME/tibco.home/bw*/*/config/appnode_config.ini
 	unzip -qq `echo $HOME/tibco.home/bw*/1.*/bin/bwapp.ear` -d /tmp
 	setRouteInterface
+	setLogLevel
 	cd /java-code
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
