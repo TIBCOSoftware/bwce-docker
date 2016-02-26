@@ -6,7 +6,7 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 
 ##Create BWCE base docker Image
 1. Clone this repo
-2. Download [**bwce.zip**](http://reldist.na.tibco.com/package/bwcf/1.0.1/V9/bwce.zip) and copy it to _/resources/bwce-runtime_ folder.
+2. Download latest [**bwce_cf.zip**](http://reldist.na.tibco.com/package/bwce/2.0.0/V9/bwce_cf.zip) and copy it to _/resources/bwce-runtime_ folder.
 2. Build docker image from [repo folder](https://github.com/TIBCOSoftware/bwce-20-docker) e.g. 
  	_docker build -f [[Dockerfile-Ubuntu](Dockerfile-Ubuntu) or [Dockerfile](Dockerfile)] -t **tibco/bwce:v1.1.0** ._
 3. BWCE base docker image size:
