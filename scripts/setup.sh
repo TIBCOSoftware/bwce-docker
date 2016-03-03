@@ -36,17 +36,6 @@ else
 fi
 }
 
-
-setRouteInterface()
-{
-	appnodeConfigFile=`echo $HOME/tibco.home/bw*/*/config/appnode_config.ini`
-	printf '%s\n' "bwce.edition=bwce" >> $appnodeConfigFile
-	if [[ ${BW_SWAGGER_HOST} ]]; then
-		printf '%s\n' "bw.rest.docApi.reverseProxy.hostName=${BW_SWAGGER_HOST}" >> $appnodeConfigFile
-		printf '%s\n' "bw.rest.docApi.reverseProxy.port=${BW_SWAGGER_PORT-80}" >> $appnodeConfigFile
-	fi
-}
-
 setLogLevel()
 {
 	logback=$HOME/tibco.home/bw*/*/config/logback.xml
@@ -79,8 +68,7 @@ then
 	fi
 	ln -s /*.ear `echo $HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$HOME#g" $HOME/tibco.home/bw*/*/config/appnode_config.ini
-	unzip -qq `echo $HOME/tibco.home/bw*/1.*/bin/bwapp.ear` -d /tmp
-	setRouteInterface
+	unzip -qq `echo $HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	cd /java-code
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
