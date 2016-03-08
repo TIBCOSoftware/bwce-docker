@@ -1,39 +1,40 @@
 #!/bin/bash
 checkProfile()
 {
-BUILD_DIR=/tmp
-defaultProfile=default.substvar
-manifest=$BUILD_DIR/META-INF/MANIFEST.MF
-bwAppConfig="TIBCO-BW-ConfigProfile"
-bwAppNameHeader="Bundle-SymbolicName"
-bwEdition='bwcf'
-if [ -f ${manifest} ]; then
-	bwAppProfileStr=`grep -o $bwAppConfig.*.substvar ${manifest}`
-	bwEditionHeaderStr=`grep -E $bwEdition ${manifest}`
-	res=$?
-	if [ ${res} -eq 0 ]; then
-		echo " "
-	else
-		echo "${bwEdition} header not detected in ${manifest}"
-		exit 1
+	BUILD_DIR=/tmp
+	defaultProfile=default.substvar
+	manifest=$BUILD_DIR/META-INF/MANIFEST.MF
+	bwAppConfig="TIBCO-BW-ConfigProfile"
+	bwAppNameHeader="Bundle-SymbolicName"
+	bwEdition='bwcf'
+	if [ -f ${manifest} ]; then
+		bwAppProfileStr=`grep -o $bwAppConfig.*.substvar ${manifest}`
+		bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
+		bwEditionHeaderStr=`grep -E $bwEdition ${manifest}`
+		res=$?
+		if [ ${res} -eq 0 ]; then
+			echo " "
+		else
+			echo "${bwEdition} header not detected in ${manifest}"
+			exit 1
+		fi
 	fi
-fi
-arr=$(echo $bwAppProfileStr | tr "/" "\n")
+	arr=$(echo $bwAppProfileStr | tr "/" "\n")
 
-for x in $arr
-do
-    case "$x" in 
-	*substvar)
-	defaultProfile=$x;;esac	
-done
+	for x in $arr
+	do
+    	case "$x" in 
+		*substvar)
+		defaultProfile=$x;;esac	
+	done
 
-if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
-else 
+	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
+	else 
 		case $BW_PROFILE in
  		*.substvar ) ;;
 		* ) BW_PROFILE="${BW_PROFILE}.substvar";;esac
 		echo "BW_PROFILE is set to '$BW_PROFILE'";
-fi
+	fi
 }
 
 setLogLevel()
@@ -82,9 +83,8 @@ else
 fi
 
 cd /java-code
-$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver
+$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
 STATUS=$?
 if [ $STATUS == "1" ]; then
-    echo "ERROR: Failed to substitute properties in the application profile."
     exit 1 # terminate and indicate error
 fi

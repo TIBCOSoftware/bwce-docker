@@ -44,9 +44,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class ProfileTokenResolver {
 
-    static String TOKEN_DELIMITER  = "#";
-    static String pattern          = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
-    static String PROFILE_ROOT_DIR = System.getenv("HOME") + "/tmp";
+    static String  TOKEN_DELIMITER  = "#";
+    static String  pattern          = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
+    static String  PROFILE_ROOT_DIR = System.getenv("HOME") + "/tmp";
+    static boolean isDebugOn        = System.getenv("BW_LOGLEVEL") != null && System.getenv("BW_LOGLEVEL").equalsIgnoreCase("debug");
 
     public static void main(String[] args) throws Throwable {
 
@@ -56,10 +57,18 @@ public class ProfileTokenResolver {
         }
 
         Map<String, Value> tokenMap = new HashMap<String, Value>();
-        collectEnvVariables(tokenMap);
-        collectPropertiesFromConsul(tokenMap);
-        resolveTokens(tokenMap);
-        System.exit(0);
+        try {
+            tokenMap.put("BWCE_APP_NAME", new Value(System.getProperty("BWCE_APP_NAME"), Type.SYSPROP));
+            collectEnvVariables(tokenMap);
+            collectPropertiesFromConsul(tokenMap);
+            resolveTokens(tokenMap);
+            System.exit(0);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(1);
+        } finally {
+            tokenMap.clear();
+        }
     }
 
     /**
@@ -81,23 +90,27 @@ public class ProfileTokenResolver {
 
     private static void collectPropertiesFromConsul(Map<String, Value> valueMap) throws Exception {
         String profileName = System.getenv("APP_CONFIG_PROFILE");
-        if (profileName == null) {
+        String appName = valueMap.get("BWCE_APP_NAME").value;
+        if (profileName == null || appName == null) {
             return;
         }
 
         String consulServerUri = getConsulAgentURI();
         if (consulServerUri != null) {
-            System.out.println("Loading properties from Consul [" + consulServerUri + "]");
+
+            ObjectMapper mapper = new ObjectMapper();
+            URL endpointURL = new URL(consulServerUri + "kv/" + appName + "/" + profileName + "?recurse");
+            if (isDebugOn) {
+                System.out.println("Loading properties from Consul [" + endpointURL.toString() + "]");
+            }
             try {
-                ObjectMapper mapper = new ObjectMapper();
-                URL endpointURL = new URL(consulServerUri + "kv/" + profileName + "?recurse");
                 JsonNode response = mapper.readTree(endpointURL);
                 if (response.isArray()) {
                     for (int i = 0; i < response.size(); i++) {
                         JsonNode propNode = response.get(i);
                         String propName = propNode.get("Key").asText();
                         if (!profileName.isEmpty()) {
-                            propName = propName.replace(profileName + "/", "");
+                            propName = propName.replace(appName + "/" + profileName + "/", "");
                         }
                         if (!propName.isEmpty()) {
                             String propValue = propNode.get("Value").asText();
@@ -106,14 +119,18 @@ public class ProfileTokenResolver {
                     }
                 }
             } catch (Throwable e) {
-                throw new Exception("Failed to load properties. Ensure that Consul URL [" + consulServerUri + "] is correct.", e);
+                throw new Exception("Failed to load properties from URL [" + endpointURL.toString()
+                        + "]. Ensure that CONSUL is configured correctly.", e);
             }
         }
     }
 
     private static String getConsulAgentURI() {
-        String consulServerUri = System.getenv("CONSUL_AGENT_URI");
-
+        String consulServerUri = System.getenv("CONSUL_SERVER_URL");
+        String apiVersion = System.getenv("CONSUL_API_VERSION");
+        if (apiVersion == null || apiVersion.trim().isEmpty()) {
+            apiVersion = "v1";
+        }
         if (consulServerUri == null) {
             // For K8S
             String consulServiceName = System.getenv("CONSUL_SERVICE_NAME");
@@ -124,14 +141,14 @@ public class ProfileTokenResolver {
                     System.out.println("The Consul Service[" + consulServiceName + "] not found in the environment.");
                     return null;
                 }
-                return consulUri.replace("tcp", "http") + "/v1/";
+                return consulUri.replace("tcp", "http") + "/" + apiVersion + "/";
             } else {
                 // For Docker
-                String consulAgentPort = System.getenv("CONSULAGENT_PORT");
+                String consulAgentPort = System.getenv("CONSULSERVER_PORT");
                 if (consulAgentPort != null) {
-                    String consulUri = System.getenv("CONSULAGENT_PORT_" + consulAgentPort + "_TCP");
+                    String consulUri = System.getenv("CONSULSERVER_PORT_" + consulAgentPort + "_TCP");
                     if (consulUri != null) {
-                        return consulUri.replace("tcp", "http") + "/v1/";
+                        return consulUri.replace("tcp", "http") + "/" + apiVersion + "/";
                     }
                 }
             }
@@ -139,8 +156,9 @@ public class ProfileTokenResolver {
             if (!consulServerUri.endsWith("/")) {
                 consulServerUri = consulServerUri + "/";
             }
-            if (!consulServerUri.endsWith("v1/")) {
-                consulServerUri = consulServerUri + "v1/";
+            int size = consulServerUri.split("v[0-9]+").length;
+            if (size == 1) {
+                consulServerUri = consulServerUri + apiVersion + "/";
             }
         }
 
@@ -148,6 +166,11 @@ public class ProfileTokenResolver {
     }
 
     private static void resolveTokens(Map<String, Value> tokenMap) throws Exception {
+
+        if (isDebugOn) {
+            String appName = tokenMap.get("BWCE_APP_NAME").value;
+            System.out.println("Substituting Profile values for BWCE Application [" + appName + "]");
+        }
 
         Path source = Paths.get(PROFILE_ROOT_DIR, "pcf.substvar");
 
@@ -285,6 +308,6 @@ public class ProfileTokenResolver {
     }
 
     enum Type {
-        ENV, APPCONFIG
+        ENV, APPCONFIG, SYSPROP
     }
 }
