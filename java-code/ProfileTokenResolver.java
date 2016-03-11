@@ -120,7 +120,7 @@ public class ProfileTokenResolver {
                 }
             } catch (Throwable e) {
                 throw new Exception("Failed to load properties from URL [" + endpointURL.toString()
-                        + "]. Ensure that CONSUL is configured correctly.", e);
+                        + "]. Check Key/Value store configuration for the Application[" + appName + "]", e);
             }
         }
     }
@@ -132,7 +132,6 @@ public class ProfileTokenResolver {
             apiVersion = "v1";
         }
         if (consulServerUri == null) {
-            // For K8S
             String consulServiceName = System.getenv("CONSUL_SERVICE_NAME");
             if (consulServiceName != null) {
                 consulServiceName = consulServiceName.replace("-", "_").toUpperCase();
@@ -143,7 +142,6 @@ public class ProfileTokenResolver {
                 }
                 return consulUri.replace("tcp", "http") + "/" + apiVersion + "/";
             } else {
-                // For Docker
                 String consulAgentPort = System.getenv("CONSULSERVER_PORT");
                 if (consulAgentPort != null) {
                     String consulUri = System.getenv("CONSULSERVER_PORT_" + consulAgentPort + "_TCP");
@@ -168,8 +166,7 @@ public class ProfileTokenResolver {
     private static void resolveTokens(Map<String, Value> tokenMap) throws Exception {
 
         if (isDebugOn) {
-            String appName = tokenMap.get("BWCE_APP_NAME").value;
-            System.out.println("Substituting Profile values for BWCE Application [" + appName + "]");
+            System.out.println("Substituting Profile values for BWCE Application [" + tokenMap.get("BWCE_APP_NAME").value + "]");
         }
 
         Path source = Paths.get(PROFILE_ROOT_DIR, "pcf.substvar");
