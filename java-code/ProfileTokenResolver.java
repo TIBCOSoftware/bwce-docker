@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -127,42 +128,33 @@ public class ProfileTokenResolver {
 
     private static String getConsulAgentURI() {
         String consulServerUri = System.getenv("CONSUL_SERVER_URL");
-        String apiVersion = System.getenv("CONSUL_API_VERSION");
-        if (apiVersion == null || apiVersion.trim().isEmpty()) {
-            apiVersion = "v1";
-        }
-        if (consulServerUri == null) {
-            String consulServiceName = System.getenv("CONSUL_SERVICE_NAME");
-            if (consulServiceName != null) {
-                consulServiceName = consulServiceName.replace("-", "_").toUpperCase();
-                String consulUri = System.getenv(consulServiceName + "_PORT");
-                if (consulUri == null) {
-                    System.out.println("The Consul Service[" + consulServiceName + "] not found in the environment.");
-                    return null;
+        if (consulServerUri != null && !consulServerUri.isEmpty()) {
+            try {
+                URL url = new URL(consulServerUri);
+                String hostName = url.getHost();
+                if (!hostName.contains(".") && isK8s()) {
+                    String consulServiceName = hostName.replace("-", "_").toUpperCase();
+                    String consulUri = System.getenv(consulServiceName + "_PORT");
+                    consulServerUri = consulUri.replace("tcp", "http");
                 }
-                return consulUri.replace("tcp", "http") + "/" + apiVersion + "/";
-            } else {
-                String consulAgentPort = System.getenv("CONSULSERVER_PORT");
-                if (consulAgentPort != null) {
-                    String consulUri = System.getenv("CONSULSERVER_PORT_" + consulAgentPort + "_TCP");
-                    if (consulUri != null) {
-                        return consulUri.replace("tcp", "http") + "/" + apiVersion + "/";
-                    }
-                }
+            } catch (MalformedURLException e) {
+                return null;
             }
-        } else {
+
             if (!consulServerUri.endsWith("/")) {
                 consulServerUri = consulServerUri + "/";
             }
             int size = consulServerUri.split("v[0-9]+").length;
             if (size == 1) {
-                consulServerUri = consulServerUri + apiVersion + "/";
+                consulServerUri = consulServerUri + "v1/";
             }
         }
-
         return consulServerUri;
     }
 
+    private static boolean isK8s() {
+        return System.getenv("KUBERNETES_SERVICE_HOST") != null;
+    }
     private static void resolveTokens(Map<String, Value> tokenMap) throws Exception {
 
         if (isDebugOn) {
