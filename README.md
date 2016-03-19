@@ -10,8 +10,9 @@ Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker M
 2. Build docker image from [repo folder](https://github.com/TIBCOSoftware/bwce-20-docker) e.g. 
  	_docker build -f [[Dockerfile-Ubuntu](Dockerfile-Ubuntu) or [Dockerfile](Dockerfile)] -t **tibco/bwce:v1.1.0** ._
 3. BWCE base docker image size:
-	* With Ubuntu : ~405 MB
-	* With Alpine: 207.4 MB
+	* Ubuntu : ~405 MB
+	* Alpine: 207.4 MB [Can not be shipped due to glibc issue]
+	* Debian: 319.2 MB [Used for BWCE 2.0]
 4. Run BWCE application
 	* In Local Environment: In local enviornment, run BWCE application by mapping volume containing ear file to / volume in the container
 		e.g.  _docker run --name BWRESTAPP -d **-v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/testrest_1.0.0.ear** -p 18080:8080 -p 17777:7777 **tibco/bwce:v1.1.0**_. [See docker for more info](https://docs.docker.com/engine/userguide/dockervolumes)
