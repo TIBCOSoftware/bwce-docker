@@ -6,7 +6,7 @@ checkProfile()
 	manifest=$BUILD_DIR/META-INF/MANIFEST.MF
 	bwAppConfig="TIBCO-BW-ConfigProfile"
 	bwAppNameHeader="Bundle-SymbolicName"
-	bwEdition='bwcf'
+	bwEdition='docker'
 	if [ -f ${manifest} ]; then
 		bwAppProfileStr=`grep -o $bwAppConfig.*.substvar ${manifest}`
 		bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
