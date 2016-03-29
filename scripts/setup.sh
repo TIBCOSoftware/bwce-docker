@@ -6,7 +6,8 @@ checkProfile()
 	manifest=$BUILD_DIR/META-INF/MANIFEST.MF
 	bwAppConfig="TIBCO-BW-ConfigProfile"
 	bwAppNameHeader="Bundle-SymbolicName"
-	bwEdition='docker'
+	bwEdition='bwcf'
+	bwceTarget='TIBCO-BWCE-Editon-Target:'
 	if [ -f ${manifest} ]; then
 		bwAppProfileStr=`grep -o $bwAppConfig.*.substvar ${manifest}`
 		bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
@@ -15,9 +16,25 @@ checkProfile()
 		if [ ${res} -eq 0 ]; then
 			echo " "
 		else
-			echo "${bwEdition} header not detected in ${manifest}"
+			echo "Application [$bwBundleAppName] is not compatible with TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition from the TIBCO Business Studio."
 			exit 1
 		fi
+		bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
+		res=$?
+		if [ ${res} -eq 0 ]; then
+			bwceTargetStr=`grep -E 'docker' $bwceTargetHeaderStr`
+			res2=$?
+			if [ ${res2} -eq 0 ]; then
+				echo ""
+			else
+				echo "Application [$bwBundleAppName] is not developed for the Docker platform and cannot be deployed to the Docker platform. Make this application compatible with Docker platform using the TIBCO Business Studio."
+				exit 1
+			fi
+		else
+		 	echo "Application [$bwBundleAppName] is not developed for the Docker platform and cannot be deployed to the Docker platform. Make this application compatible with Docker platform using the TIBCO Business Studio."
+		 	exit 1
+		fi
+
 	fi
 	arr=$(echo $bwAppProfileStr | tr "/" "\n")
 
