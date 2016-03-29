@@ -22,7 +22,7 @@ checkProfile()
 		bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
 		res=$?
 		if [ ${res} -eq 0 ]; then
-			bwceTargetStr=`grep -E 'docker' $bwceTargetHeaderStr`
+			bwceTargetStr=`echo "$bwceTargetHeaderStr" | grep -E 'docker'`
 			res2=$?
 			if [ ${res2} -eq 0 ]; then
 				echo ""
