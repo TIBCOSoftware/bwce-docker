@@ -27,11 +27,11 @@ checkProfile()
 			if [ ${res2} -eq 0 ]; then
 				echo ""
 			else
-				echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You need to convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
+				echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
 				exit 1
 			fi
 		else
-		 	echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You need to convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
+		 	echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
 			exit 1
 		fi
 
