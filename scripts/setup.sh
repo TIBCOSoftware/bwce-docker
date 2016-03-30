@@ -16,7 +16,7 @@ checkProfile()
 		if [ ${res} -eq 0 ]; then
 			echo " "
 		else
-			echo "Application [$bwBundleAppName] is not compatible with TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition from the TIBCO Business Studio."
+			echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO BusinessWorks Container Edition Studio."
 			exit 1
 		fi
 		bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
@@ -27,12 +27,12 @@ checkProfile()
 			if [ ${res2} -eq 0 ]; then
 				echo ""
 			else
-				echo "Application [$bwBundleAppName] is not developed for the Docker platform and cannot be deployed to the Docker platform. Make this application compatible with Docker platform using the TIBCO Business Studio."
+				echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You need to convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
 				exit 1
 			fi
 		else
-		 	echo "Application [$bwBundleAppName] is not developed for the Docker platform and cannot be deployed to the Docker platform. Make this application compatible with Docker platform using the TIBCO Business Studio."
-		 	exit 1
+		 	echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You need to convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
+			exit 1
 		fi
 
 	fi
