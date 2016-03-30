@@ -16,7 +16,7 @@ checkProfile()
 		if [ ${res} -eq 0 ]; then
 			echo " "
 		else
-			echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO BusinessWorks Container Edition Studio."
+			echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO BusinessWorks Container Edition Studio. Refer Conversion Guide for more details."
 			exit 1
 		fi
 		bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
