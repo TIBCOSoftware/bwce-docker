@@ -19,21 +19,21 @@ checkProfile()
 			echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO BusinessWorks Container Edition Studio. Refer Conversion Guide for more details."
 			exit 1
 		fi
-		bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
-		res=$?
-		if [ ${res} -eq 0 ]; then
-			bwceTargetStr=`echo "$bwceTargetHeaderStr" | grep -E 'docker'`
-			res2=$?
-			if [ ${res2} -eq 0 ]; then
-				echo ""
-			else
-				echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
-				exit 1
-			fi
-		else
-		 	echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
-			exit 1
-		fi
+		#bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
+		#res=$?
+		#if [ ${res} -eq 0 ]; then
+			#bwceTargetStr=`echo "$bwceTargetHeaderStr" | grep -E 'docker'`
+			#res2=$?
+			#if [ ${res2} -eq 0 ]; then
+				#echo ""
+			#else
+				#echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
+				#exit 1
+			#fi
+		#else
+		 	#echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
+			#exit 1
+		#fi
 
 	fi
 	arr=$(echo $bwAppProfileStr | tr "/" "\n")
