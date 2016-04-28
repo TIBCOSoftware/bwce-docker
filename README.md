@@ -35,9 +35,9 @@ Run [createDockerImage.sh](createBuildpack.sh) to create BWCE base docker image.
      
 ##Test BWCE Base Docker Image
   * Goto [example/http](/example/http) directory and update base docker image in Dockerfile to your BWCE base docker image
-  * Build application docker image: `docker build -t BWCE-HTTP-APP .`
-  * Run application docker image: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' BWCE-HTTP-APP`
-  * Find Host port mapped to 8080 using `docker ps` and send request to `http://<DOCKER-HOST-IP>:<HOST-PORT>`. It should return 'Welcome to BWCE 2.0 !!!' message. In case of failure, inspect logs.
+  * From [example/http](/example/http) directory, build BWCE application: `docker build -t BWCE-HTTP-APP .`
+  * Run BWCE application: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' BWCE-HTTP-APP`
+  * Find port number mapped to 8080 using `docker ps` and send request to `http://<DOCKER-HOST-IP>:<HOST-PORT>`. It should return 'Welcome to BWCE 2.0 !!!' message. In case of failure, inspect logs.
 
 ##License
 These buildpack scripts are released under [3-clause BSD](License.md) license.
