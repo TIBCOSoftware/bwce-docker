@@ -19,7 +19,7 @@ Download appropriate TIBCO BusinessWorks™ Container Edition 2.0.0 artifacts fr
    2. Locate bwce_cf.zip file from the downloaded artifacts and run [createDockerImage.sh](createDockerImage.sh). This will create BWCE base docker image.
 
 ##Extend BWCE Base Docker Image
-You can customize base docker iamge to add supported third-party drivers e.g. Oracle JDBC driver, OSGified bundles or runtime of certified Plug-ins in TIBCO BusinessWorks™ Container Edition runtime. It can also be customized for application certificate management as well as to integrate with application configuration management services.
+You can customize base docker image for supported third-party drivers e.g. Oracle JDBC driver, OSGified bundles or to add runtime of supported Plug-ins in BWCE runtime. It can also be customized for application certificate management as well as to integrate with application configuration management services.
 * **Provision suppprted JDBC drivers**:
      * Follow steps described in "Using Third Party JDBC Drivers" on https://docs.tibco.com/pub/bwce/2.0.0/doc/html/GUID-881316C3-28F9-4BCF-A512-38B731BE63D1.html.
      * Copy the appropriate driver bundle from `<TIBCO_HOME>/bwce/2.x/config/drivers/shells/<driverspecific runtime>/runtime/plugins/` to  `<Your-local-docker-repo>/resources/addons/jars` folder. 
