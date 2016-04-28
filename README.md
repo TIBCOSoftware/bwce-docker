@@ -31,7 +31,7 @@ You can customize base docker iamge to add supported third-party drivers e.g. Or
   * Goto `<TIBCO-HOME>/bwce/palettes/<plugin-name>/<plugin-version>` directory and  zip `lib` and `runtime` folders into `<plugin-name>.zip` file. Copy `<plugin-name>.zip` into `<Your-local-docker-repo>/resources/addons/plugins`
   * Copy any OSGi bundles required by Plug-in e.g. driver bundles into `<Your-local-buildpack-repo>/resources/addons/jars`
 
-Run [createDockerImage.sh](createBuildpack.sh) to create BWCE base docker image.
+Run [createDockerImage.sh](createDockerImage.sh) to create BWCE base docker image.
      
 ##Test BWCE Base Docker Image
   * Goto [example/http](/example/http) directory and update base docker image in Dockerfile to your BWCE base docker image
