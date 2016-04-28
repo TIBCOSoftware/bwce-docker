@@ -1,33 +1,44 @@
-##Caution
-For internal users only. **Must not be shared outside of BW engineering**.
+# Docker Scripts for TIBCO BusinessWorks™ Container Edition 
+The TIBCO BusinessWorks™ Container Edition (BWCE) Docker image is a highly extensible docker base image for running TIBCO BusinessWorks™ Container Edition applications. This image can be customized for supported third-party drivers, OSGI bundles, integration with application configuration management systems, application certificate management etc.
 
-##Prerequiste
-Install [Docker Engine](https://docs.docker.com/engine/installation) , [Docker Machine](https://docs.docker.com/machine/install-machine).
+TIBCO BusinessWorks(TM) Container Edition allows customers to leverage the power and functionality of TIBCO ActiveMatrix BusinessWorks(TM) in order to build cloud-native applications with an API-first approach and to deploy it to container-based PaaS platforms such as Cloud Foundry(TM), Kubernetes(TM) etc.
 
-##Create BWCE base docker Image
-1. Clone this repo
-2. Download latest [**bwce_cf.zip**](http://reldist.na.tibco.com/package/bwce/2.0.0/V9) and copy it to _/resources/bwce-runtime_ folder.
-2. Build docker image from [repo folder](https://github.com/TIBCOSoftware/bwce-20-docker) e.g. 
- 	_docker build -f [[Dockerfile-Ubuntu](Dockerfile-Ubuntu) or [Dockerfile](Dockerfile)] -t **tibco/bwce:v1.1.0** ._
-3. BWCE base docker image size:
-	* Ubuntu : ~405 MB
-	* Alpine: 207.4 MB [Can not be shipped due to glibc issue]
-	* Debian: 319.2 MB [Used for BWCE 2.0]
-4. Run BWCE application
-	* In Local Environment: In local enviornment, run BWCE application by mapping volume containing ear file to / volume in the container
-		e.g.  _docker run --name BWRESTAPP -d **-v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/testrest_1.0.0.ear** -p 18080:8080 -p 17777:7777 **tibco/bwce:v1.1.0**_. [See docker for more info](https://docs.docker.com/engine/userguide/dockervolumes)
-	* Build Application docker image: To run application on docker based PAAS platforms, create application docker image. 
-		* Build Image: Create application Dockerfile and ear [[Example](examples/HTTP)] and build image. _Ensure that application docker image is created using BWCE base image [[Example](examples/HTTP/Dockerfile)]._ e.g. **docker build -t docker.http.application:1.0 .**. 
-		* Run application using application image e.g.  _docker run -e MESSAGE='Welcome to BWCE' --log-driver=syslog --log-opt syslog-address=udp://logs3.papertrailapp.com:39293 -d -P docker.http.application:1.0_
+To find more about TIBCO BusinessWorks™ Container Edition, refer https://docs.tibco.com/products/tibco-businessworks-container-edition-2-0-0
 
-##Supported Features
-* **Application configuration**: 
-	* **Using Environment Variables** - BWCE application can be configured with env variables. Refer environment var using **`#ENV-VAR-NAME#`** token in the application profile. Only supported for default application profile (default.substvar). e.g. _docker run --name BWHTTPAPP **-e MESSAGE='BWCE Rocks on Docker'** -d -v /Users/vnalawad/docker-apps/docker.http.application_1.0.0.ear:/docker.http.application_1.0.0.ear -p 18081:8080 tibco/bwce:v1.1.0_
-	*  **Consul Configuration Managment Service** -  BWCE applications can be configured with keys from the Consul. Refer key using **`#KEY-NAME#`** token in the application profile. e.g. for key /dev/MESSAGE use `#MESSAGE#`. Use **`APP_CONFIG_PROFILE`** env variable to configure root folder(s) e.g **`APP_CONFIG_PROFILE`=dev**. 
-		* **Consul Server running outside of docker** - To use configurations from Consul server running outside of docker, set `CONSUL_SERVER_URL` env variable. e.g. `CONSUL_SERVER_URL`=http://10.97.201.21:8500
-		* **Consul Server running as docker container** - To use configurations from Consul server running as docker container, link consul docker container to your BWCE application container and set `CONSUL_SERVER_URL`=http://<link-name>:<port>
-			* docker run --name consul-agent-node1 -d -p 8400:8400 -p 8500:8500 -p 8600:53/udp -h node1 progrium/consul -server -bootstrap
-			* docker run --name Dev-BWHttpApp -e APP_CONFIG_PROFILE=dev **--link consul-agent-node1:consulagent** -e **CONSUL_SERVER_URL=http://consulagent:8500** --log-driver=syslog --log-opt syslog-address=udp://logs3.papertrailapp.com:39293 -d -v /Users/vnalawad/docker-apps/docker.http.application_1.0.0.ear:/docker.http.application_1.0.0.ear -p 18081:8080 tibco/bwce-alpine
-* **Logging using Papertrail**: Run your BWCE application with  _--log-driver=syslog --log-opt syslog-address=udp://{your-papertrail-log-destination}_  e.g. docker run --name BWRESTAPP  **--log-driver=syslog --log-opt syslog-address=udp://logs3.papertrailapp.com:11111** -d -v /Users/vnalawad/docker-apps/testrest_1.0.0.ear:/testrest_1.0.0.ear -p 18080:8080 -p 17777:7777 tibco/bwce:v1.1.0. [More Options](http://help.papertrailapp.com/kb/configuration/configuring-centralized-logging-from-docker)
+These docker scripts are subject to the license shared as part of the repository. Review the license before using or downloading these scripts.
 
+##Prerequisite
+  * Need access to https://edelivery.tibco.com.
+  * Install [Docker](https://docs.docker.com/engine/installation/).
+    
+##Download TIBCO BusinessWorks™ Container Edition
+Download appropriate TIBCO BusinessWorks™ Container Edition 2.0.0 artifacts from [https://edelivery.tibco.com](https://edelivery.tibco.com/storefront/eval/tibco-businessworks-container-edition/prod11654.html). It contains TIBCO BusinessWorks™ Container Edition runtime(bwce_cf.zip).
+     
+##Create BWCE Base Docker Image
+   1. Clone this repository onto your local machine.
+   2. Locate bwce_cf.zip file from the downloaded artifacts and run [createDockerImage.sh](createDockerImage.sh). This will create BWCE base docker image.
 
+##Docker Image Extension
+You can customize base docker iamge to add supported third-party drivers e.g. Oracle JDBC driver, OSGified bundles or runtime of certified Plug-ins in TIBCO BusinessWorks™ Container Edition runtime. It can also be customized for application certificate management as well as to integrate with application configuration management services.
+* **Provision suppprted JDBC drivers**:
+     * Follow steps described in "Using Third Party JDBC Drivers" on https://docs.tibco.com/pub/bwce/2.0.0/doc/html/GUID-881316C3-28F9-4BCF-A512-38B731BE63D1.html.
+     * Copy the appropriate driver bundle from `<TIBCO_HOME>/bwce/2.x/config/drivers/shells/<driverspecific runtime>/runtime/plugins/` to  `<Your-local-docker-repo>/resources/addons/jars` folder. 
+* **Provision [OSGi](https://www.osgi.org) bundle jar(s)**: Copy OSGified bundle jar(s) into `<Your-local-docker-repo>/resources/addons/jars`
+* **Application Configuration Management**: TIBCO BusinessWorks™ Container Edition supports [Consul](https://www.consul.io/) configuration mechanism out of the box. Refer https://docs.tibco.com/pub/bwce/2.0.0/doc/html/GUID-3AAEE4AD-8701-4F4E-AD7B-2416A9DDA260.html for further details. To add support for other systems, update `<Your-local-docker-repo>/java-code/ProfileTokenResolver.java`. This class has a dependecy on Jackson(2.6.x) JSON library. You can pull this dependencies from the installation `<TIBCO_HOME>/bwce/2.x/system/shared/com.tibco.bw.tpcl.com.fasterxml.jackson` or download it from the web.
+* **Certificate Management**: There are use cases where you need to use certificates into your application to connect to different systems. For example, a certificate to connect to TIBCO Enterprise Message Service. Bundling certificates with your application is not a good idea as you would need to rebuild your application when the certificates expire. To avoid that, you can copy your certificates into the `<Your-local-docker-repo>/resources/addons/certs` folder. Once the certificates expire, you can copy the new certificates into the buildpack without rebuilding your application. Just push your application with the new buildpack. To access the certificates folder from your application, use the environment variable [BW_KEYSTORE_PATH]. For example, #BW_KEYSTORE_PATH#/mycert.jks in your application property.
+*  **Provision TIBCO BusinessWorks™ Container Edition Plug-in Runtime**: For Plug-ins created using [TIBCO ActiveMatrix BusinessWorks™ Plug-in Development Kit](https://docs.tibco.com/products/tibco-activematrix-businessworks-plug-in-development-kit-6-1-1), their runtime must be added to the base docker image. To add Plug-in runtime into your base docker image:
+  * [Install Plug-In](https://docs.tibco.com/pub/bwpdk/6.1.1/doc/html/GUID-0FB70A84-DBF6-4EE6-A6C8-28AC5E4FF1FF.html) if not already installed
+  * Goto `<TIBCO-HOME>/bwce/palettes` directory and  zip `lib` and `runtime` folders into <palette-name>.zip file. Copy <palette-name>.zip into `<Your-local-docker-repo>/resources/addons/plugins`
+  * Copy any OSGi bundles required by Plug-in e.g. driver bundles into `<Your-local-buildpack-repo>/resources/addons/jars`
+
+Run [createDockerImage.sh](createBuildpack.sh) to create BWCE base docker image.
+     
+##Test BWCE Base Docker Image
+  * Goto [example/http](/example/http) directory and update base docker image in Dockerfile to your BWCE base docker image
+  * Build application docker image: `docker build -t BWCE-HTTP-APP .`
+  * Run application docker image: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' BWCE-HTTP-APP`. 
+  * Get Docker host port mapped to 8080 and send request to http://<DOCKER-HOST-IP>:<PORT>. It should reply 'Welcome to BWCE 2.0 !!!' message.
+
+##License
+These buildpack scripts are released under [3-clause BSD](License.md) license.
+     
