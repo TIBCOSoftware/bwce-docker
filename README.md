@@ -1,7 +1,7 @@
 # Docker Scripts for TIBCO BusinessWorks™ Container Edition 
 The TIBCO BusinessWorks™ Container Edition (BWCE) Docker image is a highly extensible docker base image for running TIBCO BusinessWorks™ Container Edition applications. This image can be customized for supported third-party drivers, OSGI bundles, integration with application configuration management systems, application certificate management etc.
 
-TIBCO BusinessWorks(TM) Container Edition allows customers to leverage the power and functionality of TIBCO ActiveMatrix BusinessWorks(TM) in order to build cloud-native applications with an API-first approach and to deploy it to container-based PaaS platforms such as [Cloud Foundry(TM)](http://pivotal.io/platform), [Kubernetes](http://kubernetes.io/) etc.
+TIBCO BusinessWorks(TM) Container Edition allows customers to build microservices with an API-first approach and deploy them to cloud-native platforms such as [Cloud Foundry(TM)](http://pivotal.io/platform) and [Kubernetes](http://kubernetes.io/). By elegantly right-sizing TIBCO ActiveMatrix BusinessWorks(TM), it brings visual application development and integration capabilities to any enterprise platform as a service.
 
 To find more about TIBCO BusinessWorks™ Container Edition, refer https://docs.tibco.com/products/tibco-businessworks-container-edition-2-0-0
 
@@ -31,7 +31,7 @@ You can customize base docker iamge to add supported third-party drivers e.g. Or
   * Goto `<TIBCO-HOME>/bwce/palettes/<plugin-name>/<plugin-version>` directory and  zip `lib` and `runtime` folders into `<plugin-name>.zip` file. Copy `<plugin-name>.zip` into `<Your-local-docker-repo>/resources/addons/plugins`
   * Copy any OSGi bundles required by Plug-in e.g. driver bundles into `<Your-local-buildpack-repo>/resources/addons/jars`
 
-Run [createDockerImage.sh](createDockerImage.sh) to create BWCE base docker image.
+Run [createDockerImage.sh](createBuildpack.sh) to create BWCE base docker image.
      
 ##Test BWCE Base Docker Image
   * Goto [example/http](/example/http) directory and update base docker image in Dockerfile to your BWCE base docker image
