@@ -34,8 +34,8 @@ You can customize base docker image for supported third-party drivers e.g. Oracl
 Run [createDockerImage.sh](createBuildpack.sh) to create BWCE base docker image.
      
 ##Test TIBCO BusinessWorks™ Container Edition Base Docker Image
-  * Goto [example/http](/example/http) directory and update base docker image in [Dockerfile](/example/http/Dockerfile) to your BWCE base docker image
-  * From [example/http](/example/http) directory, build BWCE application: `docker build -t BWCE-HTTP-APP .`
+  * Goto [examples/http](/examples/http) directory and update base docker image in [Dockerfile](/examples/http/Dockerfile) to your BWCE base docker image
+  * From [examples/http](/examples/http) directory, build BWCE application: `docker build -t BWCE-HTTP-APP .`
   * Run BWCE application: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' BWCE-HTTP-APP`
   * Find port number mapped to 8080 using `docker ps` and send request to `http://<DOCKER-HOST-IP>:<HOST-PORT>`. It should return 'Welcome to BWCE 2.0 !!!' message. In case of failure, inspect logs.
 
