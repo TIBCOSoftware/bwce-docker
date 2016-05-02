@@ -21,7 +21,7 @@ Download appropriate TIBCO BusinessWorks™ Container Edition 2.0.0 artifacts fr
 ##Extend TIBCO BusinessWorks™ Container Edition Base Docker Image
 You can customize base docker image for supported third-party drivers e.g. Oracle JDBC driver, OSGified bundles or to add runtime of supported Plug-ins in BWCE runtime. It can also be customized for application certificate management as well as to integrate with application configuration management services.
 * **Provision suppprted JDBC drivers**:
-     * Follow steps described in "Using Third Party JDBC Drivers" on https://docs.tibco.com/pub/bwce/2.0.0/doc/html/GUID-881316C3-28F9-4BCF-A512-38B731BE63D1.html.
+     * Follow steps described in "[Using Third Party JDBC Drivers](https://docs.tibco.com/pub/bwce/2.0.0/doc/html/GUID-881316C3-28F9-4BCF-A512-38B731BE63D1.html)"
      * Copy the appropriate driver bundle from `<TIBCO_HOME>/bwce/2.x/config/drivers/shells/<driverspecific runtime>/runtime/plugins/` to  `<Your-local-docker-repo>/resources/addons/jars` folder. 
 * **Provision [OSGi](https://www.osgi.org) bundle jar(s)**: Copy OSGified bundle jar(s) into `<Your-local-docker-repo>/resources/addons/jars`
 * **Application Configuration Management**: TIBCO BusinessWorks™ Container Edition supports [Consul](https://www.consul.io/) configuration mechanism out of the box. Refer https://docs.tibco.com/pub/bwce/2.0.0/doc/html/GUID-3AAEE4AD-8701-4F4E-AD7B-2416A9DDA260.html for further details. To add support for other systems, update `<Your-local-docker-repo>/java-code/ProfileTokenResolver.java`. This class has a dependecy on Jackson(2.6.x) JSON library. You can pull this dependencies from the installation `<TIBCO_HOME>/bwce/2.x/system/shared/com.tibco.bw.tpcl.com.fasterxml.jackson` or download it from the web.
