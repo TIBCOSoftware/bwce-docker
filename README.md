@@ -8,7 +8,7 @@ To know more about TIBCO BusinessWorks™ Container Edition, visit [Documentatio
 These docker scripts are subject to the license shared as part of the repository. Review the license before using or downloading these scripts.
 
 ##Prerequisite
-  * Access to https://edelivery.tibco.com.
+  * Access to [TIBCO(TM) eDelivery](https://edelivery.tibco.com).
   * [Docker](https://docs.docker.com/engine/installation/).
     
 ##Download TIBCO BusinessWorks™ Container Edition
