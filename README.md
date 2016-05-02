@@ -8,8 +8,8 @@ To know more about TIBCO BusinessWorks™ Container Edition, visit [Documentatio
 These docker scripts are subject to the license shared as part of the repository. Review the license before using or downloading these scripts.
 
 ##Prerequisite
-  * Need access to https://edelivery.tibco.com.
-  * Install [Docker](https://docs.docker.com/engine/installation/).
+  * Access to https://edelivery.tibco.com.
+  * [Docker](https://docs.docker.com/engine/installation/).
     
 ##Download TIBCO BusinessWorks™ Container Edition
 Download appropriate TIBCO BusinessWorks™ Container Edition 2.0.0 artifacts from [https://edelivery.tibco.com](https://edelivery.tibco.com/storefront/eval/tibco-businessworks-container-edition/prod11654.html). It contains TIBCO BusinessWorks™ Container Edition runtime (bwce_cf.zip).
