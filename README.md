@@ -3,7 +3,7 @@ The TIBCO BusinessWorks™ Container Edition (BWCE) Docker image is a highly ext
 
 TIBCO BusinessWorks(TM) Container Edition allows customers to build microservices with an API-first approach and deploy them to cloud-native platforms such as [Cloud Foundry(TM)](http://pivotal.io/platform) and [Kubernetes](http://kubernetes.io/). By elegantly right-sizing TIBCO ActiveMatrix BusinessWorks(TM), it brings visual application development and integration capabilities to any enterprise platform as a service.
 
-To find more about TIBCO BusinessWorks™ Container Edition, refer https://docs.tibco.com/products/tibco-businessworks-container-edition-2-0-0
+To find more about TIBCO BusinessWorks™ Container Edition, visit https://docs.tibco.com/products/tibco-businessworks-container-edition-2-0-0
 
 These docker scripts are subject to the license shared as part of the repository. Review the license before using or downloading these scripts.
 
