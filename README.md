@@ -14,11 +14,11 @@ These docker scripts are subject to the license shared as part of the repository
 ##Download TIBCO BusinessWorks™ Container Edition
 Download appropriate TIBCO BusinessWorks™ Container Edition 2.0.0 artifacts from [https://edelivery.tibco.com](https://edelivery.tibco.com/storefront/eval/tibco-businessworks-container-edition/prod11654.html). It contains TIBCO BusinessWorks™ Container Edition runtime (bwce_cf.zip).
      
-##Create BWCE Base Docker Image
+##Create TIBCO BusinessWorks™ Container Edition Base Docker Image
    1. Clone this repository onto your local machine.
    2. Locate bwce_cf.zip file from the downloaded artifacts and run [createDockerImage.sh](createDockerImage.sh). This will create BWCE base docker image.
 
-##Extend BWCE Base Docker Image
+##Extend TIBCO BusinessWorks™ Container Edition Base Docker Image
 You can customize base docker image for supported third-party drivers e.g. Oracle JDBC driver, OSGified bundles or to add runtime of supported Plug-ins in BWCE runtime. It can also be customized for application certificate management as well as to integrate with application configuration management services.
 * **Provision suppprted JDBC drivers**:
      * Follow steps described in "Using Third Party JDBC Drivers" on https://docs.tibco.com/pub/bwce/2.0.0/doc/html/GUID-881316C3-28F9-4BCF-A512-38B731BE63D1.html.
@@ -33,7 +33,7 @@ You can customize base docker image for supported third-party drivers e.g. Oracl
 
 Run [createDockerImage.sh](createBuildpack.sh) to create BWCE base docker image.
      
-##Test BWCE Base Docker Image
+##Test TIBCO BusinessWorks™ Container Edition Base Docker Image
   * Goto [example/http](/example/http) directory and update base docker image in Dockerfile to your BWCE base docker image
   * From [example/http](/example/http) directory, build BWCE application: `docker build -t BWCE-HTTP-APP .`
   * Run BWCE application: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' BWCE-HTTP-APP`
