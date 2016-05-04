@@ -130,6 +130,26 @@ done
 fi
 }
 
+checkAgents()
+{
+	agentFolder=/resources/addons/monitor-agents
+
+	if [ "$(ls $agentFolder)"  ]; then 
+		echo "Adding monitoring jars"
+
+		for name in $(find $agentFolder -type f); 
+do	
+	# filter out hidden files
+	if [[  "$(basename $name )" != .* ]];then
+		mkdir -p $HOME/agent/
+   		unzip -q $name -d $HOME/agent/
+	fi
+done
+		
+	fi
+
+}
+
 
 export BW_KEYSTORE_DIR=/resources/addons/certs
 if [ ! -d $HOME/tibco.home ];
@@ -143,6 +163,7 @@ then
 	touch $HOME/keys.properties
 	mkdir $HOME/tmp
 	checkJarsPalettes
+	checkAgents
 	jarFolder=/resources/addons/jars
 	if [ "$(ls $jarFolder)"  ]; then
 		#Copy jars to Hotfix
