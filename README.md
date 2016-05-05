@@ -35,8 +35,8 @@ Run [createDockerImage.sh](createBuildpack.sh) to create the BWCE base docker im
      
 ##Test TIBCO BusinessWorks™ Container Edition Base Docker Image
   * Navigate to the [examples/HTTP](/examples/HTTP) directory and update the base docker image in [Dockerfile](/examples/HTTP/Dockerfile) to your BWCE base docker image.
-  * From the [examples/HTTP](/examples/HTTP) directory, build BWCE application: `docker build -t BWCE-HTTP-APP .`
-  * Run the BWCE application: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' BWCE-HTTP-APP`
+  * From the [examples/HTTP](/examples/HTTP) directory, build BWCE application: `docker build -t bwce-http-app .`
+  * Run the BWCE application: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' bwce-http-app`
   * Find the port number mapped to 8080 using `docker ps` and send a request to `http://<DOCKER-HOST-IP>:<HOST-PORT>`. It should return 'Welcome to BWCE 2.0 !!!' message. In case of failure, inspect the logs.
 
 ##License
