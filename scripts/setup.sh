@@ -154,7 +154,7 @@ do
 	if [[  "$(basename $name )" != .* ]];then
    		extract $name
 		mkdir -p $HOME/tibco.home/addons/runtime/plugins/ && mv runtime/plugins/* "$_"
-		mkdir -p $HOME/tibco.home/addons/lib/ && mv lib/* "$_"/${name##*/}.ini
+		#mkdir -p $HOME/tibco.home/addons/lib/ && mv lib/* "$_"/${name##*/}.ini
 	fi
 done
 fi
