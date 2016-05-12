@@ -1,4 +1,34 @@
 #!/bin/bash
+#
+# Copyright 2012 - 2016 by TIBCO Software Inc. 
+# All rights reserved.
+#
+# This software is confidential and proprietary information of
+# TIBCO Software Inc.
+#
+#
+
+extract ()
+{
+if [ -f $1 ] ; then
+  case $1 in
+    *.tar.gz)  tar xvfz $1;;
+    *.gz)      gunzip $1;;
+    *.tar)     tar xvf $1;;
+    *.tgz)     tar xvzf $1;;
+    *.tar.bz2) tar xvjf $1;;
+    *.bz2)     bunzip2 $1;;
+    *.rar)     unrar x $1;;
+    *.tbz2)    tar xvjf $1;;
+    *.zip)     unzip $1;;
+    *.Z)       uncompress $1;;
+    *)         echo "can't extract from $1";;
+  esac
+else
+  echo "no file called $1"
+fi
+}
+
 checkProfile()
 {
 	BUILD_DIR=/tmp
