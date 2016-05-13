@@ -8,6 +8,12 @@
 #
 #
 
+print_Debug()
+{
+		if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
+ 			echo $1 
+ 		fi
+}
 extract ()
 {
 if [ -f $1 ] ; then
@@ -20,7 +26,7 @@ if [ -f $1 ] ; then
     *.bz2)     bunzip2 $1;;
     *.rar)     unrar x $1;;
     *.tbz2)    tar xvjf $1;;
-    *.zip)     unzip $1;;
+    *.zip)     unzip -q $1;;
     *.Z)       uncompress $1;;
     *)         echo "can't extract from $1";;
   esac
@@ -28,6 +34,7 @@ else
   echo "no file called $1"
 fi
 }
+
 
 checkProfile()
 {
@@ -145,7 +152,7 @@ BW_VERSION=`ls $HOME/tibco.home/bw*/`
 
 pluginFolder=/resources/addons/plugins
 if [ "$(ls $pluginFolder)"  ]; then 
-	echo "Adding addional plugins"
+	print_Debug "Adding addional plugins"
 	echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/tibco.home/addons" > `echo $HOME/tibco.home/bw*/*/ext/shared`/addons.link
 	# unzip whatever is there not done
 for name in $(find $pluginFolder -type f); 
@@ -165,7 +172,7 @@ checkAgents()
 	agentFolder=/resources/addons/monitor-agents
 
 	if [ "$(ls $agentFolder)"  ]; then 
-		echo "Adding monitoring jars"
+		print_Debug "Adding monitoring jars"
 
 		for name in $(find $agentFolder -type f); 
 do	
