@@ -40,7 +40,7 @@ Run [createDockerImage.sh](createBuildpack.sh) to create the BWCE base docker im
   * Find the port number mapped to 8080 using `docker ps` and send a request to `http://<DOCKER-HOST-IP>:<HOST-PORT>`. It should return 'Welcome to BWCE 2.0 !!!' message. In case of failure, inspect the logs.
 
 ##License
-These buildpack scripts are released under [3-clause BSD-type](License.md) license.
+These buildpack scripts are released under a [3-clause BSD-type](License.md) license.
 
 TIBCO, ActiveMatrix, ActiveMatrix BusinessWorks, TIBCO BusinessWorks, and TIBCO Enterprise Message Service are trademarks or registered trademarks of TIBCO Software Inc. in the United States and/or other countries.
 
