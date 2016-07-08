@@ -13,8 +13,8 @@ fi
 zipLocation=$1
 
 if [ -z "$2"  ]; then
-	tag="bwce:v2.0.0"
-	echo "Tag is set to bwce:v2.0.0"
+	tag="bwce:latest"
+	echo "Tag is set to bwce:latest"
 else
 	tag=$2
 fi
