@@ -188,7 +188,7 @@ done
 }
 
 
-export BW_KEYSTORE_DIR=/resources/addons/certs
+export BW_KEYSTORE_PATH=/resources/addons/certs
 if [ ! -d $HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
