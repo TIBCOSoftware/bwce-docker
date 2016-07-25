@@ -152,7 +152,7 @@ BW_VERSION=`ls $HOME/tibco.home/bw*/`
 
 pluginFolder=/resources/addons/plugins
 if [ "$(ls $pluginFolder)"  ]; then 
-	print_Debug "Adding addional plugins"
+	print_Debug "Adding Plug-in Jars"
 	echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/tibco.home/addons" > `echo $HOME/tibco.home/bw*/*/ext/shared`/addons.link
 	# unzip whatever is there not done
 for name in $(find $pluginFolder -type f); 
