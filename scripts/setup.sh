@@ -216,19 +216,22 @@ then
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
 	touch $HOME/keys.properties
 	mkdir $HOME/tmp
-	checkJarsPalettes
-	checkAgents
-	jarFolder=/resources/addons/jars
-	if [ "$(ls $jarFolder)"  ]; then
+	addonFolder=/resources/addons
+	if [ -d ${addonFolder} ]; then
+		checkJarsPalettes
+		checkAgents
+		checkLibs
+		jarFolder=/resources/addons/jars
+		if [ "$(ls $jarFolder)"  ]; then
 		#Copy jars to Hotfix
-	  	cp -r /resources/addons/jars/* `echo $HOME/tibco.home/bw*/*`/system/hotfix/shared
+	  		cp -r /resources/addons/jars/* `echo $HOME/tibco.home/bw*/*`/system/hotfix/shared
+		fi
 	fi
 	ln -s /*.ear `echo $HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$HOME#g" $HOME/tibco.home/bw*/*/config/appnode_config.ini
 	unzip -qq `echo $HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	checkEnvSubstituteConfig
-	checkLibs
 	cd /java-code
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
