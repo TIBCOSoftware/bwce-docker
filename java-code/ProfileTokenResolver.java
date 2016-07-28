@@ -1,9 +1,12 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,6 +29,9 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.bind.DatatypeConverter;
+
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONObject;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,7 +67,7 @@ public class ProfileTokenResolver {
         try {
             tokenMap.put("BWCE_APP_NAME", new Value(System.getProperty("BWCE_APP_NAME"), Type.SYSPROP));
             collectEnvVariables(tokenMap);
-            collectPropertiesFromConsul(tokenMap);
+            collectPropertiesfromConfigServer(tokenMap);
             resolveTokens(tokenMap);
             System.exit(0);
         } catch (Throwable t) {
@@ -85,19 +91,53 @@ public class ProfileTokenResolver {
         }
     }
 
+    /*
+    * CUPS: Two different config servers can be uses at the moment:
+    * 
+    * Consul:
+    *    - CONSUL_SERVER_URI
+    *    
+    * Spring Cloud Config:
+    *    - SPRING_CLOUD_CONFIG_URI
+    *    
+    * If you need OAuth2, you need to set up:
+    *    - CUPS_ACCESS_TOKEN_URI
+    *    - CUPS_CLIENT_ID
+    *    - CUPS_CLIENT_SECRET
+    */
+   private static void collectPropertiesfromConfigServer(Map<String, Value> valueMap) throws Exception {
+       String profileName = System.getenv("APP_CONFIG_PROFILE");
+       String appName = valueMap.get("BWCE_APP_NAME").value;
+       if (profileName == null || appName == null) {
+           if (isDebugOn) {
+               System.out.println("One of profileName ["+profileName+"] or AppName ["+appName+"] is null: skipping CUPS configuration");
+           }
+           return;
+       }
+
+       // Check which configuration should we use
+       String consulServerUri = getConsulAgentURI();
+       if (consulServerUri != null) {
+    	   collectPropertiesFromConsul(valueMap,consulServerUri,appName,profileName);
+    	   return;
+       } else if (isDebugOn) {
+           System.out.println("Consul Agent URI is null: skipping configuration");
+       }
+       
+       String springCloudConfigServerUri = getSpringCloudConfigServerURI();
+       if (springCloudConfigServerUri != null) {
+    	   collectPropertiesFromSpringCloudConfig(valueMap,springCloudConfigServerUri,appName,profileName);
+    	   return;
+       } else if (isDebugOn) {
+           System.out.println("Spring Cloud Config URI is null: skipping configuration");
+       }
+    }
+    
     /**
      * 
      */
 
-    private static void collectPropertiesFromConsul(Map<String, Value> valueMap) throws Exception {
-        String profileName = System.getenv("APP_CONFIG_PROFILE");
-        String appName = valueMap.get("BWCE_APP_NAME").value;
-        if (profileName == null || appName == null) {
-            return;
-        }
-
-        String consulServerUri = getConsulAgentURI();
-        if (consulServerUri != null) {
+    private static void collectPropertiesFromConsul(Map<String, Value> valueMap, String consulServerUri, String appName, String profileName) throws Exception {
 
             ObjectMapper mapper = new ObjectMapper();
             URL endpointURL = new URL(consulServerUri + "kv/" + appName + "/" + profileName + "?recurse");
@@ -123,9 +163,59 @@ public class ProfileTokenResolver {
                 throw new Exception("Failed to load properties from URL [" + endpointURL.toString()
                         + "]. Check Key/Value store configuration for the Application[" + appName + "]", e);
             }
-        }
     }
 
+    private static void collectPropertiesFromSpringCloudConfig(Map<String, Value> valueMap, String springCloudConfigServerUri, String appName, String profileName) throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+        URL endpointURL = new URL(springCloudConfigServerUri + appName + "/" + profileName );
+        if (isDebugOn) {
+            System.out.println("Loading properties from Spring Cloud Config [" + endpointURL.toString() + "]");
+        }
+        try {
+            URLConnection connection = endpointURL.openConnection();
+            connection.setReadTimeout(30000);
+            connection.setConnectTimeout(30000);
+            String accessTokenUri = System.getenv("CUPS_ACCESS_TOKEN_URI");
+            if (accessTokenUri != null && !accessTokenUri.isEmpty()) {
+                // OAuth 2.0
+                connection.setRequestProperty("Authorization", getAuthorization());
+            } else if (springCloudConfigServerUri.contains("@")) {
+                // Basic Auth
+                connection.setRequestProperty("Authorization", getBasicAuthentication(springCloudConfigServerUri));
+            }
+            StringBuilder result = new StringBuilder();
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+            try {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    result.append(line);
+                }
+            } finally {
+                in.close();
+            }
+            if (connection.getContentType().contains("application/json")) {
+                // JSON
+                JSONObject springConfig = new JSONObject(result.toString());
+                if (springConfig.has("propertySources")) {
+                    JSONArray propertySources = springConfig.getJSONArray("propertySources");
+                    for (int i = 0; i < propertySources.length(); i++) {
+                        JSONObject source = propertySources.getJSONObject(i).getJSONObject("source");
+                        JSONArray propertyNames = source.names();
+                        for (int k = 0; k < propertyNames.length(); k++) {
+                            String keyName = propertyNames.getString(k);
+                            valueMap.put(keyName, new Value(source.getString(keyName), Type.APPCONFIG));
+                        }
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            throw new Exception("Failed to load properties from URL [" + endpointURL.toString()
+                    + "]. Check Key/Value store configuration for the Application[" + appName + "]", e);
+        }
+}
+
+    
     private static String getConsulAgentURI() {
         String consulServerUri = System.getenv("CONSUL_SERVER_URL");
         if (consulServerUri != null && !consulServerUri.isEmpty()) {
@@ -152,9 +242,33 @@ public class ProfileTokenResolver {
         return consulServerUri;
     }
 
+    private static String getSpringCloudConfigServerURI() {
+        String springCloudConfigServerUri = System.getenv("SPRING_CLOUD_CONFIG_SERVER_URL");
+        if (springCloudConfigServerUri != null && !springCloudConfigServerUri.isEmpty()) {
+            try {
+                URL url = new URL(springCloudConfigServerUri);
+                String hostName = url.getHost();
+                if (!hostName.contains(".") && isK8s()) {
+                    String springCloudConfigService = hostName.replace("-", "_").toUpperCase();
+                    String springCloudConfigUri = System.getenv(springCloudConfigService + "_PORT");
+                    springCloudConfigServerUri = springCloudConfigUri.replace("tcp", "http");
+                }
+            } catch (MalformedURLException e) {
+                return null;
+            }
+        }
+        return springCloudConfigServerUri;
+    }
+
+    private static String getBasicAuthentication(String serverUri) throws Throwable {
+        return "Basic " + DatatypeConverter.printBase64Binary(serverUri.split("@")[0].split("://")[1].getBytes());
+    }
+
+    
     private static boolean isK8s() {
         return System.getenv("KUBERNETES_SERVICE_HOST") != null;
     }
+
     private static void resolveTokens(Map<String, Value> tokenMap) throws Exception {
 
         if (isDebugOn) {
@@ -239,6 +353,42 @@ public class ProfileTokenResolver {
         }
 
     }
+    
+    private static String getAuthorization() throws Throwable {
+        // For OAUTH 2.0
+        String client_id = System.getenv("CUPS_CLIENT_ID");
+        String client_secret = System.getenv("CUPS_CLIENT_SECRET");
+        String accessTokenUri = System.getenv("CUPS_ACCESS_TOKEN_URI");
+
+        String authString = client_id + ":" + client_secret;
+        String authEncodedString = DatatypeConverter.printBase64Binary(authString.getBytes());
+        String body = "grant_type=client_credentials";
+
+        URL accessTokenUrl = new URL(accessTokenUri);
+        URLConnection urlConnection = accessTokenUrl.openConnection();
+        urlConnection.setRequestProperty("Authorization", "Basic " + authEncodedString);
+        urlConnection.setDoOutput(true);
+        OutputStream output = urlConnection.getOutputStream();
+        output.write(body.getBytes());
+        output.close();
+
+        StringBuilder result = new StringBuilder();
+        BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), "UTF-8"));
+        try {
+            String line;
+            while ((line = in.readLine()) != null) {
+                result.append(line);
+            }
+        } finally {
+            in.close();
+        }
+
+        JSONObject accessTokenConfig = new JSONObject(result.toString());
+        String accessToken = accessTokenConfig.getString("access_token");
+        String tokenType = accessTokenConfig.getString("token_type");
+        return tokenType + " " + accessToken;
+    }
+
 
     private static void disable_ssl_verification() {
 

@@ -152,7 +152,7 @@ BW_VERSION=`ls $HOME/tibco.home/bw*/`
 
 pluginFolder=/resources/addons/plugins
 if [ "$(ls $pluginFolder)"  ]; then 
-	print_Debug "Adding Plug-in Jars"
+	print_Debug "Adding addional plugins"
 	echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/tibco.home/addons" > `echo $HOME/tibco.home/bw*/*/ext/shared`/addons.link
 	# unzip whatever is there not done
 for name in $(find $pluginFolder -type f); 
@@ -165,23 +165,6 @@ do
 	fi
 done
 fi
-}
-
-checkLibs()
-{
-	BW_VERSION=`ls $HOME/tibco.home/bw*/`
-	libFolder=/resources/addons/lib
-	if [ "$(ls $libFolder)"  ]; then
-		print_Debug "Adding additional libs"
-		for name in $(find $libFolder -type f); 
-		do	
-			# filter out hidden files
-			if [[  "$(basename $name )" != .* ]];then
-				mkdir -p $HOME/tibco.home/addons/lib/ 
-   				unzip -q $name -d $HOME/tibco.home/addons/lib/ 
-   			fi
-		done
-	fi
 }
 
 checkAgents()
@@ -233,7 +216,7 @@ then
 	setLogLevel
 	checkEnvSubstituteConfig
 	cd /java-code
-	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
+	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
 
 checkProfile
@@ -244,7 +227,7 @@ else
 fi
 
 cd /java-code
-$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
+$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error
