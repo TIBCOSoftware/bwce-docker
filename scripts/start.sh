@@ -1,7 +1,6 @@
 #!/bin/bash
 #Set ENV Variables
 export APPDIR=$HOME
-export MALLOC_ARENA_MAX=4
 bash /scripts/setup.sh
 STATUS=$?
 if [ $STATUS == "1" ]; then
