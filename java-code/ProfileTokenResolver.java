@@ -95,15 +95,15 @@ public class ProfileTokenResolver {
     * CUPS: Two different config servers can be uses at the moment:
     * 
     * Consul:
-    *    - CONSUL_SERVER_URI
+    *    - CONSUL_SERVER_URL
     *    
     * Spring Cloud Config:
-    *    - SPRING_CLOUD_CONFIG_URI
+    *    - SPRING_CLOUD_CONFIG_SERVER_URL
     *    
-    * If you need OAuth2, you need to set up:
-    *    - CUPS_ACCESS_TOKEN_URI
-    *    - CUPS_CLIENT_ID
-    *    - CUPS_CLIENT_SECRET
+    * If you need OAuth2 for Spring Cloud Config Server, you need to set up:
+    *    - SPRING_CLOUD_CONFIG_ACCESS_TOKEN_URI
+    *    - SPRING_CLOUD_CONFIG_CLIENT_ID
+    *    - SPRING_CLOUD_CONFIG_CLIENT_SECRET
     */
    private static void collectPropertiesfromConfigServer(Map<String, Value> valueMap) throws Exception {
        String profileName = System.getenv("APP_CONFIG_PROFILE");
