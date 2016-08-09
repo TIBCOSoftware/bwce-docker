@@ -31,9 +31,9 @@ You can customize the base docker image for supported third-party drivers e.g. O
      * Download appropriate Plug-in packaging e.g. TIBCO ActiveMatrix BusinessWorks(TM) Plug-in for WebSphere MQ from https://edelivery.tibco.com
      * Locate Plug-in runtime zip file e.g. `<ProductID>_ePaas.zip` or `TIB_<ProductID>_<ProductionVersion>_<BuildNumber>_bwce-runtime.zip` file from the downloaded artifacts and copy into `<Your-local-buildpack-repo>/resources/addons/plugins`
   * Plug-ins created using [TIBCO ActiveMatrix BusinessWorks™ Plug-in Development Kit](https://docs.tibco.com/products/tibco-activematrix-businessworks-plug-in-development-kit-6-1-1), the Plug-in runtime must be added to the base Docker image. To add the Plug-in runtime into your base docker image:
-  * [Install Plug-In](https://docs.tibco.com/pub/bwpdk/6.1.1/doc/html/GUID-0FB70A84-DBF6-4EE6-A6C8-28AC5E4FF1FF.html) if not already installed.
-  * Navigate to the `<TIBCO-HOME>/bwce/palettes/<plugin-name>/<plugin-version>` directory and  zip the `lib` and `runtime` folders into `<plugin-name>.zip` file. Copy `<plugin-name>.zip` to `<Your-local-Docker-repo>/resources/addons/plugins` folder.
-  * Copy any OSGi bundles required by Plug-in e.g. driver bundles into `<Your-local-Docker-repo>/resources/addons/jars`
+    * [Install Plug-In](https://docs.tibco.com/pub/bwpdk/6.1.1/doc/html/GUID-0FB70A84-DBF6-4EE6-A6C8-28AC5E4FF1FF.html) if not already installed.
+    * Navigate to the `<TIBCO-HOME>/bwce/palettes/<plugin-name>/<plugin-version>` directory and  zip the `lib` and `runtime` folders into `<plugin-name>.zip` file. Copy `<plugin-name>.zip` to `<Your-local-Docker-repo>/resources/addons/plugins` folder.
+  * Copy any OSGi bundles required by Plug-in e.g. driver bundle into `<Your-local-Docker-repo>/resources/addons/jars`
 
 Run [createDockerImage.sh](createBuildpack.sh) to create the BWCE base docker image.
      
