@@ -233,7 +233,7 @@ then
 	setLogLevel
 	checkEnvSubstituteConfig
 	cd /java-code
-	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
+	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
 fi
 
 checkProfile
@@ -244,7 +244,7 @@ else
 fi
 
 cd /java-code
-$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
+$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error
