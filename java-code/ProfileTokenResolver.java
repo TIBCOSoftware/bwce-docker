@@ -176,7 +176,7 @@ public class ProfileTokenResolver {
             URLConnection connection = endpointURL.openConnection();
             connection.setReadTimeout(30000);
             connection.setConnectTimeout(30000);
-            String accessTokenUri = System.getenv("CUPS_ACCESS_TOKEN_URI");
+            String accessTokenUri = System.getenv("SPRING_CLOUD_CONFIG_ACCESS_TOKEN_URI");
             if (accessTokenUri != null && !accessTokenUri.isEmpty()) {
                 // OAuth 2.0
                 connection.setRequestProperty("Authorization", getAuthorization());
@@ -356,9 +356,9 @@ public class ProfileTokenResolver {
     
     private static String getAuthorization() throws Throwable {
         // For OAUTH 2.0
-        String client_id = System.getenv("CUPS_CLIENT_ID");
-        String client_secret = System.getenv("CUPS_CLIENT_SECRET");
-        String accessTokenUri = System.getenv("CUPS_ACCESS_TOKEN_URI");
+        String client_id = System.getenv("SPRING_CLOUD_CONFIG_CLIENT_ID");
+        String client_secret = System.getenv("SPRING_CLOUD_CONFIG_CLIENT_SECRET");
+        String accessTokenUri = System.getenv("SPRING_CLOUD_CONFIG_ACCESS_TOKEN_URI");
 
         String authString = client_id + ":" + client_secret;
         String authEncodedString = DatatypeConverter.printBase64Binary(authString.getBytes());
