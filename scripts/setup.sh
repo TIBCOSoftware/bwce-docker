@@ -154,7 +154,7 @@ checkJarsPalettes()
 BW_VERSION=`ls $HOME/tibco.home/bw*/`
 
 pluginFolder=/resources/addons/plugins
-if [ "$(ls $pluginFolder)"  ]; then 
+if [ -d ${pluginFolder} ] && [ "$(ls $pluginFolder)" ]; then 
 	print_Debug "Adding Plug-in Jars"
 	echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/tibco.home/addons" > `echo $HOME/tibco.home/bw*/*/ext/shared`/addons.link
 	# unzip whatever is there not done
@@ -174,7 +174,7 @@ checkLibs()
 {
 	BW_VERSION=`ls $HOME/tibco.home/bw*/`
 	libFolder=/resources/addons/lib
-	if [ "$(ls $libFolder)"  ]; then
+	if [ -d ${libFolder} ] && [ "$(ls $libFolder)" ]; then
 		print_Debug "Adding additional libs"
 		for name in $(find $libFolder -type f); 
 		do	
@@ -191,7 +191,7 @@ checkAgents()
 {
 	agentFolder=/resources/addons/monitor-agents
 
-	if [ "$(ls $agentFolder)"  ]; then 
+	if [ -d ${agentFolder} ] && [ "$(ls $agentFolder)" ]; then 
 		print_Debug "Adding monitoring jars"
 
 		for name in $(find $agentFolder -type f); 
@@ -225,7 +225,7 @@ then
 		checkAgents
 		checkLibs
 		jarFolder=/resources/addons/jars
-		if [ "$(ls $jarFolder)"  ]; then
+		if [ -d ${jarFolder} ] && [ "$(ls $jarFolder)" ]; then
 		#Copy jars to Hotfix
 	  		cp -r /resources/addons/jars/* `echo $HOME/tibco.home/bw*/*`/system/hotfix/shared
 		fi
