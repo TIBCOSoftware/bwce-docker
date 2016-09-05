@@ -107,10 +107,13 @@ public class ProfileTokenResolver {
     */
    private static void collectPropertiesfromConfigServer(Map<String, Value> valueMap) throws Exception {
        String profileName = System.getenv("APP_CONFIG_PROFILE");
+       if (profileName == null) {
+           profileName = "default";
+       }
        String appName = valueMap.get("BWCE_APP_NAME").value;
-       if (profileName == null || appName == null) {
+       if (appName == null) {
            if (isDebugOn) {
-               System.out.println("One of profileName ["+profileName+"] or AppName ["+appName+"] is null: skipping CUPS configuration");
+               System.out.println("AppName ["+appName+"] is null: skipping CUPS configuration");
            }
            return;
        }
