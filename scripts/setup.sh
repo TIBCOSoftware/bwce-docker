@@ -35,6 +35,15 @@ else
 fi
 }
 
+checkWrapper ()
+{
+
+	if [ -f $HOME/tibco.home/bw*/*/bin/bwadpppnode.script.sh ]; then
+    	return 0
+    else 
+    	return 1
+	fi
+}
 
 checkProfile()
 {
@@ -213,10 +222,21 @@ if [ ! -d $HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
 	rm -rf /resources/bwce-runtime/bwce*.zip
-	chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
+	# chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
+	checkWrapper
+	res=$?
+	if [ $res == "0" ]; then
+		chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode.script.sh
+		sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.script.sh
+	else
+		chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
+		if [ -d ${$HOME/tibco.home/addons/lib} ] && [ "$(ls $HOME/tibco.home/addons/lib)"  ]; then 
+			sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra	
+		fi
+	fi
 	touch $HOME/keys.properties
 	mkdir $HOME/tmp
 	addonFolder=/resources/addons
