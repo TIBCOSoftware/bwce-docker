@@ -1,6 +1,8 @@
 #!/bin/bash
 #Set ENV Variables
 export APPDIR=$HOME
+export MALLOC_MMAP_THRESHOLD_=1024
+export MALLOC_MMAP_MAX_=None
 bash /scripts/setup.sh
 STATUS=$?
 if [ $STATUS == "1" ]; then
