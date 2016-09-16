@@ -39,9 +39,9 @@ checkWrapper ()
 {
 
 	if [ -f $HOME/tibco.home/bw*/*/bin/bwappnode.script.sh ]; then
-    	return 0
-    else 
-    	return 1
+		TIBCO_BIN_PATH=`echo $HOME/tibco.home/bw*/*/bin`
+		ln -s $TIBCO_BIN_PATH/bwappnode.script.sh $TIBCO_BIN_PATH/bwappnode.tra
+		ln -s $TIBCO_BIN_PATH/bwappnode.tra $TIBCO_BIN_PATH/bwappnode
 	fi
 }
 
@@ -124,8 +124,8 @@ checkEnvSubstituteConfig()
 	appnodeConfigFile=$HOME/tibco.home/bw*/*/config/appnode_config.ini
 if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
-			 sed -i.bak "/java.extended.properties/s/$/ $BW_JAVA_OPTS/" $bwappnodeTRA
-			 echo "appended $BW_JAVA_OPTS to java.extend.properties"
+			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
+			echo "Appended $BW_JAVA_OPTS to java.extend.properties"
 		fi
 fi
 
@@ -222,21 +222,12 @@ if [ ! -d $HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
 	rm -rf /resources/bwce-runtime/bwce*.zip
-	# chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
+	checkWrapper
+	chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
-	checkWrapper
-	res=$?
-	if [ $res == "0" ]; then
-		chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode.script.sh
-		sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.script.sh
-	else
-		chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
-		if [ -d ${$HOME/tibco.home/addons/lib} ] && [ "$(ls $HOME/tibco.home/addons/lib)"  ]; then 
-			sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra	
-		fi
-	fi
+	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra	
 	touch $HOME/keys.properties
 	mkdir $HOME/tmp
 	addonFolder=/resources/addons
