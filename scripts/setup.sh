@@ -216,7 +216,8 @@ then
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
-	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra	
+	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra
+	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $HOME/keys.properties
 	mkdir $HOME/tmp
 	addonFolder=/resources/addons
