@@ -206,6 +206,15 @@ done
 
 }
 
+memoryCalculator()
+{
+	memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//'`
+	configured_MEM=$((($memory_Number*67+50)/100))
+	thread_Stack=$((memory_Number))
+	JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss"$thread_Stack"K"
+	export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
+}
+
 
 export BW_KEYSTORE_PATH=/resources/addons/certs
 if [ ! -d $HOME/tibco.home ];
@@ -235,6 +244,7 @@ then
 	sed -i.bak "s#_APPDIR_#$HOME#g" $HOME/tibco.home/bw*/*/config/appnode_config.ini
 	unzip -qq `echo $HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
+	memoryCalculator
 	checkEnvSubstituteConfig
 	cd /java-code
 	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
