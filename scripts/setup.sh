@@ -35,16 +35,6 @@ else
 fi
 }
 
-checkWrapper ()
-{
-
-	if [ -f $HOME/tibco.home/bw*/*/bin/bwappnode.script.sh ]; then
-		TIBCO_BIN_PATH=`echo $HOME/tibco.home/bw*/*/bin`
-		ln -s $TIBCO_BIN_PATH/bwappnode.script.sh $TIBCO_BIN_PATH/bwappnode.tra
-		ln -s $TIBCO_BIN_PATH/bwappnode.tra $TIBCO_BIN_PATH/bwappnode
-	fi
-}
-
 checkProfile()
 {
 	BUILD_DIR=/tmp
@@ -222,7 +212,6 @@ if [ ! -d $HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
 	rm -rf /resources/bwce-runtime/bwce*.zip
-	checkWrapper
 	chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
