@@ -208,15 +208,15 @@ done
 
 memoryCalculator()
 {
-	memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//'`
-	configured_MEM=$((($memory_Number*67+50)/100))
-	thread_Stack=$((memory_Number))
-	JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss"$thread_Stack"K"
-	export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
+	if [[ ${MEMORY_LIMIT} ]]; then
+		memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//'`
+		configured_MEM=$((($memory_Number*67+50)/100))
+		thread_Stack=$((memory_Number))
+		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss"$thread_Stack"K"
+		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
+	fi
 }
 
-
-export BW_KEYSTORE_PATH=/resources/addons/certs
 if [ ! -d $HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
