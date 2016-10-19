@@ -216,6 +216,16 @@ memoryCalculator()
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
 	fi
 }
+checkJAVAHOME()
+{
+		if [[ ${JAVA_HOME}  ]]; then
+ 			print_Debug $JAVA_HOME
+ 		else
+ 			export JAVA_HOME=$APPDIR/tibco.home/tibcojre64/1.8.0
+ 			chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
+			chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
+ 		fi
+}
 
 if [ ! -d $HOME/tibco.home ];
 then
@@ -225,6 +235,7 @@ then
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
+	checkJAVAHOME
 	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $HOME/keys.properties
@@ -247,7 +258,8 @@ then
 	memoryCalculator
 	checkEnvSubstituteConfig
 	cd /java-code
-	$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
+	#$HOME/tibco.home/tibcojre64/1.*/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib ProfileTokenResolver.java
+	$JAVA_HOME/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib ProfileTokenResolver.java
 fi
 
 checkProfile
@@ -258,7 +270,8 @@ else
 fi
 
 cd /java-code
-$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
+#$HOME/tibco.home/tibcojre64/1.*/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$HOME/tibco.home/tibcojre64/1.*/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
+$JAVA_HOME/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error
