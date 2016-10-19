@@ -221,7 +221,7 @@ checkJAVAHOME()
 		if [[ ${JAVA_HOME}  ]]; then
  			print_Debug $JAVA_HOME
  		else
- 			export JAVA_HOME=$APPDIR/tibco.home/tibcojre64/1.8.0
+ 			export JAVA_HOME=$HOME/tibco.home/tibcojre64/1.8.0
  			chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
 			chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
  		fi
