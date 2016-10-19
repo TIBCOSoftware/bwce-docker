@@ -12,4 +12,5 @@ if [ $STATUS == "1" ]; then
     echo "ERROR: Failed to setup BWCE runtime. See logs for more details."
     exit 1
 fi
+export JAVA_HOME=$HOME/tibco.home/tibcojre64/1.8.0
 exec bash $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
