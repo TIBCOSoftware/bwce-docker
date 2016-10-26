@@ -209,7 +209,7 @@ done
 memoryCalculator()
 {
 	if [[ ${MEMORY_LIMIT} ]]; then
-		memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//'`
+		memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//I'`
 		configured_MEM=$((($memory_Number*67+50)/100))
 		thread_Stack=$((memory_Number))
 		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss"$thread_Stack"K"
