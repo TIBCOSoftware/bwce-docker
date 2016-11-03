@@ -212,7 +212,7 @@ memoryCalculator()
 		memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//I'`
 		configured_MEM=$((($memory_Number*67+50)/100))
 		thread_Stack=$((memory_Number))
-		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss"$thread_Stack"K"
+		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
 	fi
 }
