@@ -227,6 +227,7 @@ checkJAVAHOME()
  		fi
 }
 
+checkJAVAHOME
 if [ ! -d $HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
@@ -235,7 +236,6 @@ then
 	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
 	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
-	checkJAVAHOME
 	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $HOME/keys.properties
