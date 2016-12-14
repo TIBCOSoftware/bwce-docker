@@ -53,7 +53,7 @@ public class ProfileTokenResolver {
 
     static String  TOKEN_DELIMITER  = "#";
     static String  pattern          = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
-    static String  PROFILE_ROOT_DIR = System.getenv("HOME") + "/tmp";
+    static String  PROFILE_ROOT_DIR = "/tmp/tmp";
     static boolean isDebugOn        = System.getenv("BW_LOGLEVEL") != null && System.getenv("BW_LOGLEVEL").equalsIgnoreCase("debug");
 
     public static void main(String[] args) throws Throwable {

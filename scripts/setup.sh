@@ -95,7 +95,7 @@ checkProfile()
 
 setLogLevel()
 {
-	logback=$HOME/tibco.home/bw*/*/config/logback.xml
+	logback=$BWCE_HOME/tibco.home/bw*/*/config/logback.xml
 	if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
 		if [ -e ${logback} ]; then
 			sed -i.bak "/<root/ s/\".*\"/\"$BW_LOGLEVEL\"/Ig" $logback
@@ -110,8 +110,8 @@ setLogLevel()
 
 checkEnvSubstituteConfig()
 {
-	bwappnodeTRA=$HOME/tibco.home/bw*/*/bin/bwappnode.tra
-	appnodeConfigFile=$HOME/tibco.home/bw*/*/config/appnode_config.ini
+	bwappnodeTRA=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
+	appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
 			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
@@ -150,20 +150,20 @@ fi
 
 checkJarsPalettes()
 {
-BW_VERSION=`ls $HOME/tibco.home/bw*/`
+BW_VERSION=`ls $BWCE_HOME/tibco.home/bw*/`
 
 pluginFolder=/resources/addons/plugins
 if [ -d ${pluginFolder} ] && [ "$(ls $pluginFolder)" ]; then 
 	print_Debug "Adding Plug-in Jars"
-	echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/tibco.home/addons" > `echo $HOME/tibco.home/bw*/*/ext/shared`/addons.link
+	echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$BWCE_HOME/tibco.home/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
 	# unzip whatever is there not done
 for name in $(find $pluginFolder -type f); 
 do	
 	# filter out hidden files
 	if [[  "$(basename $name )" != .* ]];then
    		extract $name
-		mkdir -p $HOME/tibco.home/addons/runtime/plugins/ && mv runtime/plugins/* "$_"
-		#mkdir -p $HOME/tibco.home/addons/lib/ && mv lib/* "$_"/${name##*/}.ini
+		mkdir -p $BWCE_HOME/tibco.home/addons/runtime/plugins/ && mv runtime/plugins/* "$_"
+		#mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv lib/* "$_"/${name##*/}.ini
 	fi
 done
 fi
@@ -171,7 +171,7 @@ fi
 
 checkLibs()
 {
-	BW_VERSION=`ls $HOME/tibco.home/bw*/`
+	BW_VERSION=`ls $BWCE_HOME/tibco.home/bw*/`
 	libFolder=/resources/addons/lib
 	if [ -d ${libFolder} ] && [ "$(ls $libFolder)" ]; then
 		print_Debug "Adding additional libs"
@@ -179,8 +179,8 @@ checkLibs()
 		do	
 			# filter out hidden files
 			if [[  "$(basename $name )" != .* ]];then
-				mkdir -p $HOME/tibco.home/addons/lib/ 
-   				unzip -q $name -d $HOME/tibco.home/addons/lib/ 
+				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ 
+   				unzip -q $name -d $BWCE_HOME/tibco.home/addons/lib/ 
    			fi
 		done
 	fi
@@ -197,8 +197,8 @@ checkAgents()
 do	
 	# filter out hidden files
 	if [[  "$(basename $name )" != .* ]];then
-		mkdir -p $HOME/agent/
-   		unzip -q $name -d $HOME/agent/
+		mkdir -p $BWCE_HOME/agent/
+   		unzip -q $name -d $BWCE_HOME/agent/
 	fi
 done
 		
@@ -221,23 +221,23 @@ checkJAVAHOME()
 		if [[ ${JAVA_HOME}  ]]; then
  			print_Debug $JAVA_HOME
  		else
- 			export JAVA_HOME=$HOME/tibco.home/tibcojre64/1.8.0
+ 			export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/1.8.0
  		fi
 }
 
 checkJAVAHOME
-if [ ! -d $HOME/tibco.home ];
+if [ ! -d $BWCE_HOME/tibco.home ];
 then
-	unzip -qq /resources/bwce-runtime/bwce*.zip -d $HOME
+	unzip -qq /resources/bwce-runtime/bwce*.zip -d $BWCE_HOME
 	rm -rf /resources/bwce-runtime/bwce*.zip
-	chmod 755 $HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
-	chmod 755 $HOME/tibco.home/bw*/*/bin/bwappnode
-	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/java
-	chmod 755 $HOME/tibco.home/tibcojre64/*/bin/javac
-	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode.tra
-	sed -i "s#_APPDIR_#$APPDIR#g" $HOME/tibco.home/bw*/*/bin/bwappnode
-	touch $HOME/keys.properties
-	mkdir $HOME/tmp
+	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
+	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
+	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
+	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/javac
+	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
+	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
+	touch $BWCE_HOME/keys.properties
+	mkdir $BWCE_HOME/tmp
 	addonFolder=/resources/addons
 	if [ -d ${addonFolder} ]; then
 		checkJarsPalettes
@@ -246,28 +246,27 @@ then
 		jarFolder=/resources/addons/jars
 		if [ -d ${jarFolder} ] && [ "$(ls $jarFolder)" ]; then
 		#Copy jars to Hotfix
-	  		cp -r /resources/addons/jars/* `echo $HOME/tibco.home/bw*/*`/system/hotfix/shared
+	  		cp -r /resources/addons/jars/* `echo $BWCE_HOME/tibco.home/bw*/*`/system/hotfix/shared
 		fi
 	fi
-	ln -s /*.ear `echo $HOME/tibco.home/bw*/*/bin`/bwapp.ear
-	sed -i.bak "s#_APPDIR_#$HOME#g" $HOME/tibco.home/bw*/*/config/appnode_config.ini
-	unzip -qq `echo $HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
+	ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
+	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
+	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	memoryCalculator
 	checkEnvSubstituteConfig
 	cd /java-code
-	$JAVA_HOME/bin/javac -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib ProfileTokenResolver.java
+	$JAVA_HOME/bin/javac -d $BWCE_HOME -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib ProfileTokenResolver.java
 fi
 
 checkProfile
 if [ -f /*.substvar ]; then
-	cp -f /*.substvar $HOME/tmp/pcf.substvar # User provided profile
+	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
-	cp -f /tmp/META-INF/$BW_PROFILE $HOME/tmp/pcf.substvar
+	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
 
-cd /java-code
-$JAVA_HOME/bin/java -cp `echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
+$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error
