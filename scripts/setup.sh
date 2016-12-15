@@ -112,40 +112,43 @@ checkEnvSubstituteConfig()
 {
 	bwappnodeTRA=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-if [[ ${BW_JAVA_OPTS} ]]; then
+	manifest=/tmp/META-INF/MANIFEST.MF
+	bwAppNameHeader="Bundle-SymbolicName"
+	bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
+	if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
 			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
 			echo "Appended $BW_JAVA_OPTS to java.extend.properties"
 		fi
-fi
+	fi
 
-if [[ ${BW_ENGINE_THREADCOUNT} ]]; then
+	if [[ ${BW_ENGINE_THREADCOUNT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.engine.threadCount=$BW_ENGINE_THREADCOUNT" >> $appnodeConfigFile
 			echo "set BW_ENGINE_THREADCOUNT to $BW_ENGINE_THREADCOUNT"
 		fi
-fi
-if [[ ${BW_ENGINE_STEPCOUNT} ]]; then
+	fi
+	if [[ ${BW_ENGINE_STEPCOUNT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.engine.stepCount=$BW_ENGINE_STEPCOUNT" >> $appnodeConfigFile
 			echo "set BW_ENGINE_STEPCOUNT to $BW_ENGINE_STEPCOUNT"
 		fi
-fi
-if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]]; then
+	fi
+	if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 
 			printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName=$BW_APPLICATION_JOB_FLOWLIMIT" >> $appnodeConfigFile
 			echo "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
 		fi
-fi
+	fi
 
-if [[  $BW_LOGLEVEL = "DEBUG" ]]; then
-	if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]] || [[ ${BW_ENGINE_STEPCOUNT} ]] || [[ ${BW_ENGINE_THREADCOUNT} ]]; then
+	if [[  $BW_LOGLEVEL = "DEBUG" ]]; then
+		if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]] || [[ ${BW_ENGINE_STEPCOUNT} ]] || [[ ${BW_ENGINE_THREADCOUNT} ]]; then
 		echo "---------------------------------------"
 		cat $appnodeConfigFile
 		echo "---------------------------------------"
+		fi
 	fi
-fi
 }
 
 checkJarsPalettes()
