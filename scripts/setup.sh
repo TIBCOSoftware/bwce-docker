@@ -228,6 +228,48 @@ checkJAVAHOME()
  		fi
 }
 
+checkThirdPartyInstallations()
+{
+	installFolder=/resources/addons/thirdparty-installs
+	if [ -d ${installFolder} ] && [ "$(ls $installFolder)"  ]; then
+		mkdir -p $BWCE_HOME/tibco.home/thirdparty-installs
+		for f in "$installFolder"/*; do
+      		if [ -d $f ]
+      		then
+                cp -R "$f" $BWCE_HOME/tibco.home/thirdparty-installs
+      		else
+              	if [ "${f##*.}" == "zip" ]       
+              	then
+                    unzip -q "$f" -d $BWCE_HOME/tibco.home/thirdparty-installs/$(basename "$f" .zip);
+                else
+                   echo "Can not unzip $f. Not a valid ZIP file"    
+              	fi
+      		fi
+		done;
+	fi	
+}
+
+setupThirdPartyInstallationEnvironment() 
+{
+	INSTALL_DIR=$BWCE_HOME/tibco.home/thirdparty-installs
+	if [ -d "$INSTALL_DIR" ]; then
+		for f in "$INSTALL_DIR"/*; do
+      		if [ -d $f ]
+      		then
+            	if [ -d "$f"/lib ]; then
+                	export LD_LIBRARY_PATH="$f"/lib:$LD_LIBRARY_PATH
+            	fi	
+      		
+      			setupFile=`ls "$f"/*.sh`
+      			if [ -f "$setupFile" ]; then
+      		    	chmod 755 "$setupFile" 
+      		    	source "$setupFile" "$f"
+      			fi	
+      		fi
+		done;
+	fi
+}
+
 checkJAVAHOME
 if [ ! -d $BWCE_HOME/tibco.home ];
 then
@@ -246,6 +288,7 @@ then
 		checkJarsPalettes
 		checkAgents
 		checkLibs
+		checkThirdPartyInstallations
 		jarFolder=/resources/addons/jars
 		if [ -d ${jarFolder} ] && [ "$(ls $jarFolder)" ]; then
 		#Copy jars to Hotfix
@@ -263,6 +306,7 @@ then
 fi
 
 checkProfile
+setupThirdPartyInstallationEnvironment
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
