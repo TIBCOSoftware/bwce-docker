@@ -219,6 +219,22 @@ memoryCalculator()
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
 	fi
 }
+
+checkJMXConfig()
+{
+	if [[ ${BW_JMX_CONFIG} ]]; then
+		if [[ $BW_JMX_CONFIG == *":"* ]]; then
+			JMX_HOST=${BW_JMX_CONFIG%%:*}
+			JMX_PORT=${BW_JMX_CONFIG#*:}
+		else
+			JMX_HOST="127.0.0.1"
+			JMX_PORT=$BW_JMX_CONFIG
+		fi
+		JMX_PARAM="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port="$JMX_PORT" -Dcom.sun.management.jmxremote.rmi.port="$JMX_PORT" -Djava.rmi.server.hostname="$JMX_HOST" -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false "
+		export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$JMX_PARAM
+	fi
+}
+
 checkJAVAHOME()
 {
 		if [[ ${JAVA_HOME}  ]]; then
@@ -300,6 +316,7 @@ then
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	memoryCalculator
+	checkJMXConfig
 	checkEnvSubstituteConfig
 	cd /java-code
 	$JAVA_HOME/bin/javac -d $BWCE_HOME -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib ProfileTokenResolver.java
