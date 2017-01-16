@@ -235,6 +235,15 @@ checkJMXConfig()
 	fi
 }
 
+checkJavaGCConfig()
+{
+	if [[ ${BW_JAVA_GC_OPTS}  ]]; then
+ 		echo $BW_JAVA_GC_OPTS
+ 	else
+ 		export BW_JAVA_GC_OPTS="-XX:+UseG1GC"
+ 	fi
+}
+
 checkJAVAHOME()
 {
 		if [[ ${JAVA_HOME}  ]]; then
@@ -317,6 +326,7 @@ then
 	setLogLevel
 	memoryCalculator
 	checkJMXConfig
+	checkJavaGCConfig
 	checkEnvSubstituteConfig
 	cd /java-code
 	$JAVA_HOME/bin/javac -d $BWCE_HOME -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib ProfileTokenResolver.java
