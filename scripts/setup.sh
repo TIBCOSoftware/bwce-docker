@@ -296,6 +296,9 @@ setupThirdPartyInstallationEnvironment()
 }
 
 checkJAVAHOME
+checkJMXConfig
+checkJavaGCConfig
+
 if [ ! -d $BWCE_HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $BWCE_HOME
@@ -325,8 +328,6 @@ then
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	memoryCalculator
-	checkJMXConfig
-	checkJavaGCConfig
 	checkEnvSubstituteConfig
 	cd /java-code
 	$JAVA_HOME/bin/javac -d $BWCE_HOME -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib ProfileTokenResolver.java
