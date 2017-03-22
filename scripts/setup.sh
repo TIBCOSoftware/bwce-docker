@@ -56,21 +56,21 @@ checkProfile()
 				echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO BusinessWorks Container Edition Studio. Refer Conversion Guide for more details."
 				exit 1
 			fi
-			#bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
-			#res=$?
-			#if [ ${res} -eq 0 ]; then
-				#bwceTargetStr=`echo "$bwceTargetHeaderStr" | grep -E 'docker'`
-				#res2=$?
-				#if [ ${res2} -eq 0 ]; then
-					#echo ""
-				#else
-					#echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
-					#exit 1
-				#fi
-			#else
-		 		#echo "Application [$bwBundleAppName] is not supported in the Docker platform and cannot be started. You should convert this application using TIBCO BusinessWorks Container Edition Studio. Refer Application Development guide for more details."
-				#exit 1
-			#fi
+
+			bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
+			res=$?
+			if [ ${res} -eq 0 ]; then
+				for name in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
+				do
+					unzip -o -q $name
+					MANIFESTMF=META-INF/MANIFEST.MF
+					bwcePolicyStr=`grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid' ${MANIFESTMF}`
+					policy_res=$?
+					if [ ${policy_res} -eq 0 ]; then
+						POLICY_ENABLED="true"
+					fi
+				done
+			fi
 		else
 			print_Debug "Validation disabled."
 		fi
@@ -93,6 +93,16 @@ checkProfile()
 	fi
 }
 
+checkPolicy()
+{
+	if [[ $POLICY_ENABLED = "true" ]]; then
+		if [ -e ${appnodeConfigFile} ]; then
+			printf '%s\n' "bw.governance.enabled=true" >> $appnodeConfigFile
+			print_Debug "Set bw.governance.enabled=true"
+		fi
+	fi
+}
+
 setLogLevel()
 {
 	logback=$BWCE_HOME/tibco.home/bw*/*/config/logback.xml
@@ -111,7 +121,7 @@ setLogLevel()
 checkEnvSubstituteConfig()
 {
 	bwappnodeTRA=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
-	appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
+	#appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 	manifest=/tmp/META-INF/MANIFEST.MF
 	bwAppNameHeader="Bundle-SymbolicName"
 	bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
@@ -295,6 +305,8 @@ setupThirdPartyInstallationEnvironment()
 	fi
 }
 
+appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
+POLICY_ENABLED="false"
 checkJAVAHOME
 checkJMXConfig
 checkJavaGCConfig
@@ -334,7 +346,9 @@ then
 fi
 
 checkProfile
+checkPolicy
 setupThirdPartyInstallationEnvironment
+
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
