@@ -190,11 +190,19 @@ checkLibs()
 		print_Debug "Adding additional libs"
 		for name in $(find $libFolder -type f); 
 		do	
-			# filter out hidden files
-			if [[  "$(basename $name )" != .* ]];then
-				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ 
-   				unzip -q $name -d $BWCE_HOME/tibco.home/addons/lib/ 
-   			fi
+			if [[ "$(basename $name)" = 'libsunec.so' ]]; then 
+				print_Debug "libsunec.so File found..."		
+				JRE_VERSION=`ls $BWCE_HOME/tibco.home/tibcojre64/`
+				JRE_LOCATION=$BWCE_HOME/tibco.home/tibcojre64/$JRE_VERSION
+				SUNEC_LOCATION=$JRE_LOCATION/lib/amd64
+				cp -vf $name $SUNEC_LOCATION
+			else
+				# filter out hidden files
+				if [[  "$(basename $name )" != .* ]]; then
+					mkdir -p $BWCE_HOME/tibco.home/addons/lib/ 
+   					unzip -q $name -d $BWCE_HOME/tibco.home/addons/lib/ 
+   				fi
+			fi
 		done
 	fi
 }
