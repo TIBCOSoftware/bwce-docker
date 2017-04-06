@@ -62,12 +62,14 @@ checkProfile()
 			if [ ${res} -eq 0 ]; then
 				for name in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
 				do
-					unzip -o -q $name
-					MANIFESTMF=META-INF/MANIFEST.MF
-					bwcePolicyStr=`grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid' ${MANIFESTMF}`
-					policy_res=$?
-					if [ ${policy_res} -eq 0 ]; then
-						POLICY_ENABLED="true"
+					if [[ $name == *.jar ]]; then
+						unzip -o -q $name
+						MANIFESTMF=META-INF/MANIFEST.MF
+						bwcePolicyStr=`grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid' ${MANIFESTMF}`
+						policy_res=$?
+						if [ ${policy_res} -eq 0 ]; then
+							POLICY_ENABLED="true"
+						fi
 					fi
 				done
 			fi
