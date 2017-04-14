@@ -148,14 +148,19 @@ checkEnvSubstituteConfig()
 	fi
 	if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
-
 			printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName=$BW_APPLICATION_JOB_FLOWLIMIT" >> $appnodeConfigFile
 			echo "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
 		fi
 	fi
+	if [[ ${BW_APP_MONITORING_CONFIG} ]]; then
+		if [ -e ${appnodeConfigFile} ]; then
+			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
+			echo "set bw.frwk.event.subscriber.metrics.enabled to true"
+		fi
+	fi
 
 	if [[  $BW_LOGLEVEL = "DEBUG" ]]; then
-		if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]] || [[ ${BW_ENGINE_STEPCOUNT} ]] || [[ ${BW_ENGINE_THREADCOUNT} ]]; then
+		if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]] || [[ ${BW_ENGINE_STEPCOUNT} ]] || [[ ${BW_ENGINE_THREADCOUNT} ]] || [[ ${BW_APP_MONITORING_CONFIG} ]]; then
 		echo "---------------------------------------"
 		cat $appnodeConfigFile
 		echo "---------------------------------------"
