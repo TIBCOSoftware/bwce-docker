@@ -7,18 +7,18 @@ To know more about TIBCO BusinessWorks Container Edition, visit [Documentation](
 
 These Docker scripts are subject to the license shared as part of the repository. Review the license before using or downloading these scripts.
 
-##Prerequisite
+## Prerequisite
   * Access to [TIBCO® eDelivery](https://edelivery.tibco.com)
   * [Docker](https://docs.docker.com/engine/installation/)
     
-##Download TIBCO BusinessWorks Container Edition
+## Download TIBCO BusinessWorks Container Edition
 Download the appropriate TIBCO BusinessWorks Container Edition 2.0.0 artifacts from [TIBCO® eDelivery](https://edelivery.tibco.com/storefront/eval/tibco-businessworks-container-edition/prod11654.html). It contains TIBCO BusinessWorks Container Edition runtime (bwce_cf.zip).
      
-##Create TIBCO BusinessWorks Container Edition Base Docker Image
+## Create TIBCO BusinessWorks Container Edition Base Docker Image
    1. Clone this repository onto your local machine.
    2. Locate the bwce_cf.zip file from the downloaded artifacts and run [createDockerImage.sh](createDockerImage.sh). This will create the TIBCO BusinessWorks Container Edition base Docker image.
 
-##Extend TIBCO BusinessWorks Container Edition Base Docker Image
+## Extend TIBCO BusinessWorks Container Edition Base Docker Image
 You can customize the base Docker image for supported third-party drivers e.g. Oracle JDBC drivers, OSGi™ bundles or to add runtime of supported Plug-ins in TIBCO BusinessWorks Container Edition runtime. It can also be customized for application certificate management as well as to integrate with application configuration management services.
 * **Provision supported JDBC drivers**:
      * Run **bwinstall[.exe] help** from `<BWCE_HOME>/bin` and follow instructions to add the driver to your TIBCO BusinessWorks Container Edition installation.
@@ -37,13 +37,13 @@ You can customize the base Docker image for supported third-party drivers e.g. O
 
 Run [createDockerImage.sh](createBuildpack.sh) to create the TIBCO BusinessWorks™ Container Edition base Docker image.
      
-##Test TIBCO BusinessWorks Container Edition Base Docker Image
+## Test TIBCO BusinessWorks Container Edition Base Docker Image
   * Navigate to the [examples/HTTP](/examples/HTTP) directory and update the base Docker image in [Dockerfile](/examples/HTTP/Dockerfile) to your TIBCO BusinessWorks™ Container Edition base Docker image.
   * From the [examples/HTTP](/examples/HTTP) directory, build the TIBCO BusinessWorks™ Container Edition application: `docker build -t bwce-http-app .`
   * Run the TIBCO BusinessWorks™ Container Edition application: `docker run -P -e MESSAGE='Welcome to BWCE 2.0 !!!' bwce-http-app`
   * Find the port number mapped to 8080 using `docker ps` and send a request to `http://<DOCKER-HOST-IP>:<HOST-PORT>`. It should return 'Welcome to BWCE 2.0 !!!' message. In case of failure, inspect the logs.
 
-##License
+## License
 These buildpack scripts are released under a [3-clause BSD-type](License.md) license.
 
 TIBCO, ActiveMatrix, ActiveMatrix BusinessWorks, TIBCO BusinessWorks, and TIBCO Enterprise Message Service are trademarks or registered trademarks of TIBCO Software Inc. in the United States and/or other countries.
