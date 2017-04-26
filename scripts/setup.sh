@@ -59,16 +59,20 @@ checkProfile()
 
 			bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
 			res=$?
+			
 			if [ ${res} -eq 0 ]; then
 				for name in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
 				do
 					if [[ $name == *.jar ]]; then
-						unzip -o -q $name
-						MANIFESTMF=META-INF/MANIFEST.MF
+					        mkdir -p $BUILD_DIR/temp 
+						unzip -o -q $name -d $BUILD_DIR/temp
+						MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
 						bwcePolicyStr=`grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid' ${MANIFESTMF}`
 						policy_res=$?
+						rm -rf $BUILD_DIR/temp
 						if [ ${policy_res} -eq 0 ]; then
 							POLICY_ENABLED="true"
+							break
 						fi
 					fi
 				done
