@@ -43,7 +43,7 @@ checkProfile()
 	bwAppConfig="TIBCO-BW-ConfigProfile"
 	bwAppNameHeader="Bundle-SymbolicName"
 	bwEdition='bwcf'
-	bwceTarget='TIBCO-BWCE-Edition-Target:'
+	#bwceTarget='TIBCO-BWCE-Edition-Target:'
 	if [ -f ${manifest} ]; then
 		bwAppProfileStr=`grep -o $bwAppConfig.*.substvar ${manifest}`
 		bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
@@ -51,38 +51,33 @@ checkProfile()
 			bwEditionHeaderStr=`grep -E $bwEdition ${manifest}`
 			res=$?
 			if [ ${res} -eq 0 ]; then
-				echo " "
+				print_Debug " "
 			else
-				echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO BusinessWorks Container Edition Studio. Refer Conversion Guide for more details."
+				echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO Business Studio Container Edition. Refer Conversion Guide for more details."
 				exit 1
 			fi
-
-			bwceTargetHeaderStr=`grep -E $bwceTarget ${manifest}`
-			res=$?
-			
-			if [ ${res} -eq 0 ]; then
-				for name in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
-				do
-					if [[ $name == *.jar ]]; then
-					        mkdir -p $BUILD_DIR/temp 
-						unzip -o -q $name -d $BUILD_DIR/temp
-						MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
-						bwcePolicyStr=`grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid' ${MANIFESTMF}`
-						policy_res=$?
-						rm -rf $BUILD_DIR/temp
-						if [ ${policy_res} -eq 0 ]; then
-							POLICY_ENABLED="true"
-							break
-						fi
-					fi
-				done
-			fi
 		else
-			print_Debug "Validation disabled."
+			print_Debug "BWCE EAR Validation disabled."
 		fi
-	fi
-	arr=$(echo $bwAppProfileStr | tr "/" "\n")
 
+		for name in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
+		do
+			if [[ $name == *.jar ]]; then
+			        mkdir -p $BUILD_DIR/temp 
+				unzip -o -q $name -d $BUILD_DIR/temp
+				MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
+				bwcePolicyStr=`grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid' ${MANIFESTMF}`
+				policy_res=$?
+				rm -rf $BUILD_DIR/temp
+				if [ ${policy_res} -eq 0 ]; then
+					POLICY_ENABLED="true"
+					break
+				fi
+			fi
+		done
+	fi
+
+	arr=$(echo $bwAppProfileStr | tr "/" "\n")
 	for x in $arr
 	do
     	case "$x" in 
@@ -90,7 +85,8 @@ checkProfile()
 		defaultProfile=$x;;esac	
 	done
 
-	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
+	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then
+		echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
 	else 
 		case $BW_PROFILE in
  		*.substvar ) ;;
@@ -119,7 +115,6 @@ setLogLevel()
 		fi
 	else
 			sed -i.bak "/<root/ s/\".*\"/\"ERROR\"/Ig" $logback
-			#echo "The loglevel set to ERROR level"
 	fi
 }
 
@@ -134,32 +129,32 @@ checkEnvSubstituteConfig()
 	if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
 			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
-			echo "Appended $BW_JAVA_OPTS to java.extend.properties"
+			print_Debug "Appended $BW_JAVA_OPTS to java.extend.properties"
 		fi
 	fi
 
 	if [[ ${BW_ENGINE_THREADCOUNT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.engine.threadCount=$BW_ENGINE_THREADCOUNT" >> $appnodeConfigFile
-			echo "set BW_ENGINE_THREADCOUNT to $BW_ENGINE_THREADCOUNT"
+			print_Debug "set BW_ENGINE_THREADCOUNT to $BW_ENGINE_THREADCOUNT"
 		fi
 	fi
 	if [[ ${BW_ENGINE_STEPCOUNT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.engine.stepCount=$BW_ENGINE_STEPCOUNT" >> $appnodeConfigFile
-			echo "set BW_ENGINE_STEPCOUNT to $BW_ENGINE_STEPCOUNT"
+			print_Debug "set BW_ENGINE_STEPCOUNT to $BW_ENGINE_STEPCOUNT"
 		fi
 	fi
 	if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName=$BW_APPLICATION_JOB_FLOWLIMIT" >> $appnodeConfigFile
-			echo "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
+			print_Debug "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
 		fi
 	fi
 	if [[ ${BW_APP_MONITORING_CONFIG} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
-			echo "set bw.frwk.event.subscriber.metrics.enabled to true"
+			print_Debug "set bw.frwk.event.subscriber.metrics.enabled to true"
 		fi
 	fi
 
@@ -267,7 +262,7 @@ checkJMXConfig()
 checkJavaGCConfig()
 {
 	if [[ ${BW_JAVA_GC_OPTS}  ]]; then
- 		echo $BW_JAVA_GC_OPTS
+ 		print_Debug $BW_JAVA_GC_OPTS
  	else
  		export BW_JAVA_GC_OPTS="-XX:+UseG1GC"
  	fi
