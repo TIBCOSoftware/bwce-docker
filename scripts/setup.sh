@@ -53,7 +53,7 @@ checkProfile()
 			if [ ${res} -eq 0 ]; then
 				print_Debug " "
 			else
-				echo "Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO Business Studio Container Edition. Refer Conversion Guide for more details."
+				echo "ERROR: Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO Business Studio Container Edition. Refer Conversion Guide for more details."
 				exit 1
 			fi
 		else
@@ -66,9 +66,19 @@ checkProfile()
 			        mkdir -p $BUILD_DIR/temp 
 				unzip -o -q $name -d $BUILD_DIR/temp
 				MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
+
+				bwcePaletteStr=`grep -E 'bw.tcp|bw.rv' ${MANIFESTMF}`
+				palette_res=$?
+
 				bwcePolicyStr=`grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid' ${MANIFESTMF}`
 				policy_res=$?
 				rm -rf $BUILD_DIR/temp
+
+				if [ ${palette_res} -eq 0 ]; then
+	 				echo "ERROR: Application [$bwBundleAppName] is using unsupported RV/TCP palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
+	 				exit 1
+				fi
+
 				if [ ${policy_res} -eq 0 ]; then
 					POLICY_ENABLED="true"
 					break
