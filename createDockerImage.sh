@@ -5,8 +5,8 @@
 
 
 if [[ $# -lt 1 || $# -gt 2 ]]; then
-    echo "Usage: ./createDockerImage.sh <path/to/bwce_cf.zip> <Tag>"
-    printf "\t %s \t\t %s \n\t\t\t\t %s \n" "Location of runtime zip(bwce_cf.zip)"
+    echo "Usage: ./createDockerImage.sh <path/to/bwce-runtime-2.3.1.zip> <Tag>"
+    printf "\t %s \t\t %s \n\t\t\t\t %s \n" "Location of runtime zip (bwce-runtime-<version>.zip)"
     printf "\t %s \t\t %s \n\t\t\t\t %s \n" "Tag. Eg: bwce:v2.0.0"
     exit 1
 fi

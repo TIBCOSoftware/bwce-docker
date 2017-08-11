@@ -12,11 +12,11 @@ These Docker scripts are subject to the license shared as part of the repository
   * [Docker](https://docs.docker.com/engine/installation/)
     
 ## Download TIBCO BusinessWorks Container Edition
-Download the appropriate TIBCO BusinessWorks Container Edition 2.0.0 artifacts from [TIBCO® eDelivery](https://edelivery.tibco.com/storefront/eval/tibco-businessworks-container-edition/prod11654.html). It contains TIBCO BusinessWorks Container Edition runtime (bwce_cf.zip).
+Download the appropriate TIBCO BusinessWorks Container Edition 2.0.0 artifacts from [TIBCO® eDelivery](https://edelivery.tibco.com/storefront/eval/tibco-businessworks-container-edition/prod11654.html). It contains TIBCO BusinessWorks Container Edition runtime (`bwce-runtime-<version>.zip`).
      
 ## Create TIBCO BusinessWorks Container Edition Base Docker Image
    1. Clone this repository onto your local machine.
-   2. Locate the bwce_cf.zip file from the downloaded artifacts and run [createDockerImage.sh](createDockerImage.sh). This will create the TIBCO BusinessWorks Container Edition base Docker image.
+   2. Locate the `bwce-runtime-<version>.zip` (e.g. bwce-runtime-2.3.1.zip) file from the downloaded artifacts and run [createDockerImage.sh](createDockerImage.sh). This will create the TIBCO BusinessWorks Container Edition base Docker image.
 
 ## Extend TIBCO BusinessWorks Container Edition Base Docker Image
 You can customize the base Docker image for supported third-party drivers e.g. Oracle JDBC drivers, OSGi™ bundles or to add runtime of supported Plug-ins in TIBCO BusinessWorks Container Edition runtime. It can also be customized for application certificate management as well as to integrate with application configuration management services.
