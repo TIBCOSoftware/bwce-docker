@@ -3,7 +3,7 @@ The TIBCO BusinessWorks™ Container Edition (BWCE) Docker image is a highly ext
 
 TIBCO BusinessWorks Container Edition allows customers to build microservices with an API-first approach and deploy them to cloud-native platforms such as [Cloud Foundry™](http://pivotal.io/platform) and [Kubernetes](http://kubernetes.io/). By elegantly right-sizing TIBCO ActiveMatrix BusinessWorks™, it brings visual application development and integration capabilities to any enterprise platform as a service.
 
-To know more about TIBCO BusinessWorks Container Edition, visit [Documentation](https://docs.tibco.com/products/tibco-businessworks-container-edition-2-0-0)
+To know more about TIBCO BusinessWorks Container Edition, visit [Documentation](https://docs.tibco.com/products/tibco-businessworks-container-edition-2-3-2)
 
 These Docker scripts are subject to the license shared as part of the repository. Review the license before using or downloading these scripts.
 
@@ -24,7 +24,7 @@ You can customize the base Docker image for supported third-party drivers e.g. O
      * Run **bwinstall[.exe] help** from `<BWCE_HOME>/bin` and follow instructions to add the driver to your TIBCO BusinessWorks Container Edition installation.
      * Copy the appropriate driver OSGi bundle from `<BWCE_HOME>/config/drivers/shells/<driverspecific runtime>/runtime/plugins/` to the `<Your-local-Docker-repo>/resources/addons/jars` folder. 
 * **Provision [OSGi](https://www.osgi.org) bundle jar(s)**: Copy OSGi bundle jar(s) into `<Your-local-docker-repo>/resources/addons/jars`
-* **Application Configuration Management**: TIBCO BusinessWorks Container Edition supports [Consul](https://www.consul.io/) configuration mechanism out of the box. Refer https://docs.tibco.com/pub/bwce/2.3.2/doc/html/GUID-96F1629B-E01D-4FAD-BCEE-2E2F1DADAF6D.html for further details.
+* **Application Configuration Management**: TIBCO BusinessWorks Container Edition supports [Consul](https://www.consul.io/) configuration mechanism out of the box. Refer [Documentation](https://docs.tibco.com/pub/bwce/2.3.2/doc/html/GUID-96F1629B-E01D-4FAD-BCEE-2E2F1DADAF6D.html) for further details.
 * **Certificate Management**: There are use cases where you need to use certificates into your application to connect to different systems. For example, a certificate to connect to TIBCO Enterprise Message Service™. Bundling certificates with your application is not a good idea as you would need to rebuild your application when the certificates expire. To avoid that, you can copy your certificates into the `<Your-local-Docker-repo>/resources/addons/certs` folder. Once the certificates expire, you can simply copy the new certificates into the base Docker image without rebuilding your application. Just build your application with the base Docker image. To access the certificates from your application, use the environment variable [BW_KEYSTORE_PATH]. For example, #BW_KEYSTORE_PATH#/mycert.jks.
 *  **Provision TIBCO BusinessWorks™ Container Edition Plug-in Runtime**: 
    * TIBCO Certified Plug-Ins: The TIBCO BusinessWorks™ Container Edition has certified a few plug-ins. Contact `TIBCO Support` for the list of all supported plug-ins. To add a plug-in runtime into your base Docker image:
