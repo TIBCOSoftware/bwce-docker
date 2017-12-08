@@ -19,6 +19,6 @@ else
 	tag=$2
 fi
 
-mkdir -p resources/bwce-runtime && cp -i $zipLocation "$_"
+mkdir -p resources/bwce-runtime && cp -f $zipLocation "$_"
 
 docker build -f Dockerfile -t $tag .
