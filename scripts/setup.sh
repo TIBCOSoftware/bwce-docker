@@ -187,25 +187,25 @@ checkEnvSubstituteConfig()
 	fi
 }
 
-checkJarsPalettes()
+checkPlugins()
 {
-BW_VERSION=`ls $BWCE_HOME/tibco.home/bw*/`
+	pluginFolder=/resources/addons/plugins
+	if [ -d ${pluginFolder} ] && [ "$(ls $pluginFolder)" ]; then 
+		print_Debug "Adding Plug-in Jars"
+		echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$BWCE_HOME/tibco.home/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
 
-pluginFolder=/resources/addons/plugins
-if [ -d ${pluginFolder} ] && [ "$(ls $pluginFolder)" ]; then 
-	print_Debug "Adding Plug-in Jars"
-	echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$BWCE_HOME/tibco.home/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
-	# unzip whatever is there not done
-for name in $(find $pluginFolder -type f); 
-do	
-	# filter out hidden files
-	if [[  "$(basename $name )" != .* ]];then
-   		extract $name
-		mkdir -p $BWCE_HOME/tibco.home/addons/runtime/plugins/ && mv runtime/plugins/* "$_"
-		#mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv lib/* "$_"/${name##*/}.ini
+		for name in $(find $pluginFolder -type f); 
+		do	
+			# filter out hidden files
+			if [[ "$(basename $name )" != .* ]]; then
+		   		unzip -q -o $name -d $BWCE_HOME/plugintmp/
+				mkdir -p $BWCE_HOME/tibco.home/addons/runtime/plugins/ && mv $BWCE_HOME/plugintmp/runtime/plugins/* "$_"
+				mkdir -p $BWCE_HOME/tibco.home/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
+				rm -rf $BWCE_HOME/plugintmp/
+				#mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv lib/* "$_"/${name##*/}.ini
+			fi
+		done
 	fi
-done
-fi
 }
 
 checkLibs()
@@ -359,7 +359,7 @@ then
 	mkdir $BWCE_HOME/tmp
 	addonFolder=/resources/addons
 	if [ -d ${addonFolder} ]; then
-		checkJarsPalettes
+		checkPlugins
 		checkAgents
 		checkLibs
 		checkThirdPartyInstallations
