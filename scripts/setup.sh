@@ -233,6 +233,27 @@ checkLibs()
 	fi
 }
 
+checkCerts()
+{
+	certsFolder=/resources/addons/certs
+	if [ -d ${certsFolder} ] && [ "$(ls $certsFolder)" ]; then 
+		JRE_VERSION=`ls $BWCE_HOME/tibco.home/tibcojre64/`
+		JRE_LOCATION=$BWCE_HOME/tibco.home/tibcojre64/$JRE_VERSION
+		certsStore=$JRE_LOCATION/lib/security/cacerts
+		chmod +x $JRE_LOCATION/bin/keytool
+		for name in $(find $certsFolder -type f); 
+		do	
+			# filter out hidden files
+			if [[ "$(basename $name )" != .* && "$(basename $name )" != *.jks ]]; then
+				certsFile=$(basename $name )
+ 			 	print_Debug "Importing $certsFile into java truststore"
+  				aliasName="${certsFile%.*}"
+				$JRE_LOCATION/bin/keytool -import -trustcacerts -keystore $certsStore -storepass changeit -noprompt -alias $aliasName -file $name
+			fi
+		done
+	fi
+}
+
 checkAgents()
 {
 	agentFolder=/resources/addons/monitor-agents
@@ -362,6 +383,7 @@ then
 		checkPlugins
 		checkAgents
 		checkLibs
+		checkCerts
 		checkThirdPartyInstallations
 		jarFolder=/resources/addons/jars
 		if [ -d ${jarFolder} ] && [ "$(ls $jarFolder)" ]; then
