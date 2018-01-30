@@ -67,7 +67,7 @@ checkProfile()
 				unzip -o -q $name -d $BUILD_DIR/temp
 				MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
 
-				bwcePaletteStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.rv'`
+				bwcePaletteStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.tcp|bw.rv'`
 				palette_res=$?
 
 				bwcePolicyStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid'`
@@ -75,7 +75,7 @@ checkProfile()
 				rm -rf $BUILD_DIR/temp
 
 				if [ ${palette_res} -eq 0 ]; then
-	 				echo "ERROR: Application [$bwBundleAppName] is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
+	 				echo "ERROR: Application [$bwBundleAppName] is using unsupported RV/TCP palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
 	 				exit 1
 				fi
 
@@ -397,6 +397,8 @@ then
 	setLogLevel
 	memoryCalculator
 	checkEnvSubstituteConfig
+	cd /java-code
+	$JAVA_HOME/bin/javac -d $BWCE_HOME -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:.:$JAVA_HOME/lib ProfileTokenResolver.java
 fi
 
 checkProfile
@@ -409,7 +411,7 @@ else
 	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
 
-$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName ProfileTokenResolver
 
 STATUS=$?
 if [ $STATUS == "1" ]; then
