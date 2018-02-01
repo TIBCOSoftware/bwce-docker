@@ -51,10 +51,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class ProfileTokenResolver {
 
-    static String  TOKEN_DELIMITER  = "#";
-    static String  pattern          = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
-    static String  PROFILE_ROOT_DIR = "/tmp/tmp";
-    static boolean isDebugOn        = System.getenv("BW_LOGLEVEL") != null && System.getenv("BW_LOGLEVEL").equalsIgnoreCase("debug");
+    static String TOKEN_DELIMITER = "#";
+    static String pattern = "\\" + TOKEN_DELIMITER + "([^" + TOKEN_DELIMITER + "]+)\\" + TOKEN_DELIMITER;
+    static String PROFILE_ROOT_DIR = (System.getenv("BWCE_HOME") != null) ? (System.getenv("BWCE_HOME") + "/tmp") : "/tmp/tmp";
+    static boolean isDebugOn = System.getenv("BW_LOGLEVEL") != null && System.getenv("BW_LOGLEVEL").equalsIgnoreCase("debug");
 
     public static void main(String[] args) throws Throwable {
 
