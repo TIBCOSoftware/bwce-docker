@@ -202,7 +202,7 @@ checkPlugins()
 				mkdir -p $BWCE_HOME/tibco.home/addons/runtime/plugins/ && mv $BWCE_HOME/plugintmp/runtime/plugins/* "$_"
 				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/* "$_"
 				mkdir -p $BWCE_HOME/tibco.home/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
-				find  $BWCE_HOME/plugintmp//*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} / \; 2> /dev/null
+				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} / \; 2> /dev/null
 				rm -rf $BWCE_HOME/plugintmp/
 				#mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv lib/* "$_"/${name##*/}.ini
 			fi
