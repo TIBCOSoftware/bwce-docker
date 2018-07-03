@@ -427,6 +427,4 @@ $JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibc
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error
-f
-
-i
+fi
