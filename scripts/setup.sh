@@ -118,6 +118,17 @@ checkPolicy()
 setLogLevel()
 {
 	logback=$BWCE_HOME/tibco.home/bw*/*/config/logback.xml
+
+	if [[ ${CUSTOM_LOGBACK} ]]; then
+	         logback_custom=/resources/addons/custom-logback/logback.xml
+		 if [ -e ${logback_custom} ]; then
+			cp ${logback} `ls $logback`.original.bak && cp -f ${logback_custom}  ${logback}  
+			echo "Using Custom Logback file"
+		else
+			echo "Custom Logback file not found. Using the default logback file"
+		fi	
+	fi
+
 	if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
 		if [ -e ${logback} ]; then
 			sed -i.bak "/<root/ s/\".*\"/\"$BW_LOGLEVEL\"/Ig" $logback
@@ -416,4 +427,6 @@ $JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibc
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error
-fi
+f
+
+i
