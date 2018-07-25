@@ -508,14 +508,14 @@ try {
 		Get-Content "$env:BWCE_HOME\META-INF\default.substvar"
 		write-output "*****File-COntent*******"
 		
-		write-output "*******bakchodi*******"
+		
 		Get-ChildItem $env:BWCE_HOME\META-INF\$env:BW_PROFILE |
 			ForEach-Object {
 			
 				write-output $_.Name
 		
 			}
-		write-output "*******bakchodi*******"
+		
 	 #>
 	}
 	
