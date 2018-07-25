@@ -1,19 +1,17 @@
-#!/bin/bash
-#
-# Copyright 2012 - 2016 by TIBCO Software Inc. 
-# All rights reserved.
-#
-# This software is confidential and proprietary information of
-# TIBCO Software Inc.
-#
-#
+:: Copyright 2012 - 2016 by TIBCO Software Inc. 
+:: All rights reserved.
+:: This software is confidential and proprietary information of TIBCO Software Inc.
+::ECHO OFF
+CALL:print_Debug 100
 
-print_Debug()
-{
-		if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
- 			echo $1 
- 		fi
-}
+:print_Debug
+	IF DEFINED BW_LOGLEVEL (
+		IF "%BW_LOGLEVEL%"=="debug" (
+			ECHO %~1
+		)
+ 	)
+GOTO:EOF
+
 extract ()
 {
 if [ -f $1 ] ; then
@@ -37,7 +35,7 @@ fi
 
 checkProfile()
 {
-	BUILD_DIR=/tmp
+	BUILD_DIR=c:/tmp
 	defaultProfile=default.substvar
 	manifest=$BUILD_DIR/META-INF/MANIFEST.MF
 	bwAppConfig="TIBCO-BW-ConfigProfile"
