@@ -37,7 +37,7 @@ fi
 
 checkProfile()
 {
-	BUILD_DIR=/tmp
+	BUILD_DIR=c:/tmp
 	defaultProfile=default.substvar
 	manifest=$BUILD_DIR/META-INF/MANIFEST.MF
 	bwAppConfig="TIBCO-BW-ConfigProfile"
@@ -98,6 +98,7 @@ checkProfile()
 	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then
 		echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
 	else 
+		#why is case being used here?? why the default case? do we even need it?
 		case $BW_PROFILE in
  		*.substvar ) ;;
 		* ) BW_PROFILE="${BW_PROFILE}.substvar";;esac
@@ -132,9 +133,9 @@ setLogLevel()
 checkEnvSubstituteConfig()
 {
 	bwappnodeTRA=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
-	bwappnodeFile=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
-	#appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-	manifest=/tmp/META-INF/MANIFEST.MF
+	#bwappnodeFile=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
+	appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
+	manifest=c:/tmp/META-INF/MANIFEST.MF
 	bwAppNameHeader="Bundle-SymbolicName"
 	bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
 	export BWCE_APP_NAME=$bwBundleAppName 	
@@ -142,10 +143,10 @@ checkEnvSubstituteConfig()
 		sed -i 's?-Djava.class.path=?-Djava.class.path=$ADDONS_HOME/lib:?' $bwappnodeTRA
 		print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
 	fi
-	if [ -e ${bwappnodeFile} ]; then
-		sed -i 's?-Djava.class.path=?-Djava.class.path=$ADDONS_HOME/lib:?' $bwappnodeFile
-		print_Debug "Appended ADDONS_HOME/lib in bwappnode file"
-	fi
+	#if [ -e ${bwappnodeFile} ]; then
+	#	sed -i 's?-Djava.class.path=?-Djava.class.path=$ADDONS_HOME/lib:?' $bwappnodeFile
+	#	print_Debug "Appended ADDONS_HOME/lib in bwappnode file"
+	#fi
 	if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
 			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
@@ -189,7 +190,7 @@ checkEnvSubstituteConfig()
 
 checkPlugins()
 {
-	pluginFolder=/resources/addons/plugins
+	pluginFolder=c:/resources/addons/plugins
 	if [ -d ${pluginFolder} ] && [ "$(ls $pluginFolder)" ]; then 
 		print_Debug "Adding Plug-in Jars"
 		echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$BWCE_HOME/tibco.home/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
@@ -211,7 +212,7 @@ checkPlugins()
 checkLibs()
 {
 	BW_VERSION=`ls $BWCE_HOME/tibco.home/bw*/`
-	libFolder=/resources/addons/lib
+	libFolder=c:/resources/addons/lib
 	if [ -d ${libFolder} ] && [ "$(ls $libFolder)" ]; then
 		print_Debug "Adding additional libs"
 		for name in $(find $libFolder -type f); 
@@ -235,7 +236,7 @@ checkLibs()
 
 checkCerts()
 {
-	certsFolder=/resources/addons/certs
+	certsFolder=c:/resources/addons/certs
 	if [ -d ${certsFolder} ] && [ "$(ls $certsFolder)" ]; then 
 		JRE_VERSION=`ls $BWCE_HOME/tibco.home/tibcojre64/`
 		JRE_LOCATION=$BWCE_HOME/tibco.home/tibcojre64/$JRE_VERSION
@@ -256,7 +257,7 @@ checkCerts()
 
 checkAgents()
 {
-	agentFolder=/resources/addons/monitor-agents
+	agentFolder=c:/resources/addons/monitor-agents
 
 	if [ -d ${agentFolder} ] && [ "$(ls $agentFolder)" ]; then 
 		print_Debug "Adding monitoring jars"
@@ -320,7 +321,7 @@ checkJAVAHOME()
 
 checkThirdPartyInstallations()
 {
-	installFolder=/resources/addons/thirdparty-installs
+	installFolder=c:/resources/addons/thirdparty-installs
 	if [ -d ${installFolder} ] && [ "$(ls $installFolder)"  ]; then
 		mkdir -p $BWCE_HOME/tibco.home/thirdparty-installs
 		for f in "$installFolder"/*; do
@@ -368,50 +369,87 @@ checkJavaGCConfig
 
 if [ ! -d $BWCE_HOME/tibco.home ];
 then
-	unzip -qq /resources/bwce-runtime/bwce*.zip -d $BWCE_HOME
-	rm -rf /resources/bwce-runtime/bwce*.zip 2> /dev/null
-	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
-	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
+	unzip -qq c:/resources/bwce-runtime/bwce*.zip -d $BWCE_HOME && echo "Success-In-Extracting tibco.home folder" || echo "Error copying runtime zip to BWCE_HOME"
+	rm -rf c:/resources/bwce-runtime/bwce*.zip 2> /dev/null
+	#chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
+	#chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
 	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/javac
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
-	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
+	#sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $BWCE_HOME/keys.properties
 	mkdir $BWCE_HOME/tmp
-	addonFolder=/resources/addons
+	echo "********Printing DIR************"
+	for entry in `ls c:/tmp/tibco.home/bwce/2.3/bin`
+	do
+	  echo "$entry"
+	done
+	echo "********Printing DIR end************"
+	addonFolder=c:/resources/addons
 	if [ -d ${addonFolder} ]; then
-		checkPlugins
-		checkAgents
-		checkLibs
-		checkCerts
-		checkThirdPartyInstallations
-		jarFolder=/resources/addons/jars
+		checkPlugins && echo "Success-checkPlugins" || echo "Error-checkPlugins"
+		checkAgents && echo "Success-checkAgents" || echo "Error-checkAgents"
+		checkLibs && echo "Success-checkLibs" || echo "Error-checkLibs"
+		checkCerts && echo "Success-checkCerts" || echo "Error-checkCerts"
+		checkThirdPartyInstallations && echo "Success-checkThirdPartyInstallations" || echo "Error-checkThirdPartyInstallations"
+		jarFolder=c:/resources/addons/jars
 		if [ -d ${jarFolder} ] && [ "$(ls $jarFolder)" ]; then
 		#Copy jars to Hotfix
-	  		cp -r /resources/addons/jars/* `echo $BWCE_HOME/tibco.home/bw*/*`/system/hotfix/shared
+	  		cp -r c:/resources/addons/jars/* `echo $BWCE_HOME/tibco.home/bw*/*`/system/hotfix/shared
 		fi
 	fi
-	ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
+	RESULT=$?
+	if [ $RESULT -eq 0 ]; then
+	  echo "success-hf"
+	else
+	  echo "failed-hf"
+	fi
+	ln -s c:/*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
-	setLogLevel
-	memoryCalculator
-	checkEnvSubstituteConfig
+	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d c:/tmp
+	setLogLevel && echo "Success-setLogLevel" || echo "Error-setLogLevel"
+	memoryCalculator && echo "Success-memoryCalculator" || echo "Error-memoryCalculator"
+	checkEnvSubstituteConfig && echo "Success-checkEnvSubstituteConfig" || echo "Error-checkEnvSubstituteConfig"
 fi
 
-checkProfile
-checkPolicy
-setupThirdPartyInstallationEnvironment
+checkProfile && echo "Success-checkProfile" || echo "Error-checkProfile"
+checkPolicy && echo "Success-checkPolicy" || echo "Error-checkPolicy"
+setupThirdPartyInstallationEnvironment && echo "Success-setupThirdPartyInstallationEnvironment" || echo "Error-setupThirdPartyInstallationEnvironment"
 
+#doubt in this condition, according to windows it should be C:
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
-	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
+	cp -f c:/tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
+echo "********Printing DIR shared ***************"
+for entry in `ls c:/tmp/tibco.home/bwce/2.3/system/shared`
+	do
+	  echo "$entry"
+	done
+echo "********Printing DIR shared end************"
+echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar
+#$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`;`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*/*.jar`;`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*/*.jar`;$JAVA_HOME/lib/*.jar -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+#$JAVA_HOME/bin/java -classpath echo `$BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`;`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*.jar;`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*.jar;`echo $JAVA_HOME/lib`/* -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
 
-$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+#$JAVA_HOME/bin/java -cp "c:/tmp/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:/tmp/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*/*.jar;c:/tmp/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*/*.jar;$JAVA_HOME/lib/*" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
+#$JAVA_HOME/bin/java -cp $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar;$BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*/*.jar;$BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*/*.jar;$JAVA_HOME/lib/*.jar -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+#$JAVA_HOME/bin/java -cp '"'+$BWCE_HOME+'/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar"' '-DBWCE_APP_NAME="'+$bwBundleAppName+'"' com.tibco.bwce.profile.resolver.Resolver
+#$JAVA_HOME/bin/java -cp 'c:/tmp/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar' '-DBWCE_APP_NAME="'+$bwBundleAppName+'"' com.tibco.bwce.profile.resolver.Resolver
+
+#$JAVA_HOME/bin/java -cp "'echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar';'echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*'/*;'echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*'/*;$BWCE_HOME;$JAVA_HOME/lib" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
+
+#$JAVA_HOME/bin/java -cp "c:/tmp/tibco.home/bwce/2.3/system/shared/com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:/tmp/tibco.home/bwce/2.3/system/shared/com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001/*;c:/tmp/tibco.home/bwce/2.3/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001/*;$JAVA_HOME/lib" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
+$JAVA_HOME/bin/java -cp "c:/tmp/tibco.home/bwce/2.3/system/shared/com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:/tmp/tibco.home/bwce/2.3/system/shared/com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001/*;c:/tmp/tibco.home/bwce/2.3/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001/*;$BWCE_HOME;$JAVA_HOME/lib" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
 
 STATUS=$?
 if [ $STATUS == "1" ]; then
+    exit 1 # terminate and indicate error
+fi
+
+
+STATUS=$?
+if [ $STATUS == "1" ]; then
+	echo "********Error - Nitish Log************"
     exit 1 # terminate and indicate error
 fi
