@@ -2,26 +2,73 @@
 #...are these variables env variables, if yes
 #then need to check then with env part
 
-$BW_LOGLEVEL="debug"
-function print_Debug( $message ) {
-
-	try {
+#$BW_LOGLEVEL="debug"
+$ProgressPreference = 'SilentlyContinue'
+function print_Debug() {
 	
-		if ( -not [String]::IsNullOrEmpty($BW_LOGLEVEL) -and $BW_LOGLEVEL.toLower() -eq "debug" ) {
+	[CmdletBinding()]
+	param( $message )
 	
-			write-host $message
+	process {
+	
+		try {
+	
+			if ( -not [String]::IsNullOrEmpty($env:BW_LOGLEVEL) -and $env:BW_LOGLEVEL.toLower() -eq "debug" ) {
 		
+				Write-Output $message
+			
+			}
+		
+		} catch {
+			
+			Write-Error -Exception $PSItem -ErrorAction Stop
+			
 		}
-	
-	} catch {
-	
-		Write-Error -Exception $PSItem -ErrorAction Stop
 	
 	}
 
 }
 
-function checkProfile {
+
+function Get-ErrorInformation {
+    [cmdletbinding()]
+    param($incomingError)
+
+    #if ($incomingError -and (($incomingError| Get-Member | Select-Object -ExpandProperty TypeName -Unique) -eq 'System.Management.Automation.ErrorRecord')) {
+    if ($incomingError ) {
+
+        Write-Output `n"Error information:"`n
+        Write-Output `t"Exception type for catch: [$($IncomingError.Exception | Get-Member | Select-Object -ExpandProperty TypeName -Unique)]"`n 
+
+        if ($incomingError.InvocationInfo.Line) {
+        
+            Write-Output `t"Command                 : [$($incomingError.InvocationInfo.Line.Trim())]"
+        
+        } else {
+
+            Write-Output `t"Unable to get command information! Multiple catch blocks can do this :("`n
+
+        }
+
+        Write-Output `t"Exception               : [$($incomingError.Exception.Message)]"`n
+        Write-Output `t"Target Object           : [$($incomingError.TargetObject)]"`n
+    
+    }
+
+    Else {
+
+        Write-Output "Please include a valid error record when using this function!" -ForegroundColor Red -BackgroundColor DarkBlue
+
+    }
+
+}
+
+
+
+function Check-Profile {
+
+   [cmdletbinding()]
+   param() 
 
 	try {
 	
@@ -38,27 +85,25 @@ function checkProfile {
 			
 			$bwAppProfileStr = select-string $bwAppConfig+".*.substvar" $manifest | ForEach-Object Line
 			echo $bwAppProfileStr
-			#need to check if we have to handle any special cases
-			$bwBundleAppName = select-string $bwAppNameHeader $manifest | %{$_.Line.Split(":")[1]}
-			echo $bwBundleAppName
+            $env:bwBundleAppName = select-string $bwAppNameHeader $manifest | %{$_.Line.Split(":")[1].Trim()}
+			echo $env:bwBundleAppName
 			if ( $env:DISABLE_BWCE_EAR_VALIDATION -ne "True" ) {
 			
 				$bwEditionHeaderStr = select-string $bwEdition $manifest 
 				
-				if ($bwEditionHeaderStr) {
+				if (-not [String]::IsNullOrEmpty($bwEditionHeaderStr)) {
 				
-					write-host " "
+					Write-Output " "
 				
 				} else {
 				
-					write-host "ERROR: Application $bwBundleAppName is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO Business Studio Container Edition. Refer Conversion Guide for more details."
+					Write-Output "ERROR: Application $env:bwBundleAppName is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO Business Studio Container Edition. Refer Conversion Guide for more details."
 					
 				}
 			
 			} else {
 			
-				write-host "BWCE EAR validation disabled"
-			    #TODO: Error Handling
+				Write-Output "BWCE EAR validation disabled"
 			}
 			
 			Get-ChildItem $BUILD_DIR\tibco.home -Filter *.jar |
@@ -86,7 +131,7 @@ function checkProfile {
 					
 					if ( $bwcePaletteStr ) {
 					
-						write-host "ERROR: Application $bwBundleAppName is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
+						Write-Error "ERROR: Application $bwBundleAppName is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
 						Exit 1
 					}
 					
@@ -121,48 +166,54 @@ function checkProfile {
         
         }
 				
-		if ( [String]::IsNullOrEmpty(($BW_PROFILE = $defaultProfile)) ) {
+		if ( [String]::IsNullOrEmpty(($env:BW_PROFILE = $defaultProfile)) ) {
     
-			write-host "BW_PROFILE is unset. Set it to $defaultProfile"
+			Write-Output "BW_PROFILE is unset. Set it to $defaultProfile"
 		
 		} else {
 		
-			switch -Wildcard ( $BW_PROFILE ) {
+			switch -Wildcard ( $env:BW_PROFILE ) {
 			
 			 	'*substvar' {}
 				default 
 				{
-					$env:BW_PROFILE = "$BW_PROFILE.substvar"
+					$env:BW_PROFILE = "$env:BW_PROFILE.substvar"
 					
 				}
 			
 			}
 		
-			write-host "BW_PROFILE is set to '$BW_PROFILE'"
+			Write-Output "BW_PROFILE is set to '$env:BW_PROFILE'"
 		}
 		
 		
 	} catch {
 	
 		Write-Error -Exception $PSItem -ErrorAction Stop
-		exit 1
+        #Write-Error -Exception $PSItem -ErrorAction Stop
+		#Get-ErrorInformation -incomingError $_ -ErrorAction Stop
 	
 	}
 	
 
 }
 
-<#function checkPolicy
-{
+function Check-Policy {
+
+    [CmdletBinding()]
+	param()
+
 	try {
 	
 		if ( $POLICY_ENABLED.toLower() -eq "true" ) {
+
+            Write-Output "Iside Policy enabled true condition"
 	
-			if ( [System.IO.File]::Exists($appnodeConfigFile) ) {
+			if ( Test-Path -Path $appnodeConfigFile -PathType leaf ) {
 			
-				add-content -path $appnodeConfigFile -value "`r`nbw.governance.enabled=true"
+				Add-Content -Path $appnodeConfigFile -Value "`r`nbw.governance.enabled=true"
 				print_Debug("Set bw.governance.enabled=true")
-				
+		
 			}
 		
 		}
@@ -171,32 +222,39 @@ function checkProfile {
 	
 		print_Debug("Error Setting bw.governance property to true. Check if AppNode Config file exists or not.")
 		Write-Error -Exception $PSItem -ErrorAction Stop
-		exit 1
+
 	}
 	
-}#>
+}
 
-function setLogLevel
-{
-	try {
+function Set-LogLevel {
+    
+    [CmdletBinding()]
+	param()
 	
-		Write-Output "Inside check loglevel function"
+    try {
+	
+		Write-Output "Inside setloglevel function"
 	
 		####Compile-Error-Came-Here-So-We-Put-Path-In_Quotes
-		$logback="$env:BWCE_HOME/tibco.home/bw*/*/config/logback.xml"
-	
-		if ( -not [String]::IsNullOrEmpty($BW_LOGLEVEL) -and $BW_LOGLEVEL.toLower() -eq "debug" ) {
-		
-			if ( [System.IO.File]::Exists($logback) ) {
-			
-				copy $logback $logback.bak
-				(Get-Content $logback | ForEach-Object {$_ -ireplace "<root level\s*=.*", "<root level = `"$BW_LOGLEVEL`">"}) -join "`n" | Set-Content -NoNewline -Force $logback
-				print_Debug "The loglevel is set to $BW_LOGLEVEL level"
+		$logback="$env:BWCE_HOME\tibco.home\bw*\*\config\logback.xml"
+		#need to correct this -> should be taken from an env variable
+		write-output "***Log Level Check****"
+		write-output $env:BW_LOGLEVEL
+
+		if ( -not [String]::IsNullOrEmpty($env:BW_LOGLEVEL) -and $env:BW_LOGLEVEL.toLower() -eq "debug" ) {
+		   
+			if ( Test-Path -Path $logback -PathType leaf) {
+			   
+				Copy-Item -Path $logback -Destination $logback.bak
+				(Get-Content $logback | ForEach-Object {$_ -ireplace "<root level\s*=.*", "<root level = `"$env:BW_LOGLEVEL`">"}) -join "`n" | Set-Content -NoNewline -Force $logback
+				print_Debug "The loglevel is set to $env:BW_LOGLEVEL level"
 			
 			}
 		
 		} else {
-		
+           
+			Write-Output "Setting loglevel to Error"
 			(Get-Content $logback | ForEach-Object {$_ -ireplace "<root level\s*=.*", "<root level = `"ERROR`">"}) -join "`n" | Set-Content -NoNewline -Force $logback
 		
 		}
@@ -205,12 +263,15 @@ function setLogLevel
 	
 		print_Debug("Error setting log level in logback file")
 		Write-Error -Exception $PSItem -ErrorAction Stop
-		exit 1
 	
 	}
+
 }
 
-function checkEnvSubstituteConfig {
+function Check-EnvSubstituteConfig {
+
+    [CmdletBinding()]
+	param()
     
 	try{
 	
@@ -222,7 +283,7 @@ function checkEnvSubstituteConfig {
         $manifest=c:\tmp\META-INF\MANIFEST.MF
         $bwAppNameHeader="Bundle-SymbolicName"
         $bwBundleAppName = select-string $bwAppNameHeader $manifest | %{$_.Line.Split(":")[1]}
-        Set BWCE_APP_NAME=$bwBundleAppName      #check if this is right
+        $env:BWCE_APP_NAME=$bwBundleAppName      
         
         if([System.IO.File]::Exists($bwappnodeTRA)){
             copy $bwappnodeTRA $bwappnodeTRA.bak
@@ -266,9 +327,9 @@ function checkEnvSubstituteConfig {
         }
         if($BW_LOGLEVEL -eq "DEBUG"){
             if($BW_APPLICATION_JOB_FLOWLIMIT -or $BW_ENGINE_STEPCOUNT -or $BW_ENGINE_THREADCOUNT -or $BW_APP_MONITORING_CONFIG){
-                write-host "---------------------------------------"
+                Write-Output "---------------------------------------"
                 cat $appnodeConfigFile
-                write-host "---------------------------------------"
+                Write-Output "---------------------------------------"
 			}
         }
 		
@@ -283,58 +344,66 @@ function checkEnvSubstituteConfig {
 
 
 
-<#function checkPlugins {
-
-	try {
+function Check-Plugins {
+	param()
+	process {
 	
-		#make all paths like this dynamic
-		$pluginFolder = "c:\resources\addons\plugins"
+		try {
 		
-		if ( (Test-Path $pluginFolder) -and (get-item $pluginFolder).GetFileSystemInfos().Count -gt 0 ) {
-		
-			print_Debug("Adding Plug-in Jars")
-			#check this condition 
-			$addonsFilePath = "$BWCE_HOME\tibco.home\bw*\*\ext\shared"
-			#Added quotes in pathe here, don't know why and not sure if addons link will be evaluated to absolute path or not
-			"name=Addons Factory`r`ntype=bw6`r`nlayout=bw6ext`r`nlocation=$env:BWCE_HOME\tibco.home\addons" > Get-ChildItem "$addonsFilePath"+"\addons.link"
+			Write-Output "Inside Check-Plugins function"
+			#make all paths like this dynamic
+			$pluginFolder = "c:\resources\addons\plugins"
 			
+			if ( (Test-Path $pluginFolder) -and (Get-Item $pluginFolder -Exclude ".*").GetFileSystemInfos().Count -gt 0 ) {
 			
-			Get-ChildItem -Attributes !Hidden $pluginFolder |
-			ForEach-Object {
-				$name = $_.Name
-				#New-Item -Path $env:BWCE_HOME\plugintmp, also check if -force command is required here or not
-				#also assuming $name contains the entire path of the file along with thee file name
-				Expand-Archive -Path $name -DestinationPath $env:BWCE_HOME\plugintmp -Force
-				New-Item -Path $env:BWCE_HOME\tibco.home\addons\runtime\plugins 
-				Move-Item -Path $env:BWCE_HOME\plugintmp\runtime\plugins\* -Destination $env:BWCE_HOME\tibco.home\addons\runtime\plugins
-				New-Item -Path $env:BWCE_HOME\tibco.home\addons\bin
-				#need to check this line for null condition
-				Move-Item -Path $env:BWCE_HOME\plugintmp\bin\* -Destination $env:BWCE_HOME\tibco.home\addons\bin 2> $null
+				print_Debug("Adding Plug-in Jars")
+				#check this condition 
+				$addonsFilePath = "$env:BWCE_HOME\tibco.home\bw*\*\ext\shared"
+				#Added quotes in path here, don't know why and not sure if addons link will be evaluated to absolute path or not
+				"name=Addons Factory`r`ntype=bw6`r`nlayout=bw6ext`r`nlocation=$env:BWCE_HOME\tibco.home\addons" | Set-Content -Path $addonsFilePath\addons.link   
+					
+				Get-ChildItem -Attributes !Hidden $pluginFolder |
+				ForEach-Object {
+					$name = $_.Name
+					#New-Item -Path $env:BWCE_HOME\plugintmp, also check if -force command is required here or not
+					#also assuming $name contains the entire path of the file along with thee file name
+					Expand-Archive -Path $name -DestinationPath $env:BWCE_HOME\plugintmp -Force
+					New-Item -Path $env:BWCE_HOME\tibco.home\addons\runtime\plugins 
+					Move-Item -Path $env:BWCE_HOME\plugintmp\runtime\plugins\* -Destination $env:BWCE_HOME\tibco.home\addons\runtime\plugins
+					New-Item -Path $env:BWCE_HOME\tibco.home\addons\bin
+					#need to check this line for null condition
+					Move-Item -Path $env:BWCE_HOME\plugintmp\bin\* -Destination $env:BWCE_HOME\tibco.home\addons\bin 2> $null
+				
+				}
 			
 			}
+	
+		} catch {
+		
+			#Write-Error -Exception $PSItem -ErrorAction Stop
+			Get-ErrorInformation -incomingError $_ -ErrorAction Stop
 		
 		}
-	
-	} catch {
-	
-		Write-Error -Exception $PSItem -ErrorAction Stop
 	
 	}
 
 
-}#>
+}
 
 
-function checkJAVAHOME {
+function Check-JAVAHOME {
+
+    [CmdletBinding()]
+	param()
 
 	try {
 	
 		Write-Output "Inside checkJAVAHOME function"
 	
-		if ( -not [String]::IsNullOrEmpty($JAVA_HOME) ) {
+		if ( -not [String]::IsNullOrEmpty($env:JAVA_HOME) ) {
 		#if ( $JAVA_HOME ) {
 		
-			print_Debug($JAVA_HOME)
+			print_Debug($env:JAVA_HOME)
 			
 		} else {
 			print_Debug("set java home")
@@ -353,19 +422,22 @@ function checkJAVAHOME {
 	
 }
 
-function checkJavaGCConfig {
+function Check-JavaGCConfig {
+
+    [CmdletBinding()]
+	param()
 	
 	try {
 	
 		Write-Output "Inside checkJavaGCConfig function"
 	
-		if ( -not [String]::IsNullOrEmpty($BW_JAVA_GC_OPTS) ) {
+		if ( -not [String]::IsNullOrEmpty($env:BW_JAVA_GC_OPTS) ) {
 	
-			 print_Debug($BW_JAVA_GC_OPTS)
+			 print_Debug($env:BW_JAVA_GC_OPTS)
 			 
 		} else {
 		
-			SET BW_JAVA_GC_OPTS="-XX:+UseG1GC"
+			$env:BW_JAVA_GC_OPTS="-XX:+UseG1GC"
 			
 		}
 	
@@ -377,28 +449,31 @@ function checkJavaGCConfig {
 
 }
 
-function checkJMXConfig
-{
+function Check-JMXConfig {
+
+    [CmdletBinding()]
+	param()
+
 	try {
 	
 		Write-Output "Inside checkJMXConfig function"
 	
-		if ( -not [String]::IsNullOrEmpty($BW_JMX_CONFIG) ) {
+		if ( -not [String]::IsNullOrEmpty($env:BW_JMX_CONFIG) ) {
 		
-			if ( $BW_JMX_CONFIG -like '*:*' ) {
+			if ( $env:BW_JMX_CONFIG -like '*:*' ) {
 			
-				$JMX_HOST=$BW_JMX_CONFIG.Split(":")[0]
-				$JMX_PORT=$BW_JMX_CONFIG.Split(":")[1]
+				$JMX_HOST=$env:BW_JMX_CONFIG.Split(":")[0]
+				$JMX_PORT=$env:BW_JMX_CONFIG.Split(":")[1]
 			
 			} else {
 			
 				$JMX_HOST="127.0.0.1"
-				$JMX_PORT=$BW_JMX_CONFIG
+				$JMX_PORT=$env:BW_JMX_CONFIG
 			
 			}
 			
 			$JMX_PARAM="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=""$JMX_PORT"" -Dcom.sun.management.jmxremote.rmi.port=""$JMX_PORT"" -Djava.rmi.server.hostname=""$JMX_HOST"" -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false "
-			SET BW_JAVA_OPTS=$BW_JAVA_OPTS" "$JMX_PARAM
+			$env:BW_JAVA_OPTS="$BW_JAVA_OPTS $JMX_PARAM"
 		
 		}
 	
@@ -413,9 +488,9 @@ function checkJMXConfig
 
 $appnodeConfigFile="$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
 $POLICY_ENABLED="false"
-checkJAVAHOME
-checkJMXConfig
-checkJavaGCConfig
+Check-JAVAHOME
+Check-JMXConfig
+Check-JavaGCConfig
 
 try {
 
@@ -431,22 +506,26 @@ try {
 		
 			}#>
 		
+        #TODO: In files bwappnode.tra and bwcommon.tra, path has been hard-coded(specifically APPDIR, see if that can be made dynamic
 		
 		#check condition below to ensure APPDIR is getting replaced properly and no inconsistencies are being introduced
 		(Get-Content "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra" | ForEach-Object {$_ -ireplace "_APPDIR_", "$env:BW_LOGLEVEL"}) -join "`n" | Set-Content -NoNewline -Force "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra"
-		New-Item -ItemType file key.properties | Out-Null
+		####++++++++++++###########
+
+
+        New-Item -ItemType file key.properties | Out-Null
 		New-Item -ItemType directory $env:BWCE_HOME\tmp | Out-Null
 		
-		#if ( Test-Path $env:BWCE_HOME\tmp -PathType Container ) { write-host "partial-ex" } else {write-host "nahi-chali" }
+		#if ( Test-Path $env:BWCE_HOME\tmp -PathType Container ) { Write-Output "partial-ex" } else {Write-Output "nahi-chali" }
 		
 		$addonFolder = "c:\resources\addons"
-		cd 
+		
 		if ( Test-Path $addonFolder -PathType Container ) {
 		
-			#checkPlugins
-			#checkAgents
-			#checkLibs
-			#checkThirdPartyInstallations
+			#Check-Plugins
+			#Check-Agents
+			#Check-Libs
+			#Check-ThirdPartyInstallations
 		
 			#had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
 			$jarFolder = "c:\resources\addons\jars"
@@ -462,21 +541,21 @@ try {
 		New-Item -ItemType SymbolicLink -Path $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\bin\") -Name bwapp.ear -Target C:\*.ear
 		#bakslah confusion as config has forward slashes
 		
-		Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.3\bin |
+		<#Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.3\bin |
 			ForEach-Object {
 			
 				write-output $_.Name
 		
-			} 
+			} #>
 		
 		(Get-Content $appnodeConfigFile | ForEach-Object {$_ -ireplace "_APPDIR_", "$env:BWCE_HOME"}) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
 		#hack-hardcoded-need-better
-		Rename-Item -Path "C:\tmp\tibco.home\bwce\2.3\bin\bwapp.ear" -NewName bwapp.zip 
+		Rename-Item -Path "C:\tmp\tibco.home\bwce\2.3\bin\bwapp.ear" -NewName bwapp.zip | Out-Null
 		
 		#Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.ear -DestinationPath C:\tmp -Force
-		Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.zip -DestinationPath C:\tmp -Force
-		Rename-Item -Path "C:\tmp\tibco.home\bwce\2.3\bin\bwapp.zip" -NewName bwapp.ear
-		setLogLevel
+		Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.zip -DestinationPath C:\tmp -Force | Out-Null
+		Rename-Item -Path "C:\tmp\tibco.home\bwce\2.3\bin\bwapp.zip" -NewName bwapp.ear | Out-Null
+		Set-LogLevel
 		#memoryCalculator()
 		#checkEnvSubstituteConfig()	
 		<# write-output "***META-INF-TEST******"
@@ -489,8 +568,8 @@ try {
 		write-output "***META-INF-TEST******" #>
 	}	
 	
-	checkProfile
-	#checkPolicy
+	Check-Profile
+	Check-Policy
 	#setupThirdPartyInstallationEnvironment
 	
 	if ( [System.IO.File]::Exists($(Get-ChildItem -Path "C:\*.substvar")) ) {
@@ -499,7 +578,7 @@ try {
 		
 	} else {
 		#hardcoded profile file name, need to change...env variable setting problem
-		Copy-Item $env:BWCE_HOME\META-INF\default.substvar -Destination $env:BWCE_HOME\tmp\pcf.substvar
+		Copy-Item $env:BWCE_HOME\META-INF\$env:BW_PROFILE -Destination $env:BWCE_HOME\tmp\pcf.substvar
 		
 		<# write-output "****profile env variable*******"
 		write-output $env:BW_PROFILE
@@ -519,15 +598,15 @@ try {
 	 #>
 	}
 	
-	<#write-host "temp-check"
+	<#Write-Output "temp-check"
 	Get-ChildItem \tmp\tmp\ |
 			ForEach-Object {
 			
 				write-output $_.Name
 		
 			} 
-	write-host "temp-check-end"
-	write-host [Environment]::UserName
+	Write-Output "temp-check-end"
+	Write-Output [Environment]::UserName
 	Get-LocalUser -Name "Administrator" #>
 	
 	#apply ICACLS rule 
@@ -537,7 +616,8 @@ try {
 	
 	#write-output $env:username
 	#Get-Content $env:BWCE_HOME\pcf.substvar
-	. $env:JAVA_HOME\bin\java -cp "c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001\*;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" com.tibco.bwce.profile.resolver.Resolver
+    write-output $env:bwBundleAppName
+	. $env:JAVA_HOME\bin\java -cp "c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001\*;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
 	#. $env:JAVA_HOME\bin\java -cp "c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001\*;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver -Verb runAs Administrator
 	
 	#-> working. "$env:JAVA_HOME\bin\java -cp c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001\*;c:\tmp\tibco.home\bwce\2.3\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
@@ -553,15 +633,14 @@ try {
 		exit 1 # terminate and indicate error
 
 	} #>
-	write-host "c:\tmp\tibco.home\bwce\2.3\system\hotfix\shared\********************"
+	<# Write-Output "c:\tmp\tibco.home\bwce\2.3\system\hotfix\shared\********************"
 	Get-ChildItem c:\tmp\tibco.home\bwce\2.3\system\hotfix\shared\jars\ |
 			ForEach-Object {
 			
 				write-output $_.Name
 		
 			} 
-	write-host "**********c:\tmp\tibco.home\bwce\2.3\system\hotfix\shared\*************ENNDDDDD"
-	
+	Write-Output "**********c:\tmp\tibco.home\bwce\2.3\system\hotfix\shared\*************ENNDDDDD" #>
 	
 } catch {
 	#$pscmdlet.ThrowTerminatingError($_)
