@@ -1,4 +1,4 @@
-$ProgressPreference = 'SilentlyContinue'
+#$ProgressPreference = "SilentlyContinue"
 #!/bin/bash
 #Set ENV Variables
 $env:BWCE_HOME="c:\tmp"
@@ -15,7 +15,7 @@ echo "********I came till here************"
 #. "C:\scripts\setup2.ps1"
 
 try {
-	. "C:\scripts\install-ssh.ps1"
+	#. "C:\scripts\install-ssh.ps1"
 	. "C:\scripts\setup2.ps1"
 	. c:\tmp\tibco.home\bwce\2.3\bin\bwappnode.exe --propFile c:\tmp\tibco.home\bwce\2.3\bin\bwappnode.tra -profileFile c:\tmp\tmp\pcf.substvar  -ear C:\tmp\tibco.home\bwce\2.3\bin\bwapp.ear -config c:\tmp\tibco.home\bwce\2.3\config\appnode_config.ini -l admin startlocal 
 	

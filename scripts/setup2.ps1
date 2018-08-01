@@ -1,9 +1,11 @@
+#$ProgressPreference = 'SilentlyContinue'
 # need to figure out that in some functions we're using undefined variables
 #...are these variables env variables, if yes
 #then need to check then with env part
 
 #$BW_LOGLEVEL="debug"
-$ProgressPreference = 'SilentlyContinue'
+
+$ProgressPreference = "SilentlyContinue"
 function print_Debug() {
 	
 	[CmdletBinding()]
@@ -246,6 +248,7 @@ function Set-LogLevel {
 		   
 			if ( Test-Path -Path $logback -PathType leaf) {
 			   
+                #TODO: Check if this copy Itme condition is working or not
 				Copy-Item -Path $logback -Destination $logback.bak
 				(Get-Content $logback | ForEach-Object {$_ -ireplace "<root level\s*=.*", "<root level = `"$env:BW_LOGLEVEL`">"}) -join "`n" | Set-Content -NoNewline -Force $logback
 				print_Debug "The loglevel is set to $env:BW_LOGLEVEL level"
@@ -255,6 +258,17 @@ function Set-LogLevel {
 		} else {
            
 			Write-Output "Setting loglevel to Error"
+            
+            Copy-Item $(Get-ChildItem -Path $logback) -Destination $(Get-ChildItem -Path "$logback.bak")
+            
+            Write-Output "******Pritnging contents of config folder from inside set log level function******"
+            Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.3\config |
+			ForEach-Object {
+			
+				write-output $_.Name
+		
+			}
+            Write-Output "******Set log Level end*************"
 			(Get-Content $logback | ForEach-Object {$_ -ireplace "<root level\s*=.*", "<root level = `"ERROR`">"}) -join "`n" | Set-Content -NoNewline -Force $logback
 		
 		}
@@ -268,65 +282,70 @@ function Set-LogLevel {
 
 }
 
-function Check-EnvSubstituteConfig {
+<# function Check-EnvSubstituteConfig {
 
     [CmdletBinding()]
 	param()
     
 	try{
 	
-	Write-Output "Inside checkEnvSubstituteConfig function"
+	    Write-Output "Inside checkEnvSubstituteConfig function"
         
 		####Compile-Error-Came-Here-So-We-Put-Path-In_Quotes, also need to check if such paths have wildcards or not, hence, maybe we need to enclose them within quotes
 		$bwappnodeTRA = "$env:BWCE_HOME\tibco.home\bw*\*\bin\bwappnode.tra"
-        #$appnodeConfigFile=$BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini
-        $manifest=c:\tmp\META-INF\MANIFEST.MF
+        $appnodeConfigFile="$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
+        $manifest="c:\tmp\META-INF\MANIFEST.MF"
         $bwAppNameHeader="Bundle-SymbolicName"
         $bwBundleAppName = select-string $bwAppNameHeader $manifest | %{$_.Line.Split(":")[1]}
         $env:BWCE_APP_NAME=$bwBundleAppName      
-        
-        if([System.IO.File]::Exists($bwappnodeTRA)){
-            copy $bwappnodeTRA $bwappnodeTRA.bak
+        #TODO: How is addons_home populated(can't see it in env variables"
+        if( Test-Path -Path $bwappnodeTRA -PathType leaf){
+            #Copy-Item -Path $bwappnodeTRA -Destination "$bwappnodeTRA.bak" -Force -Confirm
+           xcopy $appnodeConfigFile "$appnodeConfigFile.bak" /v /q
             (Get-Content $bwappnodeTRA | ForEach-Object {$_ -replace "-Djava.class.path=", "-Djava.class.path=$ADDONS_HOME/lib:"}) -join "`n" | Set-Content -NoNewline -Force $bwappnodeTRA
             print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
         }
-        #if([System.IO.File]::Exists($bwappnodeFile)){
-        #    copy $bwappnodeFile $bwappnodeFile.bak
-        #    (Get-Content $bwappnodeTRA | ForEach-Object {$_ -replace "-Djava.class.path=", "-Djava.class.path=$ADDONS_HOME/lib:"}) -join "`n" | Set-Content -NoNewline -Force $bwappnodeTRA
-        #    print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
-        #} 
-        if($BW_JAVA_OPTS){
-            if([System.IO.File]::Exists($bwappnodeTRA)){
+        #TODO: Is appnode even needed?
+        <#if(Test-Path -Path $bwappnodeFile -PathType leaf){
+            Copy-Item -Path $bwappnodeFile -Destination "$bwappnodeFile.bak"
+            (Get-Content $bwappnodeTRA | ForEach-Object {$_ -replace "-Djava.class.path=", "-Djava.class.path=$ADDONS_HOME/lib:"}) -join "`n" | Set-Content -NoNewline -Force $bwappnodeTRA
+            print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
+        } 
+        if($env:BW_JAVA_OPTS){
+            if(Test-Path -Path $bwappnodeTRA -PathType leaf){
+                Copy-Item -Path $bwappnodeTRA -Destination "$bwappnodeTRA.bak"
                 #sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
-                print_Debug "Appended $BW_JAVA_OPTS to java.extend.properties"
+                print_Debug "Appended $env:BW_JAVA_OPTS to java.extend.properties"
+            }
+        } #
+        if($env:BW_ENGINE_THREADCOUNT){
+            if(Test-Path -Path $appnodeConfigFile -PathType leaf){
+                    Add-Content -Path $appnodeConfigFile -Value "`r`nbw.engine.threadCount=$env:BW_ENGINE_THREADCOUNT"
+                    print_Debug "set BW_ENGINE_THREADCOUNT to $env:BW_ENGINE_THREADCOUNT"
             }
         }
-        if($BW_ENGINE_THREADCOUNT){
-            if([System.IO.File]::Exists($appnodeConfigFile)){
-                    add-content -path $appnodeConfigFile -value "`r`nbw.engine.threadCount=$BW_ENGINE_THREADCOUNT"
-                    print_Debug "set BW_ENGINE_THREADCOUNT to $BW_ENGINE_THREADCOUNT"
+        if($env:BW_ENGINE_STEPCOUNT){
+            if(Test-Path -Path $appnodeConfigFile -PathType leaf){
+                    Add-Content -Path $appnodeConfigFile -Value "`r`nbw.engine.stepCount=$env:BW_ENGINE_STEPCOUNT"
+                    print_Debug "set BW_ENGINE_STEPCOUNT to $env:BW_ENGINE_STEPCOUNT"
             }
         }
-        if($BW_ENGINE_STEPCOUNT){
-            if([System.IO.File]::Exists($appnodeConfigFile)){
-                    add-content -path $appnodeConfigFile -value "`r`nbw.engine.stepCount=$BW_ENGINE_STEPCOUNT"
-                    print_Debug "set BW_ENGINE_STEPCOUNT to $BW_ENGINE_STEPCOUNT"
+        #TODO: Check the condition below, whether concatenation is happening properly or not
+        if($env:BW_APPLICATION_JOB_FLOWLIMIT){
+            if((Test-Path -Path $appnodeConfigFile -PathType leaf)){
+                    Add-Content -Path $appnodeConfigFile -Value "`r`nbw.application.job.flowlimit.$env:bwBundleAppName=$env:BW_APPLICATION_JOB_FLOWLIMIT"
+                    print_Debug "set BW_APPLICATION_JOB_FLOWLIMIT to $env:BW_APPLICATION_JOB_FLOWLIMIT"
             }
         }
-        if($BW_APPLICATION_JOB_FLOWLIMIT){
-            if([System.IO.File]::Exists($BW_APPLICATION_JOB_FLOWLIMIT)){
-                    add-content -path $appnodeConfigFile -value "`r`nbw.application.job.flowlimit.$bwBundleAppName=$BW_APPLICATION_JOB_FLOWLIMIT"
-                    print_Debug "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
-            }
-        }
-        if($BW_APP_MONITORING_CONFIG){
-            if([System.IO.File]::Exists($appnodeConfigFile)){
+        if($env:BW_APP_MONITORING_CONFIG){
+            if((Test-Path -Path $appnodeConfigFile -PathType leaf)){
                 (Get-Content $appnodeConfigFile | ForEach-Object {$_ -replace "bw.frwk.event.subscriber.metrics.enabled=false", "bw.frwk.event.subscriber.metrics.enabled=true"}) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
                 print_Debug "set bw.frwk.event.subscriber.metrics.enabled to true"
             }
         }
-        if($BW_LOGLEVEL -eq "DEBUG"){
-            if($BW_APPLICATION_JOB_FLOWLIMIT -or $BW_ENGINE_STEPCOUNT -or $BW_ENGINE_THREADCOUNT -or $BW_APP_MONITORING_CONFIG){
+        #Always do strict checking, in this case if step count is set to 0 & no other variable is set, condition will become false, even though the value is there
+        if(-not [String]::IsNullOrEmpty($env:BW_LOGLEVEL) -and $env:BW_LOGLEVEL.toLower() -eq "debug"){
+            if(-not [String]::IsNullOrEmpty($env:BW_APPLICATION_JOB_FLOWLIMIT) -or -not [String]::IsNullOrEmpty($env:BW_ENGINE_STEPCOUNT) -or -not [String]::IsNullOrEmpty($env:BW_ENGINE_THREADCOUNT) -or -not [String]::IsNullOrEmpty($env:BW_APP_MONITORING_CONFIG)){
                 Write-Output "---------------------------------------"
                 cat $appnodeConfigFile
                 Write-Output "---------------------------------------"
@@ -340,7 +359,7 @@ function Check-EnvSubstituteConfig {
 		
     }
 	
-}
+} #>
 
 
 
@@ -368,11 +387,14 @@ function Check-Plugins {
 					#New-Item -Path $env:BWCE_HOME\plugintmp, also check if -force command is required here or not
 					#also assuming $name contains the entire path of the file along with thee file name
 					Expand-Archive -Path $name -DestinationPath $env:BWCE_HOME\plugintmp -Force
-					New-Item -Path $env:BWCE_HOME\tibco.home\addons\runtime\plugins 
+					New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\runtime\plugins 
 					Move-Item -Path $env:BWCE_HOME\plugintmp\runtime\plugins\* -Destination $env:BWCE_HOME\tibco.home\addons\runtime\plugins
-					New-Item -Path $env:BWCE_HOME\tibco.home\addons\bin
-					#need to check this line for null condition
-					Move-Item -Path $env:BWCE_HOME\plugintmp\bin\* -Destination $env:BWCE_HOME\tibco.home\addons\bin 2> $null
+
+                    New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\lib
+                    Move-Item -Path $env:BWCE_HOME\plugintmp\lib\*.jar -include -Destination $env:BWCE_HOME\tibco.home\addons\lib
+
+                    New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\bin
+					Move-Item -Path $env:BWCE_HOME\plugintmp\bin -Destination $env:BWCE_HOME\tibco.home\addons\bin | Out-Null
 				
 				}
 			
@@ -471,7 +493,7 @@ function Check-JMXConfig {
 				$JMX_PORT=$env:BW_JMX_CONFIG
 			
 			}
-			
+			#TODO: See if this double quotes are needed or not
 			$JMX_PARAM="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=""$JMX_PORT"" -Dcom.sun.management.jmxremote.rmi.port=""$JMX_PORT"" -Djava.rmi.server.hostname=""$JMX_HOST"" -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false "
 			$env:BW_JAVA_OPTS="$BW_JAVA_OPTS $JMX_PARAM"
 		
@@ -509,7 +531,7 @@ try {
         #TODO: In files bwappnode.tra and bwcommon.tra, path has been hard-coded(specifically APPDIR, see if that can be made dynamic
 		
 		#check condition below to ensure APPDIR is getting replaced properly and no inconsistencies are being introduced
-		(Get-Content "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra" | ForEach-Object {$_ -ireplace "_APPDIR_", "$env:BW_LOGLEVEL"}) -join "`n" | Set-Content -NoNewline -Force "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra"
+		(Get-Content "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra" | ForEach-Object {$_ -ireplace "_APPDIR_", "$env:APPDIR"}) -join "`n" | Set-Content -NoNewline -Force "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra"
 		####++++++++++++###########
 
 
@@ -541,13 +563,14 @@ try {
 		New-Item -ItemType SymbolicLink -Path $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\bin\") -Name bwapp.ear -Target C:\*.ear
 		#bakslah confusion as config has forward slashes
 		
-		<#Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.3\bin |
+		Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.3\config |
 			ForEach-Object {
 			
 				write-output $_.Name
 		
-			} #>
-		
+			} 
+		#Copy-Item $appnodeConfigFile "$appnodeConfigFile.bak" -Force
+        #xcopy "$appnodeConfigFile" "$appnodeConfigFile.bak" /v /q
 		(Get-Content $appnodeConfigFile | ForEach-Object {$_ -ireplace "_APPDIR_", "$env:BWCE_HOME"}) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
 		#hack-hardcoded-need-better
 		Rename-Item -Path "C:\tmp\tibco.home\bwce\2.3\bin\bwapp.ear" -NewName bwapp.zip | Out-Null
@@ -557,7 +580,7 @@ try {
 		Rename-Item -Path "C:\tmp\tibco.home\bwce\2.3\bin\bwapp.zip" -NewName bwapp.ear | Out-Null
 		Set-LogLevel
 		#memoryCalculator()
-		#checkEnvSubstituteConfig()	
+		#Check-EnvSubstituteConfig	
 		<# write-output "***META-INF-TEST******"
 		Get-ChildItem $env:BWCE_HOME\META-INF |
 			ForEach-Object {
