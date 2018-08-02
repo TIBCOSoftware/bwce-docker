@@ -1,4 +1,4 @@
-#$ProgressPreference = 'SilentlyContinue'
+$ProgressPreference = 'SilentlyContinue'
 # need to figure out that in some functions we're using undefined variables
 #...are these variables env variables, if yes
 #then need to check then with env part
@@ -139,7 +139,7 @@ function Check-Profile {
 					
 					if ( $bwcePolicyStr ) {
 						#check this boolean assignment as well, and set it globally
-						$POLICY_ENABLED = $true
+						$POLICY_ENABLED = "true"
 						break
 					
 					}	
