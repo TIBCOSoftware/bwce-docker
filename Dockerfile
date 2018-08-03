@@ -8,4 +8,5 @@ MAINTAINER TIBCO Software Inc.
 ADD . /
 #RUN chmod 755 c:/scripts/start.sh
 #RUN chmod 755 c:/scripts/setup.sh
-CMD ["powershell", "c:/scripts/start.ps1"]
+#CMD ["powershell", "c:/scripts/start.ps1"]
+CMD ["powershell", "c:/scripts/start-240.ps1"]

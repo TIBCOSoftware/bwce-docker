@@ -1,7 +1,7 @@
 FROM bwce-240:latest
 MAINTAINER Vijay Nalawade <vnalawad@tibco.com>
-ADD docker.http.application_1.0.0.ear C:/
-EXPOSE 8080
+ADD tibco.bwce.sample.core.hystrix.application_2.0.0.ear C:/
+EXPOSE 8081
 EXPOSE 8090
 
 
