@@ -552,10 +552,12 @@ try {
 			#had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
 			$jarFolder = "c:\resources\addons\jars"
 			
+			Write-Output "Copying Addons Jars"
+			
 			if ( (Test-Path $jarFolder) -and (get-item $jarFolder).GetFileSystemInfos().Count -gt 0 ) {
-			
-				Copy-Item "c:\resources\addons\jars" -Destination $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\system\hotfix\shared") -Recurse
-			
+				Write-Output "Before copying the jar"
+				Copy-Item "c:\resources\addons\jars\*" -Destination $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\system\hotfix\shared\") -Recurse
+				Write-Output "after Copying Addons Jars"
 			}
 		
 		}
