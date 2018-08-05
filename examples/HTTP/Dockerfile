@@ -1,6 +1,6 @@
 FROM bwce-240:latest
 MAINTAINER Vijay Nalawade <vnalawad@tibco.com>
-ADD docker.http.application_1.0.0.ear C:/
+ADD docker.http.application_1.0.0.ear /
 EXPOSE 8080
 EXPOSE 8090
 

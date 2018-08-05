@@ -1,9 +1,6 @@
 $ProgressPreference = 'SilentlyContinue'
-# need to figure out that in some functions we're using undefined variables
-#...are these variables env variables, if yes
-#then need to check then with env part
 
-function print_Debug() {
+function Print-Debug() {
 	
 	[CmdletBinding()]
 	param( $message )
@@ -29,7 +26,7 @@ function print_Debug() {
 }
 
 
-function Get-ErrorInformation {
+<#function Get-ErrorInformation {
     [cmdletbinding()]
     param($incomingError)
 
@@ -60,7 +57,7 @@ function Get-ErrorInformation {
 
     }
 
-}
+}#>
 
 
 
@@ -71,7 +68,7 @@ function Check-Profile {
 
 	try {
 	
-		Write-Output "Inside CheckProfile function"
+		Print-Debug("Inside CheckProfile function")
 
 		$BUILD_DIR=$env:BWCE_HOME
 		$defaultProfile="default.substvar"
@@ -83,9 +80,10 @@ function Check-Profile {
 		if ( [System.IO.File]::Exists($manifest) ) { 
 			
 			$bwAppProfileStr = select-string $bwAppConfig+".*.substvar" $manifest | ForEach-Object Line
-			echo $bwAppProfileStr
-            $env:bwBundleAppName = select-string $bwAppNameHeader $manifest | %{$_.Line.Split(":")[1].Trim()}
-			echo $env:bwBundleAppName
+			Print-Debug($bwAppProfileStr)
+            $env:bwBundleAppName = select-string $bwAppNameHeader $manifest | ForEach-Object {$_.Line.Split(":")[1].Trim()}
+			Print-Debug($env:bwBundleAppName)
+			
 			if ( $env:DISABLE_BWCE_EAR_VALIDATION -ne "True" ) {
 			
 				$bwEditionHeaderStr = select-string $bwEdition $manifest 
@@ -109,7 +107,6 @@ function Check-Profile {
 			ForEach-Object {
 			
 				$name = $_.Name
-				echo $name
 				$fileExtension = $_.Extension
                 
 				if ( $fileExtension -eq ".jar" ) {
@@ -117,7 +114,6 @@ function Check-Profile {
 					New-Item -Path $BUILD_DIR\temp
 					#Check how to do quiet unzipping
 					Expand-Archive -Path $BUILD_DIR\tibco.home\$name -DestinationPath $BUILD_DIR\temp -Force
-					####Compile-Error-Came-Here-So-We-Put-Path-In_Quotes
 					$MANIFESTMF= "$BUILD_DIR\temp\META-INF\MANIFEST.MF"
 					#need to check if we have to handle any special cases here as well(shell script had a long command)
 					$bwcePaletteStr = select-string  -Quiet 'bw.rv' $MANIFESTMF 
@@ -130,7 +126,7 @@ function Check-Profile {
 					
 					if ( $bwcePaletteStr ) {
 					
-						Write-Error "ERROR: Application $bwBundleAppName is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
+						Write-Output "ERROR: Application $bwBundleAppName is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
 						Exit 1
 					}
 					
@@ -206,12 +202,12 @@ function Check-Policy {
 	
 		if ( $POLICY_ENABLED.toLower() -eq "true" ) {
 
-            Write-Output "Iside Policy enabled true condition"
+            Print-Debug("Executing Check-Policy Function")
 	
 			if ( Test-Path -Path $appnodeConfigFile -PathType leaf ) {
 			
 				Add-Content -Path $appnodeConfigFile -Value "`r`nbw.governance.enabled=true"
-				print_Debug("Set bw.governance.enabled=true")
+				Print-Debug("Set bw.governance.enabled=true")
 		
 			}
 		
@@ -219,7 +215,7 @@ function Check-Policy {
 	
 	} catch {
 	
-		print_Debug("Error Setting bw.governance property to true. Check if AppNode Config file exists or not.")
+		Print-Debug("Error Setting bw.governance property to true. Check if AppNode Config file exists or not.")
 		Write-Error -Exception $PSItem -ErrorAction Stop
 
 	}
@@ -232,37 +228,31 @@ function Set-LogLevel {
 	param()
 	
     try {
-	
-		Write-Output "Inside setloglevel function"
+		Print-Debug("Inside Set-Loglevel function")
 		$logback="$env:BWCE_HOME\tibco.home\bw*\*\config\logback.xml"
-		write-output "***Log Level Check****"
-		write-output $env:BW_LOGLEVEL
+		Print-Debug($env:BW_LOGLEVEL)
 
 		if ( -not [String]::IsNullOrEmpty($env:BW_LOGLEVEL) ) {
 		   
 			if ( Test-Path -Path $logback -PathType leaf) {
 			   
-                
 				Copy-Item $(Get-ChildItem $logback) "$(Get-ChildItem $logback).bak"
 				(Get-Content $logback | ForEach-Object {$_ -ireplace "<root level\s*=.*", "<root level = `"$env:BW_LOGLEVEL`">"}) -join "`n" | Set-Content -NoNewline -Force $logback
-				print_Debug "The loglevel is set to $env:BW_LOGLEVEL level"
+				Write-Output "The loglevel is set to $env:BW_LOGLEVEL level"
 			
 			}
 		
 		} else {
            
-			Write-Output "Setting loglevel to Error"
-            
+			Write-Output "The loglevel is set to Error"
             Copy-Item $(Get-ChildItem $logback) "$(Get-ChildItem $logback).bak"
-            Write-Output "******Pritnging contents of config folder from inside set log level function******"
-            Write-Output "******Set log Level end*************"
 			(Get-Content $logback | ForEach-Object {$_ -ireplace "<root level\s*=.*", "<root level = `"ERROR`">"}) -join "`n" | Set-Content -NoNewline -Force $logback
 		
 		}
 	
 	} catch {
 	
-		print_Debug("Error setting log level in logback file")
+		Print-Debug("Error setting log level in logback file")
 		Write-Error -Exception $PSItem -ErrorAction Stop
 	
 	}
@@ -407,15 +397,14 @@ function Check-JAVAHOME {
 
 	try {
 	
-		Write-Output "Inside checkJAVAHOME function"
+		Print-Debug("Inside checkJAVAHOME function")
 	
 		if ( -not [String]::IsNullOrEmpty($env:JAVA_HOME) ) {
-		#if ( $JAVA_HOME ) {
 		
-			print_Debug($env:JAVA_HOME)
+			Print-Debug($env:JAVA_HOME)
 			
 		} else {
-			print_Debug("set java home")
+			Print-Debug("set java home")
 			$env:JAVA_HOME=$env:BWCE_HOME + "\tibco.home\tibcojre64\1.8.0"
 			
 		}
@@ -438,11 +427,11 @@ function Check-JavaGCConfig {
 	
 	try {
 	
-		Write-Output "Inside checkJavaGCConfig function"
+		Print-Debug("Inside checkJavaGCConfig function")
 	
 		if ( -not [String]::IsNullOrEmpty($env:BW_JAVA_GC_OPTS) ) {
 	
-			 print_Debug($env:BW_JAVA_GC_OPTS)
+			 Print-Debug($env:BW_JAVA_GC_OPTS)
 			 
 		} else {
 		
@@ -465,7 +454,7 @@ function Check-JMXConfig {
 
 	try {
 	
-		Write-Output "Inside checkJMXConfig function"
+		Print-Debug("Inside checkJMXConfig function")
 	
 		if ( -not [String]::IsNullOrEmpty($env:BW_JMX_CONFIG) ) {
 		
@@ -480,7 +469,7 @@ function Check-JMXConfig {
 				$JMX_PORT=$env:BW_JMX_CONFIG
 			
 			}
-			#TODO: See if this double quotes are needed or not
+			
 			$JMX_PARAM="-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=$JMX_PORT -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT -Djava.rmi.server.hostname=$JMX_HOST -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote.local.only=false "
 			$env:BW_JAVA_OPTS="$BW_JAVA_OPTS $JMX_PARAM"
 		
@@ -515,8 +504,6 @@ try {
         New-Item -ItemType file key.properties | Out-Null
 		New-Item -ItemType directory $env:BWCE_HOME\tmp | Out-Null
 		
-		#if ( Test-Path $env:BWCE_HOME\tmp -PathType Container ) { Write-Output "partial-ex" } else {Write-Output "nahi-chali" }
-		
 		$addonFolder = "c:\resources\addons"
 		
 		if ( Test-Path $addonFolder -PathType Container ) {
@@ -526,21 +513,19 @@ try {
 			#Check-Libs
 			#Check-ThirdPartyInstallations
 		
-			#had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
+			#TODO: had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
 			$jarFolder = "c:\resources\addons\jars"
 			
-			Write-Output "Copying Addons Jars"
+			print-Debug("Copying Addons Jars if present")
 			
 			if ( (Test-Path $jarFolder) -and (get-item $jarFolder).GetFileSystemInfos().Count -gt 0 ) {
-				Write-Output "Before copying the jar"
 				Copy-Item "c:\resources\addons\jars\*" -Destination $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\system\hotfix\shared\") -Recurse
-				Write-Output "after Copying Addons Jars"
+				Write-Output "Copied Addons Jars"
 			}
 		
 		}
 		
 		New-Item -ItemType SymbolicLink -Path $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\bin\") -Name bwapp.ear -Target C:\*.ear | Out-Null
-		#bakslah confusion as config has forward slashes
 		
 		<# Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.4\config |
 			ForEach-Object {
@@ -549,27 +534,29 @@ try {
 		
 			}  #>
 		
-		copy-item $(Get-ChildItem $appnodeConfigFile) "$(Get-ChildItem $appnodeConfigFile).bak" 
+		Copy-Item $(Get-ChildItem $appnodeConfigFile) "$(Get-ChildItem $appnodeConfigFile).bak" 
        
-		Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.4\config |
+		<#Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.4\config |
 			ForEach-Object {
 			
 				write-output $_.Name
 		
-			}  
+			}  #>
 	   
 	   
 	   
 	   
 		(Get-Content $appnodeConfigFile | ForEach-Object {$_ -ireplace "_APPDIR_", "$env:BWCE_HOME"}) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
-		#hack-hardcoded-need-better
+		
 		#Rename-Item -Path "C:\tmp\tibco.home\bwce\2.4\bin\bwapp.ear" -NewName bwapp.zip | Out-Null
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.ear") -NewName bwapp.zip | Out-Null
 		
 		#Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.ear -DestinationPath C:\tmp -Force
 		Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.zip -DestinationPath C:\tmp -Force | Out-Null
+		
 		#Rename-Item -Path "C:\tmp\tibco.home\bwce\2.4\bin\bwapp.zip" -NewName bwapp.ear | Out-Null
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip") -NewName bwapp.ear | Out-Null
+		
 		Set-LogLevel
 		#memoryCalculator()
 		#Check-EnvSubstituteConfig	
@@ -585,37 +572,13 @@ try {
 		Copy-Item $(Get-ChildItem -Path "C:\*.substvar") -Destination $env:BWCE_HOME\tmp\pcf.substvar
 		
 	} else {
-		#hardcoded profile file name, need to change...env variable setting problem
+		
 		Copy-Item $env:BWCE_HOME\META-INF\$env:BW_PROFILE -Destination $env:BWCE_HOME\tmp\pcf.substvar
 	}
 	
-	<#Write-Output "temp-check"
-	Get-ChildItem \tmp\tmp\ |
-			ForEach-Object {
-			
-				write-output $_.Name
-		
-			} 
-	Write-Output "temp-check-end"
-	Write-Output [Environment]::UserName
-	Get-LocalUser -Name "Administrator" #>
-	
-    write-output $env:bwBundleAppName
+    # write-output $env:bwBundleAppName
 	. $env:JAVA_HOME\bin\java -cp "$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*");$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
-	#. $env:JAVA_HOME\bin\java -cp "c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bwce.profile.resolver_1.0.0.003.jar;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.tpcl.com.fasterxml.jackson__2.1.4.001\*;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
-	#. $env:JAVA_HOME\bin\java -cp "c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001\*;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
-	#. $env:JAVA_HOME\bin\java -cp "c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001\*;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver -Verb runAs Administrator
 	
-	#-> working. "$env:JAVA_HOME\bin\java -cp c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bwce.profile.resolver_1.0.1.002.jar;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.tpcl.com.fasterxml.jackson_2.1.4.001\*;c:\tmp\tibco.home\bwce\2.4\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_1.4.0.001\*;$env:BWCE_HOME;$env:JAVA_HOME\lib" "-DBWCE_APP_NAME=$bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
-	
-	<# Write-Output "c:\tmp\tibco.home\bwce\2.4\system\hotfix\shared\********************"
-	Get-ChildItem c:\tmp\tibco.home\bwce\2.4\system\hotfix\shared\jars\ |
-			ForEach-Object {
-			
-				write-output $_.Name
-		
-			} 
-	Write-Output "**********c:\tmp\tibco.home\bwce\2.4\system\hotfix\shared\*************ENNDDDDD" #>
 	
 } catch {
 	#$pscmdlet.ThrowTerminatingError($_)
