@@ -65,4 +65,4 @@ docker run -it -P -e BW_LOGLEVEL=INFO -e MESSAGE='Welcome to BWCE 2.0 !!!' bwce-
 #cd examples/JDBC
 #docker build -t bwce-jdbc-app-nano .
 #docker run -p 8080:8080 -e BW_LOGLEVEL=DEBUG bwce-jdbc-app-nano [use this if vales are hardcoded in the applicatiopn/module properties]
-#docker run -p 8080:8080 -e BW_LOGLEVEL=DEBUG -e DB_URL="jdbc:postgresql://nitish-db-instance.cqhaluv3epe3.us-east-1.rds.amazonaws.com:5432/postgres" -e DB_USERNAME="nitish" -e DB_PASSWORD="nitish123" bwce-jdbc-app-nano
+#docker run -p 8080:8080 -e BW_LOGLEVEL=DEBUG -e DB_URL="xxx-xxx-xxx" -e DB_USERNAME="dummy" -e DB_PASSWORD="nitish" bwce-jdbc-app-nano
