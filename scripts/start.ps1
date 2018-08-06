@@ -1,15 +1,15 @@
 $ProgressPreference = "SilentlyContinue"
 #!/bin/bash
 #Set ENV Variables
-$env:BWCE_HOME="c:\tmp"
-$env:APPDIR=$env:BWCE_HOME
-$env:MALLOC_ARENA_MAX=2
-$env:MALLOC_MMAP_THRESHOLD_=1024
-$env:MALLOC_TRIM_THRESHOLD_=1024
-$env:MALLOC_MMAP_MAX_=65536
-$env:BW_KEYSTORE_PATH="c:\resources\addons\certs"
-$env:BW_HOME="c:\tmp\tibco.home\bwce\2.3"
-echo "********I came till here************"
+$env:BWCE_HOME = "c:\tmp"
+$env:APPDIR = $env:BWCE_HOME
+$env:MALLOC_ARENA_MAX = 2
+$env:MALLOC_MMAP_THRESHOLD_ = 1024
+$env:MALLOC_TRIM_THRESHOLD_ = 1024
+$env:MALLOC_MMAP_MAX_ = 65536
+$env:BW_KEYSTORE_PATH = "c:\resources\addons\certs"
+$env:BW_HOME = "c:\tmp\tibco.home\bwce\2.3"
+Write-Output "********I came till here************"
 #echo $env:APPDIR
 #echo $env:BWCE_HOME
 #. "C:\scripts\setup2.ps1"
@@ -17,12 +17,12 @@ echo "********I came till here************"
 try {
 	. "C:\scripts\install-ssh.ps1"
 	. "C:\scripts\setup2.ps1"
-	. c:\tmp\tibco.home\bwce\2.3\bin\bwappnode.exe --propFile c:\tmp\tibco.home\bwce\2.3\bin\bwappnode.tra -profileFile c:\tmp\tmp\pcf.substvar  -ear C:\tmp\tibco.home\bwce\2.3\bin\bwapp.ear -config c:\tmp\tibco.home\bwce\2.3\config\appnode_config.ini -l admin startlocal 
-	
+	. c:\tmp\tibco.home\bwce\2.3\bin\bwappnode.exe --propFile c:\tmp\tibco.home\bwce\2.3\bin\bwappnode.tra -profileFile c:\tmp\tmp\pcf.substvar -ear C:\tmp\tibco.home\bwce\2.3\bin\bwapp.ear -config c:\tmp\tibco.home\bwce\2.3\config\appnode_config.ini -l admin startlocal
+
 } catch {
-	
-	echo "ERROR: Failed to setup BWCE runtime. See logs for more details."
-	Write-Error  "Ran into an issue: $PSItem" -ErrorAction Stop
-	Exit 1
+
+	Write-Output "ERROR: Failed to setup BWCE runtime. See logs for more details."
+	Write-Error "Ran into an issue: $PSItem" -ErrorAction Stop
+	exit 1
 
 }
