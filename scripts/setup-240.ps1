@@ -482,6 +482,49 @@ function Check-JMXConfig {
 	}
 }
 
+function Check-Certs {
+
+	[CmdletBinding()]
+	param()
+
+	try {
+
+		$certificateFolder = "c:\resources\addons\certs"
+
+		if ((Test-Path $certificateFolder) -and (Get-ChildItem $certificateFolder).Count -gt 0) {
+
+			$JRE_VERSION = Get-ChildItem $env:BWCE_HOME\tibco.home\tibcojre64\* | ForEach-Object { Write-Output $_.Name }
+			$JRE_LOCATION = "$env:BWCE_HOME\tibco.home\tibcojre64\$JRE_VERSION"
+			$certsStore = "$JRE_LOCATION\lib\security\cacerts"
+
+			Get-ChildItem $certificateFolder -Exclude ".*" |
+			ForEach-Object {
+				$name = $_.Name
+				$fileExtension = $_.Extension
+
+				if ($fileExtension -ne ".jks") {
+
+					Print-Debug ("Importing $name into java truststore")
+					$aliasName = $name.Split(".")[0]
+					#.$JRE_LOCATION\bin\keytool.exe -import -trustcacerts -keystore $certsStore -storepass changeit -noprompt -alias $aliasName -file $name
+					$certificateFullPath = "$certificateFolder\$name"
+					$AllArgs = @('-import','-trustcacerts','-storepass ','changeit','-keystore ',$certsStore,'-alias ',$aliasName,'-file ',$certificateFullPath,'-noprompt')
+					. $JRE_LOCATION\bin\keytool.exe $AllArgs
+				}
+
+			}
+
+		}
+
+
+	} catch {
+
+		Write-Error -Exception $PSItem.ToString() -ErrorAction Stop
+
+	}
+
+}
+
 
 
 $appnodeConfigFile = "$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
@@ -511,6 +554,7 @@ try {
 			#Check-Plugins
 			#Check-Agents
 			#Check-Libs
+			Check-Certs
 			#Check-ThirdPartyInstallations
 
 			#TODO: had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
@@ -518,7 +562,7 @@ try {
 
 			Print-Debug ("Copying Addons Jars if present")
 
-			if ((Test-Path $jarFolder) -and (Get-Item $jarFolder).GetFileSystemInfos().Count -gt 0) {
+			if ((Test-Path $jarFolder) -and (Get-ChildItem $jarFolder).Count -gt 0) {
 				Copy-Item "c:\resources\addons\jars\*" -Destination $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\system\hotfix\shared\") -Recurse
 				Write-Output "Copied Addons Jars"
 			}
