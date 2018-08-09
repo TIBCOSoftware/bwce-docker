@@ -340,54 +340,88 @@ function Set-LogLevel {
 
 
 
-<#function Check-Plugins {
+function Check-Plugins {
 	param()
 	process {
-	
+
 		try {
-		
+
 			Write-Output "Inside Check-Plugins function"
-			#make all paths like this dynamic
 			$pluginFolder = "c:\resources\addons\plugins"
-			
-			if ( (Test-Path $pluginFolder) -and (Get-Item $pluginFolder -Exclude ".*").GetFileSystemInfos().Count -gt 0 ) {
-			
-				print_Debug("Adding Plug-in Jars")
-				#check this condition 
+
+			if ((Test-Path $pluginFolder) -and (Get-ChildItem $pluginFolder).Count -gt 0) {
+
+				Print-Debug ("Adding Plug-in Jars")
 				$addonsFilePath = "$env:BWCE_HOME\tibco.home\bw*\*\ext\shared"
 				#Added quotes in path here, don't know why and not sure if addons link will be evaluated to absolute path or not
-				"name=Addons Factory`r`ntype=bw6`r`nlayout=bw6ext`r`nlocation=$env:BWCE_HOME\tibco.home\addons" | Set-Content -Path $addonsFilePath\addons.link   
-					
-				Get-ChildItem -Attributes !Hidden $pluginFolder |
+				"name=Addons Factory`r`ntype=bw6`r`nlayout=bw6ext`r`nlocation=$env:BWCE_HOME\tibco.home\addons" | Set-Content -Path "$(Get-ChildItem "$addonsFilePath")\addons.link"
+
+				Get-ChildItem $pluginFolder -Exclude ".*" |
 				ForEach-Object {
+
 					$name = $_.Name
-					#New-Item -Path $env:BWCE_HOME\plugintmp, also check if -force command is required here or not
-					#also assuming $name contains the entire path of the file along with thee file name
-					Expand-Archive -Path $name -DestinationPath $env:BWCE_HOME\plugintmp -Force
-					New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\runtime\plugins 
-					Move-Item -Path $env:BWCE_HOME\plugintmp\runtime\plugins\* -Destination $env:BWCE_HOME\tibco.home\addons\runtime\plugins
 
-                    New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\lib
-                    Move-Item -Path $env:BWCE_HOME\plugintmp\lib\*.jar -include -Destination $env:BWCE_HOME\tibco.home\addons\lib
+					Expand-Archive -Path "$pluginFolder\$name" -DestinationPath $env:BWCE_HOME\plugintmp -Force
 
-                    New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\bin
-					Move-Item -Path $env:BWCE_HOME\plugintmp\bin -Destination $env:BWCE_HOME\tibco.home\addons\bin | Out-Null
-				
+					if (Test-Path $env:BWCE_HOME\plugintmp\runtime\plugins\*) {
+
+						New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\runtime\plugins | Out-Null
+						Move-Item -Path $env:BWCE_HOME\plugintmp\runtime\plugins\* -Destination $env:BWCE_HOME\tibco.home\addons\runtime\plugins\
+
+					}
+
+					if (Test-Path $env:BWCE_HOME\plugintmp\lib\*.ini) {
+
+						New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\lib | Out-Null
+						$zipFirstName = $name.Split(".")[0]
+						Move-Item -Path $env:BWCE_HOME\plugintmp\lib\*.ini -Destination "$env:BWCE_HOME\tibco.home\addons\lib\$zipFirstName.ini"
+
+					}
+
+
+					if (Test-Path $env:BWCE_HOME\plugintmp\lib\*.jar) {
+
+						Move-Item -Path $env:BWCE_HOME\plugintmp\lib\*.jar -Destination $env:BWCE_HOME\tibco.home\addons\lib
+
+					}
+
+					if (Test-Path $env:BWCE_HOME\plugintmp\bin) {
+
+						New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\bin | Out-Null
+						Move-Item -Path $env:BWCE_HOME\plugintmp\bin -Destination $env:BWCE_HOME\tibco.home\addons\bin | Out-Null
+
+					}
+
+
+					if (Test-Path $env:BWCE_HOME\plugintmp\*) {
+
+						$source = "$env:BWCE_HOME\plugintmp"
+						$dest = "C:\"
+						$exclude = @('bin','runtime','lib')
+						Get-ChildItem $source -Recurse -Exclude $exclude | Copy-Item -Destination { Join-Path $dest $_.FullName.Substring($source.length) }
+
+						#$exclude = @('bin','runtime', 'lib')
+						#Move-Item $env:BWCE_HOME\plugintmp\* "C:\" -Exclude $exclude
+
+					}
+
+					Remove-Item $env:BWCE_HOME\plugintmp -Force -Recurse | Out-Null
+
 				}
-			
+
 			}
-	
+
 		} catch {
-		
-			#Write-Error -Exception $PSItem -ErrorAction Stop
-			Get-ErrorInformation -incomingError $_ -ErrorAction Stop
-		
+
+			Write-Error -Exception $PSItem -ErrorAction Stop
+			#Get-ErrorInformation -incomingError $_ -ErrorAction Stop
+
 		}
-	
+
 	}
 
 
-}#>
+}
 
 
 function Check-JAVAHOME {
@@ -551,13 +585,13 @@ try {
 
 		if (Test-Path $addonFolder -PathType Container) {
 
-			#Check-Plugins
+			Check-Plugins
 			#Check-Agents
 			#Check-Libs
 			Check-Certs
 			#Check-ThirdPartyInstallations
 
-			#TODO: had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
+			#*#*#*#*#TODO: had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
 			$jarFolder = "c:\resources\addons\jars"
 
 			Print-Debug ("Copying Addons Jars if present")
