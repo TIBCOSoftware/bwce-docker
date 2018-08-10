@@ -381,6 +381,8 @@ function Check-Plugins {
 
 					if (Test-Path $env:BWCE_HOME\plugintmp\lib\*.jar) {
 
+						#if (!Test-Path $env:BWCE_HOME\tibco.home\addons\lib) {}
+						New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\lib -Force | Out-Null
 						Move-Item -Path $env:BWCE_HOME\plugintmp\lib\*.jar -Destination $env:BWCE_HOME\tibco.home\addons\lib
 
 					}
@@ -553,12 +555,92 @@ function Check-Certs {
 
 	} catch {
 
-		Write-Error -Exception $PSItem.ToString() -ErrorAction Stop
+		Write-Error -Exception $PSItem -ErrorAction Stop
 
 	}
 
 }
 
+
+function Check-Agents {
+
+	[CmdletBinding()]
+	param()
+
+	try {
+
+		$agentFolder = "c:\resources\addons\agents"
+
+		if ((Test-Path $agentFolder) -and (Get-ChildItem $agentFolder).Count -gt 0) {
+
+			Print-Debug ("Adding Monitoring Jars")
+
+			Get-ChildItem $agentFolder -Exclude ".*" |
+			ForEach-Object {
+
+				New-Item -ItemType directory $env:BWCE_HOME\agent -Force | Out-Null
+				Expand-Archive -Path $agentFolder\$name -DestinationPath $env:BWCE_HOME\agent
+
+			}
+
+		}
+
+	} catch {
+
+		Write-Error -Exception $PSItem -ErrorAction Stop
+
+	}
+
+}
+
+function Check-Libs {
+
+	[CmdletBinding()]
+	param()
+
+	try {
+
+		$libFolder = "c:\resources\addons\lib"
+
+		if ((Test-Path $agentFolder) -and (Get-ChildItem $agentFolder).Count -gt 0) {
+
+			Print-Debug ("Adding additonal libs")
+
+			Get-ChildItem $agentFolder -Exclude ".*" |
+			ForEach-Object {
+
+				$name = $_.Name
+				$fileExtension = $_.Extension
+
+				if ($fileExtension -eq ".dll") {
+
+					Print-Debug ("DLL file found")
+					$JRE_VERSION = Get-ChildItem $env:BWCE_HOME\tibco.home\tibcojre64\* | ForEach-Object { Write-Output $_.Name }
+					$JRE_LOCATION = "$env:BWCE_HOME\tibco.home\tibcojre64\$JRE_VERSION"
+					$SUNEC_LOCATION = "$JRE_LOCATION\lib\amd64"
+					Copy-Item "$libFolder\$name" $SUNEC_LOCATION
+
+				} else {
+
+					New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\lib -Force | Out-Null
+					Expand-Archive -Path $libFolder\$name -DestinationPath $env:BWCE_HOME\tibco.home\addons\lib
+				}
+
+
+			}
+
+
+		}
+
+
+	} catch {
+
+		Write-Error -Exception $PSItem -ErrorAction Stop
+
+	}
+
+
+}
 
 
 $appnodeConfigFile = "$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
