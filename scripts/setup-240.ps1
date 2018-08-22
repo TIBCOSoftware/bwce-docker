@@ -610,6 +610,35 @@ function Check-Agents {
 
 }
 
+
+function Memory-Calculator {
+
+    [CmdletBinding()]
+	param()
+
+	try {
+
+        if(-not [string]::IsNullOrEmpty($env:MEMORY_LIMIT)){
+        
+            $memoryNumber = $env:MEMORY_LIMIT -replace "[^0-9]" , ''
+            $configuredMemory= ($memoryNumber*67+50)/100
+            $threadStack=$memoryNumber
+            thread_Stack=$((memory_Number))
+            $JAVA_PARAM="-Xmx"+$configuredMemory+"M -Xms128M -Xss512K"
+            $env:BW_JAVA_OPTS = "$JAVA_PARAM $BW_JAVA_OPTS"
+
+            
+        }
+
+    } catch {
+    
+        Write-Error -Exception $PSItem -ErrorAction Stop
+    
+    }
+
+
+}
+
 function Check-Libs {
 
 	[CmdletBinding()]
