@@ -259,84 +259,101 @@ function Set-LogLevel {
 
 }
 
-<# function Check-EnvSubstituteConfig {
+function Check-EnvSubstituteConfig {
 
-    [CmdletBinding()]
+	[CmdletBinding()]
 	param()
-    
-	try{
-	
-	    Write-Output "Inside checkEnvSubstituteConfig function"
-        
+
+	try {
+
+		Write-Output "Inside checkEnvSubstituteConfig function"
+
 		####Compile-Error-Came-Here-So-We-Put-Path-In_Quotes, also need to check if such paths have wildcards or not, hence, maybe we need to enclose them within quotes
 		$bwappnodeTRA = "$env:BWCE_HOME\tibco.home\bw*\*\bin\bwappnode.tra"
-        $appnodeConfigFile="$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
-        $manifest="c:\tmp\META-INF\MANIFEST.MF"
-        $bwAppNameHeader="Bundle-SymbolicName"
-        $bwBundleAppName = select-string $bwAppNameHeader $manifest | %{$_.Line.Split(":")[1]}
-        $env:BWCE_APP_NAME=$bwBundleAppName      
-        #TODO: How is addons_home populated(can't see it in env variables"
-        if( Test-Path -Path $bwappnodeTRA -PathType leaf){
-            #Copy-Item -Path $bwappnodeTRA -Destination "$bwappnodeTRA.bak" -Force -Confirm
-           xcopy $appnodeConfigFile "$appnodeConfigFile.bak" /v /q
-            (Get-Content $bwappnodeTRA | ForEach-Object {$_ -replace "-Djava.class.path=", "-Djava.class.path=$ADDONS_HOME/lib:"}) -join "`n" | Set-Content -NoNewline -Force $bwappnodeTRA
-            print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
-        }
-        #TODO: Is appnode even needed?
-        <#if(Test-Path -Path $bwappnodeFile -PathType leaf){
-            Copy-Item -Path $bwappnodeFile -Destination "$bwappnodeFile.bak"
-            (Get-Content $bwappnodeTRA | ForEach-Object {$_ -replace "-Djava.class.path=", "-Djava.class.path=$ADDONS_HOME/lib:"}) -join "`n" | Set-Content -NoNewline -Force $bwappnodeTRA
-            print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
-        } 
-        if($env:BW_JAVA_OPTS){
-            if(Test-Path -Path $bwappnodeTRA -PathType leaf){
-                Copy-Item -Path $bwappnodeTRA -Destination "$bwappnodeTRA.bak"
-                #sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
-                print_Debug "Appended $env:BW_JAVA_OPTS to java.extend.properties"
-            }
-        } #
-        if($env:BW_ENGINE_THREADCOUNT){
-            if(Test-Path -Path $appnodeConfigFile -PathType leaf){
-                    Add-Content -Path $appnodeConfigFile -Value "`r`nbw.engine.threadCount=$env:BW_ENGINE_THREADCOUNT"
-                    print_Debug "set BW_ENGINE_THREADCOUNT to $env:BW_ENGINE_THREADCOUNT"
-            }
-        }
-        if($env:BW_ENGINE_STEPCOUNT){
-            if(Test-Path -Path $appnodeConfigFile -PathType leaf){
-                    Add-Content -Path $appnodeConfigFile -Value "`r`nbw.engine.stepCount=$env:BW_ENGINE_STEPCOUNT"
-                    print_Debug "set BW_ENGINE_STEPCOUNT to $env:BW_ENGINE_STEPCOUNT"
-            }
-        }
-        #TODO: Check the condition below, whether concatenation is happening properly or not
-        if($env:BW_APPLICATION_JOB_FLOWLIMIT){
-            if((Test-Path -Path $appnodeConfigFile -PathType leaf)){
-                    Add-Content -Path $appnodeConfigFile -Value "`r`nbw.application.job.flowlimit.$env:bwBundleAppName=$env:BW_APPLICATION_JOB_FLOWLIMIT"
-                    print_Debug "set BW_APPLICATION_JOB_FLOWLIMIT to $env:BW_APPLICATION_JOB_FLOWLIMIT"
-            }
-        }
-        if($env:BW_APP_MONITORING_CONFIG){
-            if((Test-Path -Path $appnodeConfigFile -PathType leaf)){
-                (Get-Content $appnodeConfigFile | ForEach-Object {$_ -replace "bw.frwk.event.subscriber.metrics.enabled=false", "bw.frwk.event.subscriber.metrics.enabled=true"}) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
-                print_Debug "set bw.frwk.event.subscriber.metrics.enabled to true"
-            }
-        }
-        #Always do strict checking, in this case if step count is set to 0 & no other variable is set, condition will become false, even though the value is there
-        if(-not [String]::IsNullOrEmpty($env:BW_LOGLEVEL) -and $env:BW_LOGLEVEL.toLower() -eq "debug"){
-            if(-not [String]::IsNullOrEmpty($env:BW_APPLICATION_JOB_FLOWLIMIT) -or -not [String]::IsNullOrEmpty($env:BW_ENGINE_STEPCOUNT) -or -not [String]::IsNullOrEmpty($env:BW_ENGINE_THREADCOUNT) -or -not [String]::IsNullOrEmpty($env:BW_APP_MONITORING_CONFIG)){
-                Write-Output "---------------------------------------"
-                cat $appnodeConfigFile
-                Write-Output "---------------------------------------"
+		$appnodeConfigFile = "$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
+		$manifest = "c:\tmp\META-INF\MANIFEST.MF"
+		$bwAppNameHeader = "Bundle-SymbolicName"
+		$bwBundleAppName = Select-String $bwAppNameHeader $manifest | ForEach-Object { $_.Line.Split(":")[1].Trim() }
+		$env:BWCE_APP_NAME = $bwBundleAppName
+
+		#TODO: How is addons_home populated(can't see it in env variables"
+		if (Test-Path -Path $bwappnodeTRA -PathType leaf) {
+			Copy-Item $(Get-ChildItem $bwappnodeTRA) "$(Get-ChildItem $bwappnodeTRA).bak"
+			(Get-Content $bwappnodeTRA | ForEach-Object { $_ -replace "-Djava.class.path=","-Djava.class.path=$env:ADDONS_HOME/lib:" }) -join "`n" | Set-Content -NoNewline -Force $bwappnodeTRA
+			Print-Debug ("Appended ADDONS_HOME/lib in bwappnode.tra file")
+		}
+
+		#TODO: Is appnode even needed?
+		#if(Test-Path -Path $bwappnodeFile -PathType leaf){
+		#    Copy-Item -Path $bwappnodeFile -Destination "$bwappnodeFile.bak"
+		#    (Get-Content $bwappnodeTRA | ForEach-Object {$_ -replace "-Djava.class.path=", "-Djava.class.path=$ADDONS_HOME/lib:"}) -join "`n" | Set-Content -NoNewline -Force $bwappnodeTRA
+		#    print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
+		#} 
+
+		if ($env:BW_JAVA_OPTS) {
+			if (Test-Path -Path $bwappnodeTRA -PathType leaf) {
+				Copy-Item $(Get-ChildItem $bwappnodeTRA) "$(Get-ChildItem $bwappnodeTRA).bak"
+				$NewContent = Get-Content -Path $bwappnodeTRA |
+				ForEach-Object {
+
+					if ($_ -match 'java.extended.properties=.*') {
+
+						$_ + " $env:BW_JAVA_OPTS"
+
+					} else {
+
+						$_
+
+					}
+				}
+
+				# Write content of $NewContent varibale back to file
+				$NewContent | Out-File -FilePath $bwappnodeTRA -Encoding Default -Force
+				Print-Debug "Appended $env:BW_JAVA_OPTS to java.extend.properties"
 			}
-        }
-		
-    } catch {
-	
-        print_Debug "Error in setting environment configurations"
+		}
+		if ($env:BW_ENGINE_THREADCOUNT) {
+			if (Test-Path -Path $appnodeConfigFile -PathType leaf) {
+				Add-Content -Path $appnodeConfigFile -Value "`r`nbw.engine.threadCount=$env:BW_ENGINE_THREADCOUNT"
+				Print-Debug ("set BW_ENGINE_THREADCOUNT to $env:BW_ENGINE_THREADCOUNT")
+			}
+		}
+		if ($env:BW_ENGINE_STEPCOUNT) {
+			if (Test-Path -Path $appnodeConfigFile -PathType leaf) {
+				Add-Content -Path $appnodeConfigFile -Value "`r`nbw.engine.stepCount=$env:BW_ENGINE_STEPCOUNT"
+				Print-Debug ("set BW_ENGINE_STEPCOUNT to $env:BW_ENGINE_STEPCOUNT")
+			}
+		}
+		#TODO: Check the condition below, whether concatenation is happening properly or not
+		if ($env:BW_APPLICATION_JOB_FLOWLIMIT) {
+			if ((Test-Path -Path $appnodeConfigFile -PathType leaf)) {
+				Add-Content -Path $appnodeConfigFile -Value "`r`nbw.application.job.flowlimit.$bwBundleAppName=$env:BW_APPLICATION_JOB_FLOWLIMIT"
+				Print-Debug ("set BW_APPLICATION_JOB_FLOWLIMIT to $env:BW_APPLICATION_JOB_FLOWLIMIT")
+			}
+		}
+		if ($env:BW_APP_MONITORING_CONFIG) {
+			if ((Test-Path -Path $appnodeConfigFile -PathType leaf)) {
+				(Get-Content $appnodeConfigFile | ForEach-Object { $_ -replace "bw.frwk.event.subscriber.metrics.enabled=false","bw.frwk.event.subscriber.metrics.enabled=true" }) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
+				Print-Debug ("set bw.frwk.event.subscriber.metrics.enabled to true")
+			}
+		}
+		#Always do strict checking, in this case if step count is set to 0 & no other variable is set, condition will become false, even though the value is there
+		if (-not [string]::IsNullOrEmpty($env:BW_LOGLEVEL) -and $env:BW_LOGLEVEL.ToLower() -eq "debug") {
+			if (-not [string]::IsNullOrEmpty($env:BW_APPLICATION_JOB_FLOWLIMIT) -or -not [string]::IsNullOrEmpty($env:BW_ENGINE_STEPCOUNT) -or -not [string]::IsNullOrEmpty($env:BW_ENGINE_THREADCOUNT) -or -not [string]::IsNullOrEmpty($env:BW_APP_MONITORING_CONFIG)) {
+				Write-Output "---------------------------------------"
+				cat $appnodeConfigFile
+				Write-Output "---------------------------------------"
+			}
+		}
+
+	} catch {
+
+		Print-Debug ("Error in setting environment configurations")
 		Write-Error -Exception $PSItem -ErrorAction Stop
-		
-    }
-	
-} #>
+
+	}
+
+}
 
 
 
@@ -719,7 +736,7 @@ try {
 
 		Set-LogLevel
 		#memoryCalculator()
-		#Check-EnvSubstituteConfig	
+		Check-EnvSubstituteConfig
 
 	}
 
