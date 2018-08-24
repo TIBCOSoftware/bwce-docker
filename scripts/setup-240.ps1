@@ -366,8 +366,8 @@ function Check-Plugins {
 			Write-Output "Inside Check-Plugins function"
 			$pluginFolder = "c:\resources\addons\plugins"
 
-			if ((Test-Path $pluginFolder) -and (Get-ChildItem $pluginFolder).Count -gt 0) {
-
+			if ((Test-Path $pluginFolder) -and (Get-ChildItem $pluginFolder -Exclude .*).Count -gt 0) {
+				
 				Print-Debug ("Adding Plug-in Jars")
 				$addonsFilePath = "$env:BWCE_HOME\tibco.home\bw*\*\ext\shared"
 				#Added quotes in path here, don't know why and not sure if addons link will be evaluated to absolute path or not
@@ -377,7 +377,7 @@ function Check-Plugins {
 				ForEach-Object {
 
 					$name = $_.Name
-
+					#Write-Output "$name"
 					Expand-Archive -Path "$pluginFolder\$name" -DestinationPath $env:BWCE_HOME\plugintmp -Force
 
 					if (Test-Path $env:BWCE_HOME\plugintmp\runtime\plugins\*) {
@@ -414,13 +414,13 @@ function Check-Plugins {
 
 					if (Test-Path $env:BWCE_HOME\plugintmp\*) {
 
-						$source = "$env:BWCE_HOME\plugintmp"
-						$dest = "C:\"
-						$exclude = @('bin','runtime','lib')
-						Get-ChildItem $source -Recurse -Exclude $exclude | Copy-Item -Destination { Join-Path $dest $_.FullName.Substring($source.length) }
+						#$source = "$env:BWCE_HOME\plugintmp\"
+						#$dest = "C:\"
+						#$exclude = @('bin','runtime','lib')
+						#Get-ChildItem $source -Recurse -Exclude $exclude | Copy-Item -Destination { Join-Path $dest $_.FullName.Substring($source.length) }
 
-						#$exclude = @('bin','runtime', 'lib')
-						#Move-Item $env:BWCE_HOME\plugintmp\* "C:\" -Exclude $exclude
+						#$exclude = @('runtime','bin', 'lib')
+						Move-Item $env:BWCE_HOME\plugintmp\* "C:\" | Out-Null
 
 					}
 
@@ -544,7 +544,7 @@ function Check-Certs {
 
 		$certificateFolder = "c:\resources\addons\certs"
 
-		if ((Test-Path $certificateFolder) -and (Get-ChildItem $certificateFolder).Count -gt 0) {
+		if ((Test-Path $certificateFolder) -and (Get-ChildItem $certificateFolder -Exclude .*).Count -gt 0) {
 
 			$JRE_VERSION = Get-ChildItem $env:BWCE_HOME\tibco.home\tibcojre64\* | ForEach-Object { Write-Output $_.Name }
 			$JRE_LOCATION = "$env:BWCE_HOME\tibco.home\tibcojre64\$JRE_VERSION"
@@ -588,7 +588,7 @@ function Check-Agents {
 
 		$agentFolder = "c:\resources\addons\agents"
 
-		if ((Test-Path $agentFolder) -and (Get-ChildItem $agentFolder).Count -gt 0) {
+		if ((Test-Path $agentFolder) -and (Get-ChildItem $agentFolder -Exclude .*).Count -gt 0) {
 
 			Print-Debug ("Adding Monitoring Jars")
 
@@ -623,7 +623,6 @@ function Memory-Calculator {
             $memoryNumber = $env:MEMORY_LIMIT -replace "[^0-9]" , ''
             $configuredMemory= ($memoryNumber*67+50)/100
             $threadStack=$memoryNumber
-            thread_Stack=$((memory_Number))
             $JAVA_PARAM="-Xmx"+$configuredMemory+"M -Xms128M -Xss512K"
             $env:BW_JAVA_OPTS = "$JAVA_PARAM $BW_JAVA_OPTS"
 
@@ -648,7 +647,7 @@ function Check-Libs {
 
 		$libFolder = "c:\resources\addons\lib"
 
-		if ((Test-Path $agentFolder) -and (Get-ChildItem $agentFolder).Count -gt 0) {
+		if ((Test-Path $agentFolder) -and (Get-ChildItem $agentFolder -Exclude .*).Count -gt 0) {
 
 			Print-Debug ("Adding additonal libs")
 
@@ -718,13 +717,12 @@ try {
 			#Check-Libs
 			Check-Certs
 			#Check-ThirdPartyInstallations
-
-			#*#*#*#*#TODO: had a bug where hidden files were added to jars folder and this condition let to an error....need to modify this instruction
+			
 			$jarFolder = "c:\resources\addons\jars"
 
 			Print-Debug ("Copying Addons Jars if present")
-
-			if ((Test-Path $jarFolder) -and (Get-ChildItem $jarFolder).Count -gt 0) {
+			##TODO - Handle hidden files
+			if ((Test-Path $jarFolder) -and (Get-ChildItem $jarFolder -Exclude .*).Count -gt 0) {
 				Copy-Item "c:\resources\addons\jars\*" -Destination $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\system\hotfix\shared\") -Recurse
 				Write-Output "Copied Addons Jars"
 			}
@@ -764,7 +762,7 @@ try {
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip") -NewName bwapp.ear | Out-Null
 
 		Set-LogLevel
-		#memoryCalculator()
+		Memory-Calculator
 		Check-EnvSubstituteConfig
 
 	}
