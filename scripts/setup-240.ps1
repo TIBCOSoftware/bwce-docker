@@ -266,9 +266,7 @@ function Check-EnvSubstituteConfig {
 
 	try {
 
-		Write-Output "Inside checkEnvSubstituteConfig function"
-
-		####Compile-Error-Came-Here-So-We-Put-Path-In_Quotes, also need to check if such paths have wildcards or not, hence, maybe we need to enclose them within quotes
+		Write-Output "Calling Check-EnvSubstituteConfig function"
 		$bwappnodeTRA = "$env:BWCE_HOME\tibco.home\bw*\*\bin\bwappnode.tra"
 		$appnodeConfigFile = "$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
 		$manifest = "c:\tmp\META-INF\MANIFEST.MF"
@@ -341,7 +339,7 @@ function Check-EnvSubstituteConfig {
 		if (-not [string]::IsNullOrEmpty($env:BW_LOGLEVEL) -and $env:BW_LOGLEVEL.ToLower() -eq "debug") {
 			if (-not [string]::IsNullOrEmpty($env:BW_APPLICATION_JOB_FLOWLIMIT) -or -not [string]::IsNullOrEmpty($env:BW_ENGINE_STEPCOUNT) -or -not [string]::IsNullOrEmpty($env:BW_ENGINE_THREADCOUNT) -or -not [string]::IsNullOrEmpty($env:BW_APP_MONITORING_CONFIG)) {
 				Write-Output "---------------------------------------"
-				cat $appnodeConfigFile
+				Get-Content $appnodeConfigFile
 				Write-Output "---------------------------------------"
 			}
 		}
@@ -363,21 +361,19 @@ function Check-Plugins {
 
 		try {
 
-			Write-Output "Inside Check-Plugins function"
+			Write-Output "Calling Check-Plugins function"
 			$pluginFolder = "c:\resources\addons\plugins"
 
 			if ((Test-Path $pluginFolder) -and (Get-ChildItem $pluginFolder -Exclude .*).Count -gt 0) {
 				
 				Print-Debug ("Adding Plug-in Jars")
 				$addonsFilePath = "$env:BWCE_HOME\tibco.home\bw*\*\ext\shared"
-				#Added quotes in path here, don't know why and not sure if addons link will be evaluated to absolute path or not
 				"name=Addons Factory`r`ntype=bw6`r`nlayout=bw6ext`r`nlocation=$env:BWCE_HOME\tibco.home\addons" | Set-Content -Path "$(Get-ChildItem "$addonsFilePath")\addons.link"
 
 				Get-ChildItem $pluginFolder -Exclude ".*" |
 				ForEach-Object {
 
 					$name = $_.Name
-					#Write-Output "$name"
 					Expand-Archive -Path "$pluginFolder\$name" -DestinationPath $env:BWCE_HOME\plugintmp -Force
 
 					if (Test-Path $env:BWCE_HOME\plugintmp\runtime\plugins\*) {
@@ -418,7 +414,6 @@ function Check-Plugins {
 						#$dest = "C:\"
 						#$exclude = @('bin','runtime','lib')
 						#Get-ChildItem $source -Recurse -Exclude $exclude | Copy-Item -Destination { Join-Path $dest $_.FullName.Substring($source.length) }
-
 						#$exclude = @('runtime','bin', 'lib')
 						Move-Item $env:BWCE_HOME\plugintmp\* "C:\" | Out-Null
 
@@ -687,6 +682,107 @@ function Check-Libs {
 
 }
 
+function Check-ThirdPartyInstallations {
+
+	[CmdletBinding()]
+	param()
+
+	try {
+	
+		$installFolder = "c:\resources\addons\thirdparty-installs"
+		
+		if ((Test-Path $installFolder) -and (Get-ChildItem $installFolder -Exclude .*).Count -gt 0) {
+
+			Print-Debug ("Adding third-party files")
+			
+			New-Item -ItemType directory $env:BWCE_HOME\tibco.home\thirdparty-installs -Force | Out-Null
+
+			Get-ChildItem $installFolder -Exclude ".*" |
+			ForEach-Object {
+			
+				$name = $_.Name
+				$fileExtension = $_.Extension
+			
+				if (Test-Path -Path $installFolder\$name -PathType Container) {
+				
+					Move-Item $installFolder\$name $env:BWCE_HOME\tibco.home\thirdparty-installs | Out-Null
+				
+				} elseif ($fileExtension -eq ".zip") {
+				
+					$zipFirstName = $name.Split(".")[0]
+					Expand-Archive -Path $installFolder\$name -DestinationPath $env:BWCE_HOME\tibco.home\thirdparty-installs\$zipFirstName
+				
+				} else {
+				
+					Write-Error "Not a valid Zip file used - third party installation" -ErrorAction Stop
+				
+				}
+
+			}
+
+		}
+		
+	
+	
+	} catch {
+
+		Write-Error -Exception $PSItem -ErrorAction Stop
+
+	}
+
+
+}
+
+function Setup-ThirdPartyInstallationEnvironment {
+
+	[CmdletBinding()]
+	param()
+
+	try {
+	
+		$installationDirectory = "$env:BWCE_HOME\tibco.home\thirdparty-installs"
+		
+		if ((Test-Path $installationDirectory) -and (Get-ChildItem $installationDirectory -Exclude .*).Count -gt 0) {
+		
+			Get-ChildItem $installationDirectory -Exclude ".*" |
+			ForEach-Object {
+			
+				$name = $_.Name
+			
+				if (Test-Path -Path $installationDirectory\$name -PathType Container)  {
+				
+					if (Test-Path -Path $installationDirectory\$name\lib -PathType Container) {
+						
+						#TODO: Check this condition
+						$env:LD_LIBRARY_PATH = "$installationDirectory/$name/lib;" + $env:LD_LIBRARY_PATH
+					
+					}
+					
+					if (Test-Path -Path $installationDirectory\$name\*.ps1 -PathType leaf) {
+					
+						$setupFile = "$installationDirectory\$name\*.ps1"
+						. $(Get-ChildItem -Path $setupFile)
+					
+					}
+				
+				}
+			
+			}
+		
+		
+		}
+		
+	
+	
+	} catch {
+
+		Write-Error -Exception $PSItem -ErrorAction Stop
+
+	}
+
+
+}
+
 
 $appnodeConfigFile = "$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
 $POLICY_ENABLED = "false"
@@ -702,7 +798,6 @@ try {
 		Remove-Item c:\resources\bwce-runtime\bwce*.zip -Force 2>$null
 
 		Copy-Item $(Get-ChildItem "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra") "$(Get-ChildItem "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra").bak"
-		#TODO: In files bwappnode.tra and bwcommon.tra, path has been hard-coded(specifically APPDIR, see if that can be made dynamic
 		(Get-Content "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra" | ForEach-Object { $_ -ireplace "_APPDIR_","$env:APPDIR" }) -join "`n" | Set-Content -NoNewline -Force "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra"
 
 		New-Item -ItemType file key.properties | Out-Null
@@ -721,7 +816,7 @@ try {
 			$jarFolder = "c:\resources\addons\jars"
 
 			Print-Debug ("Copying Addons Jars if present")
-			##TODO - Handle hidden files
+			
 			if ((Test-Path $jarFolder) -and (Get-ChildItem $jarFolder -Exclude .*).Count -gt 0) {
 				Copy-Item "c:\resources\addons\jars\*" -Destination $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\system\hotfix\shared\") -Recurse
 				Write-Output "Copied Addons Jars"
@@ -730,13 +825,6 @@ try {
 		}
 
 		New-Item -ItemType SymbolicLink -Path $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\bin\") -Name bwapp.ear -Target C:\*.ear | Out-Null
-
-		<# Get-ChildItem $env:BWCE_HOME\tibco.home\bwce\2.4\config |
-			ForEach-Object {
-			
-				write-output $_.Name
-		
-			}  #>
 
 		Copy-Item $(Get-ChildItem $appnodeConfigFile) "$(Get-ChildItem $appnodeConfigFile).bak"
 
@@ -752,13 +840,8 @@ try {
 
 		(Get-Content $appnodeConfigFile | ForEach-Object { $_ -ireplace "_APPDIR_","$env:BWCE_HOME" }) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
 
-		#Rename-Item -Path "C:\tmp\tibco.home\bwce\2.4\bin\bwapp.ear" -NewName bwapp.zip | Out-Null
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.ear") -NewName bwapp.zip | Out-Null
-
-		#Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.ear -DestinationPath C:\tmp -Force
 		Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.zip -DestinationPath C:\tmp -Force | Out-Null
-
-		#Rename-Item -Path "C:\tmp\tibco.home\bwce\2.4\bin\bwapp.zip" -NewName bwapp.ear | Out-Null
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip") -NewName bwapp.ear | Out-Null
 
 		Set-LogLevel
@@ -780,14 +863,11 @@ try {
 		Copy-Item $env:BWCE_HOME\META-INF\$env:BW_PROFILE -Destination $env:BWCE_HOME\tmp\pcf.substvar
 	}
 
-	# write-output $env:bwBundleAppName
 	. $env:JAVA_HOME\bin\java -cp "$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*");$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
 
 
 } catch {
 	#$pscmdlet.ThrowTerminatingError($_)
-	#Write-Error -Exception $PSItem -ErrorAction Stop
-	#throw
 	Write-Output $PSItem -ErrorAction Stop
 	throw
 

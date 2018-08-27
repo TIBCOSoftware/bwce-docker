@@ -1,7 +1,7 @@
 $ProgressPreference = "SilentlyContinue"
 #!/bin/bash
 #Set ENV Variables
-$env:BWCE_HOME = "c:\tmp"
+$env:BWCE_HOME = "c:/tmp"
 $env:APPDIR = $env:BWCE_HOME
 $env:MALLOC_ARENA_MAX = 2
 $env:MALLOC_MMAP_THRESHOLD_ = 1024
