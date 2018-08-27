@@ -365,7 +365,7 @@ function Check-Plugins {
 			$pluginFolder = "c:\resources\addons\plugins"
 
 			if ((Test-Path $pluginFolder) -and (Get-ChildItem $pluginFolder -Exclude .*).Count -gt 0) {
-				
+
 				Print-Debug ("Adding Plug-in Jars")
 				$addonsFilePath = "$env:BWCE_HOME\tibco.home\bw*\*\ext\shared"
 				"name=Addons Factory`r`ntype=bw6`r`nlayout=bw6ext`r`nlocation=$env:BWCE_HOME\tibco.home\addons" | Set-Content -Path "$(Get-ChildItem "$addonsFilePath")\addons.link"
@@ -608,27 +608,27 @@ function Check-Agents {
 
 function Memory-Calculator {
 
-    [CmdletBinding()]
+	[CmdletBinding()]
 	param()
 
 	try {
 
-        if(-not [string]::IsNullOrEmpty($env:MEMORY_LIMIT)){
-        
-            $memoryNumber = $env:MEMORY_LIMIT -replace "[^0-9]" , ''
-            $configuredMemory= ($memoryNumber*67+50)/100
-            $threadStack=$memoryNumber
-            $JAVA_PARAM="-Xmx"+$configuredMemory+"M -Xms128M -Xss512K"
-            $env:BW_JAVA_OPTS = "$JAVA_PARAM $BW_JAVA_OPTS"
+		if (-not [string]::IsNullOrEmpty($env:MEMORY_LIMIT)) {
 
-            
-        }
+			$memoryNumber = $env:MEMORY_LIMIT -replace "[^0-9]",''
+			$configuredMemory = ($memoryNumber * 67 + 50) / 100
+			$threadStack = $memoryNumber
+			$JAVA_PARAM = "-Xmx" + $configuredMemory + "M -Xms128M -Xss512K"
+			$env:BW_JAVA_OPTS = "$JAVA_PARAM $BW_JAVA_OPTS"
 
-    } catch {
-    
-        Write-Error -Exception $PSItem -ErrorAction Stop
-    
-    }
+
+		}
+
+	} catch {
+
+		Write-Error -Exception $PSItem -ErrorAction Stop
+
+	}
 
 
 }
@@ -688,42 +688,42 @@ function Check-ThirdPartyInstallations {
 	param()
 
 	try {
-	
+
 		$installFolder = "c:\resources\addons\thirdparty-installs"
-		
+
 		if ((Test-Path $installFolder) -and (Get-ChildItem $installFolder -Exclude .*).Count -gt 0) {
 
 			Print-Debug ("Adding third-party files")
-			
+
 			New-Item -ItemType directory $env:BWCE_HOME\tibco.home\thirdparty-installs -Force | Out-Null
 
 			Get-ChildItem $installFolder -Exclude ".*" |
 			ForEach-Object {
-			
+
 				$name = $_.Name
 				$fileExtension = $_.Extension
-			
+
 				if (Test-Path -Path $installFolder\$name -PathType Container) {
-				
+
 					Move-Item $installFolder\$name $env:BWCE_HOME\tibco.home\thirdparty-installs | Out-Null
-				
+
 				} elseif ($fileExtension -eq ".zip") {
-				
+
 					$zipFirstName = $name.Split(".")[0]
 					Expand-Archive -Path $installFolder\$name -DestinationPath $env:BWCE_HOME\tibco.home\thirdparty-installs\$zipFirstName
-				
+
 				} else {
-				
+
 					Write-Error "Not a valid Zip file used - third party installation" -ErrorAction Stop
-				
+
 				}
 
 			}
 
 		}
-		
-	
-	
+
+
+
 	} catch {
 
 		Write-Error -Exception $PSItem -ErrorAction Stop
@@ -739,41 +739,41 @@ function Setup-ThirdPartyInstallationEnvironment {
 	param()
 
 	try {
-	
+
 		$installationDirectory = "$env:BWCE_HOME\tibco.home\thirdparty-installs"
-		
+
 		if ((Test-Path $installationDirectory) -and (Get-ChildItem $installationDirectory -Exclude .*).Count -gt 0) {
-		
+
 			Get-ChildItem $installationDirectory -Exclude ".*" |
 			ForEach-Object {
-			
+
 				$name = $_.Name
-			
-				if (Test-Path -Path $installationDirectory\$name -PathType Container)  {
-				
+
+				if (Test-Path -Path $installationDirectory\$name -PathType Container) {
+
 					if (Test-Path -Path $installationDirectory\$name\lib -PathType Container) {
-						
+
 						#TODO: Check this condition
 						$env:LD_LIBRARY_PATH = "$installationDirectory/$name/lib;" + $env:LD_LIBRARY_PATH
-					
+
 					}
-					
+
 					if (Test-Path -Path $installationDirectory\$name\*.ps1 -PathType leaf) {
-					
+
 						$setupFile = "$installationDirectory\$name\*.ps1"
-						. $(Get-ChildItem -Path $setupFile)
-					
+						.$(Get-ChildItem -Path $setupFile)
+
 					}
-				
+
 				}
-			
+
 			}
-		
-		
+
+
 		}
-		
-	
-	
+
+
+
 	} catch {
 
 		Write-Error -Exception $PSItem -ErrorAction Stop
@@ -812,11 +812,11 @@ try {
 			#Check-Libs
 			Check-Certs
 			#Check-ThirdPartyInstallations
-			
+
 			$jarFolder = "c:\resources\addons\jars"
 
 			Print-Debug ("Copying Addons Jars if present")
-			
+
 			if ((Test-Path $jarFolder) -and (Get-ChildItem $jarFolder -Exclude .*).Count -gt 0) {
 				Copy-Item "c:\resources\addons\jars\*" -Destination $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\system\hotfix\shared\") -Recurse
 				Write-Output "Copied Addons Jars"
