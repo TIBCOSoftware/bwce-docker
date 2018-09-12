@@ -642,11 +642,11 @@ function Check-Libs {
 
 		$libFolder = "c:\resources\addons\lib"
 
-		if ((Test-Path $agentFolder) -and (Get-ChildItem $agentFolder -Exclude .*).Count -gt 0) {
+		if ((Test-Path $libFolder) -and (Get-ChildItem $libFolder -Exclude .*).Count -gt 0) {
 
 			Print-Debug ("Adding additonal libs")
 
-			Get-ChildItem $agentFolder -Exclude ".*" |
+			Get-ChildItem $libFolder -Exclude ".*" |
 			ForEach-Object {
 
 				$name = $_.Name
@@ -808,8 +808,8 @@ try {
 		if (Test-Path $addonFolder -PathType Container) {
 
 			Check-Plugins
-			#Check-Agents
-			#Check-Libs
+			Check-Agents
+			Check-Libs
 			Check-Certs
 			#Check-ThirdPartyInstallations
 
