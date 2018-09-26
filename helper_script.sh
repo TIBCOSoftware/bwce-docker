@@ -110,3 +110,13 @@ if [ "$sampleApplication" = "jdbc" ]; then
 	docker run -p 8080:8080 -e BW_LOGLEVEL=DEBUG -e DB_URL=$db_url -e DB_USERNAME=$db_username -e DB_PASSWORD=$db_password bwce-jdbc-app-nano
 fi
 
+#OData Sample Commands
+#=========================
+
+#Example Command: sh helper_script.sh ~/Desktop/nitish-files-backup/2.4.0/bwce-runtime-2.4.0.zip odata
+if [ "$sampleApplication" = "odata" ]; then
+	cd examples/OData
+	docker build -t bwce-odata-app-nano .
+	winpty docker run -it -p 8080:8080 -e BW_LOGLEVEL=DEBUG bwce-odata-app-nano
+fi
+
