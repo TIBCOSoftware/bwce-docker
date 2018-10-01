@@ -80,7 +80,6 @@ function Check-Profile {
 		if ([System.IO.File]::Exists($manifest)) {
 
 			$bwAppProfileStr = Select-String $bwAppConfig+".*.substvar" $manifest | ForEach-Object Line
-			Print-Debug ($bwAppProfileStr)
 			$env:bwBundleAppName = Select-String $bwAppNameHeader $manifest | ForEach-Object { $_.Line.Split(":")[1].Trim() }
 			Print-Debug ($env:bwBundleAppName)
 
@@ -160,13 +159,13 @@ function Check-Profile {
 			}
 
 		}
-
-		if ([string]::IsNullOrEmpty(($env:BW_PROFILE = $defaultProfile))) {
-
-			Write-Output "BW_PROFILE is unset. Set it to $defaultProfile"
+		
+		if ([string]::IsNullOrEmpty($env:BW_PROFILE)) {
+			Write-Output "BW_PROFILE is unset. Setting it to $defaultProfile"
+			$env:BW_PROFILE = $defaultProfile
 
 		} else {
-
+			
 			switch -Wildcard ($env:BW_PROFILE) {
 
 				'*substvar' {}
