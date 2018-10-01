@@ -80,6 +80,7 @@ function Check-Profile {
 		if ([System.IO.File]::Exists($manifest)) {
 
 			$bwAppProfileStr = Select-String $bwAppConfig+".*.substvar" $manifest | ForEach-Object Line
+			Print-Debug ($env:bwAppProfileStr)
 			$env:bwBundleAppName = Select-String $bwAppNameHeader $manifest | ForEach-Object { $_.Line.Split(":")[1].Trim() }
 			Print-Debug ($env:bwBundleAppName)
 
