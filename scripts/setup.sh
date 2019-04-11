@@ -417,9 +417,9 @@ checkPolicy
 setupThirdPartyInstallationEnvironment
 
 if [ -f /*.substvar ]; then
-	cp -f /*.substvar $BWCE_HOME/tmp/bw.substvar # User provided profile
+	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
-	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/bw.substvar
+	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
 
 $JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
