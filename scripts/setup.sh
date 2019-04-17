@@ -296,6 +296,20 @@ memoryCalculator()
 		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
 	fi
+		
+}
+
+applyDefaultJVMHeapParams(){
+
+	DEFAULT_JVM_HEAP_PARAMS="-Xmx1024M -Xms128M"
+
+	if [[ ${BW_JAVA_OPTS} && ${BW_JAVA_OPTS} != *"Xm"* ||  -z ${BW_JAVA_OPTS} ]]; then
+		
+		export BW_JAVA_OPTS=$DEFAULT_JVM_HEAP_PARAMS" "$BW_JAVA_OPTS
+
+	fi
+	
+
 }
 
 checkJMXConfig()
@@ -378,6 +392,7 @@ POLICY_ENABLED="false"
 checkJAVAHOME
 checkJMXConfig
 checkJavaGCConfig
+applyDefaultJVMHeapParams
 
 if [ ! -d $BWCE_HOME/tibco.home ];
 then
