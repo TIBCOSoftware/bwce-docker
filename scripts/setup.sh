@@ -379,10 +379,8 @@ checkJAVAHOME
 checkJMXConfig
 checkJavaGCConfig
 
-if [ ! -d $BWCE_HOME/tibco.home ];
+if [ -d $BWCE_HOME/tibco.home ];
 then
-	unzip -qq /resources/bwce-runtime/bwce*.zip -d $BWCE_HOME
-	rm -rf /resources/bwce-runtime/bwce*.zip 2> /dev/null
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
