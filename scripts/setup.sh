@@ -392,7 +392,6 @@ POLICY_ENABLED="false"
 checkJAVAHOME
 checkJMXConfig
 checkJavaGCConfig
-applyDefaultJVMHeapParams
 
 if [ ! -d $BWCE_HOME/tibco.home ];
 then
@@ -424,6 +423,7 @@ then
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	memoryCalculator
+	applyDefaultJVMHeapParams
 	checkEnvSubstituteConfig
 fi
 
