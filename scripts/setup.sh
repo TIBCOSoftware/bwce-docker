@@ -295,8 +295,7 @@ memoryCalculator()
 		thread_Stack=$((memory_Number))
 		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
-	fi
-		
+	fi	
 }
 
 applyDefaultJVMHeapParams(){
@@ -308,8 +307,6 @@ applyDefaultJVMHeapParams(){
 		export BW_JAVA_OPTS=$DEFAULT_JVM_HEAP_PARAMS" "$BW_JAVA_OPTS
 
 	fi
-	
-
 }
 
 checkJMXConfig()
