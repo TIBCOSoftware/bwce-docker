@@ -409,12 +409,12 @@ then
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	memoryCalculator
-	checkEnvSubstituteConfig
 fi
 
 checkProfile
 checkPolicy
 setupThirdPartyInstallationEnvironment
+checkEnvSubstituteConfig
 
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
