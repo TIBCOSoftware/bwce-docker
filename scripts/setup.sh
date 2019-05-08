@@ -421,12 +421,12 @@ then
 	setLogLevel
 	memoryCalculator
 	applyDefaultJVMHeapParams
-	checkEnvSubstituteConfig
 fi
 
 checkProfile
 checkPolicy
 setupThirdPartyInstallationEnvironment
+checkEnvSubstituteConfig
 
 if [ -f /*.substvar ]; then
 	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
