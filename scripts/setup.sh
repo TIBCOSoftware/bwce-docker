@@ -295,6 +295,17 @@ memoryCalculator()
 		thread_Stack=$((memory_Number))
 		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
+	fi	
+}
+
+applyDefaultJVMHeapParams(){
+
+	DEFAULT_JVM_HEAP_PARAMS="-Xmx1024M -Xms128M"
+
+	if [[ ${BW_JAVA_OPTS} && ${BW_JAVA_OPTS} != *"Xm"* ||  -z ${BW_JAVA_OPTS} ]]; then
+		
+		export BW_JAVA_OPTS=$DEFAULT_JVM_HEAP_PARAMS" "$BW_JAVA_OPTS
+
 	fi
 }
 
@@ -409,6 +420,7 @@ then
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
 	memoryCalculator
+	applyDefaultJVMHeapParams
 fi
 
 checkProfile
