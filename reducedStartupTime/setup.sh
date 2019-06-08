@@ -182,6 +182,19 @@ checkEnvSubstituteConfig()
 			print_Debug "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
 		fi
 	fi
+	if [[ ${BW_COMPONENT_JOB_FLOWLIMIT} ]]; then
+		if [ -e ${appnodeConfigFile} ]; then
+			IFS=';' # space is set as delimiter
+			read -ra processConfigurationList <<< "${BW_COMPONENT_JOB_FLOWLIMIT}" # str is read into an array as tokens separated by IFS
+			for process in "${processConfigurationList[@]}"; do # access each element of array
+				echo "Setting flow limit for $process"
+				IFS=':' # space is set as delimiter
+				read -ra processConfiguration <<< "$process" # str is read into an array as tokens separated by IFS
+				printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]}=${processConfiguration[1]}" >> $appnodeConfigFile
+				print_Debug "set bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]} to ${processConfiguration[1]}"
+			done			
+		fi
+	fi
 	if [[ ${BW_APP_MONITORING_CONFIG} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
