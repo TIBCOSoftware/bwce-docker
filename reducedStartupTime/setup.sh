@@ -289,9 +289,33 @@ done
 
 memoryCalculator()
 {
-	if [[ ${MEMORY_LIMIT} ]]; then
-		memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//I'`
-		configured_MEM=$((($memory_Number*67+50)/100))
+	if [[ ${MEMORY_LIMIT} ]]; then		
+
+		configured_MEM=$(expr `cat /sys/fs/cgroup/memory/memory.limit_in_bytes` / 1024 / 1024)
+		configured_MEM_orig=$configured_MEM
+
+		if [[ ${MEMORY_DYNAMIC_LIMIT} ]]; then			
+			sys_MEM=$(expr $configured_MEM \* ${MEMORY_DYNAMIC_LIMIT} / 100)
+			system_MEM=`printf "%.0f" $sys_MEM`
+			configured_MEM_temp=$(expr $configured_MEM - $system_MEM)
+			if [[  $configured_MEM_temp -gt 128 ]]; then
+				configured_MEM=$configured_MEM_temp
+			fi
+		elif [[ ${MEMORY_FIXED_LIMIT} ]]; then		
+			configured_MEM_temp=$(expr $configured_MEM - ${MEMORY_FIXED_LIMIT} )
+			if [[  $configured_MEM_temp -gt 128 ]]; then
+				configured_MEM=$configured_MEM_temp
+			fi
+		fi
+
+		if 	[[ $configured_MEM -eq $configured_MEM_orig ]]; then
+			configured_MEM_temp=$(expr $configured_MEM - 128)
+			if [[  $configured_MEM_temp -gt 128 ]]; then
+				configured_MEM=$configured_MEM_temp
+			fi
+		fi
+
+		print_Debug "Maximum memory calculated in a dynamic way to a value [$configured_MEM]"
 		thread_Stack=$((memory_Number))
 		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
