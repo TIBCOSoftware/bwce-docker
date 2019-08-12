@@ -403,7 +403,7 @@ function Check-Plugins {
 					if (Test-Path $env:BWCE_HOME\plugintmp\bin) {
 
 						New-Item -ItemType directory $env:BWCE_HOME\tibco.home\addons\bin | Out-Null
-						Move-Item -Path $env:BWCE_HOME\plugintmp\bin -Destination $env:BWCE_HOME\tibco.home\addons\bin | Out-Null
+						Move-Item -Path $env:BWCE_HOME\plugintmp\bin\* -Destination $env:BWCE_HOME\tibco.home\addons\bin | Out-Null
 
 					}
 
