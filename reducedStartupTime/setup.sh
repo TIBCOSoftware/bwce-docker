@@ -6,7 +6,15 @@
 # This software is confidential and proprietary information of
 # TIBCO Software Inc.
 #
-#Use this setup.sh script to unzip the bwce-runitme zip while creating the base image.
+#
+
+#Variables coming from TCI scripts
+TCI_BW_EDITION=$1
+TCI_HOME=$2
+CLOUD_VERSION=$3
+BWCE_HOME=$4
+
+echo "INFO Variables received :" $TCI_BW_EDITION, $TCI_HOME, $CLOUD_VERSION, $BWCE_HOME
 
 print_Debug()
 {
@@ -14,6 +22,7 @@ print_Debug()
  			echo $1 
  		fi
 }
+
 extract ()
 {
 if [ -f $1 ] ; then
@@ -63,7 +72,7 @@ checkProfile()
 		for name in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
 		do
 			if [[ $name == *.jar ]]; then
-			        mkdir -p $BUILD_DIR/temp 
+				mkdir -p $BUILD_DIR/temp 
 				unzip -o -q $name -d $BUILD_DIR/temp
 				MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
 
@@ -95,8 +104,7 @@ checkProfile()
 		defaultProfile=$x;;esac	
 	done
 
-	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then
-		echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
+	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
 	else 
 		case $BW_PROFILE in
  		*.substvar ) ;;
@@ -139,7 +147,6 @@ setLogLevel()
 	fi
 }
 
-
 checkEnvSubstituteConfig()
 {
 	bwappnodeTRA=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
@@ -148,7 +155,7 @@ checkEnvSubstituteConfig()
 	manifest=/tmp/META-INF/MANIFEST.MF
 	bwAppNameHeader="Bundle-SymbolicName"
 	bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
-	export BWCE_APP_NAME=$bwBundleAppName 	
+	export BWCE_APP_NAME=$bwBundleAppName
 	if [ -e ${bwappnodeTRA} ]; then
 		sed -i 's?-Djava.class.path=?-Djava.class.path=$ADDONS_HOME/lib:?' $bwappnodeTRA
 		print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
@@ -157,6 +164,7 @@ checkEnvSubstituteConfig()
 		sed -i 's?-Djava.class.path=?-Djava.class.path=$ADDONS_HOME/lib:?' $bwappnodeFile
 		print_Debug "Appended ADDONS_HOME/lib in bwappnode file"
 	fi
+
 	if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
 			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
@@ -182,19 +190,6 @@ checkEnvSubstituteConfig()
 			print_Debug "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
 		fi
 	fi
-	if [[ ${BW_COMPONENT_JOB_FLOWLIMIT} ]]; then
-		if [ -e ${appnodeConfigFile} ]; then
-			IFS=';' # space is set as delimiter
-			read -ra processConfigurationList <<< "${BW_COMPONENT_JOB_FLOWLIMIT}" # str is read into an array as tokens separated by IFS
-			for process in "${processConfigurationList[@]}"; do # access each element of array
-				echo "Setting flow limit for $process"
-				IFS=':' # space is set as delimiter
-				read -ra processConfiguration <<< "$process" # str is read into an array as tokens separated by IFS
-				printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]}=${processConfiguration[1]}" >> $appnodeConfigFile
-				print_Debug "set bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]} to ${processConfiguration[1]}"
-			done			
-		fi
-	fi
 	if [[ ${BW_APP_MONITORING_CONFIG} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
@@ -216,17 +211,24 @@ checkPlugins()
 	pluginFolder=/resources/addons/plugins
 	if [ -d ${pluginFolder} ] && [ "$(ls $pluginFolder)" ]; then 
 		print_Debug "Adding Plug-in Jars"
-		echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$BWCE_HOME/tibco.home/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
-
+		
+		if [ $TCI_BW_EDITION != "ipaas" ]; then
+			HOME=$BWCE_HOME/tibco.home
+		else
+			HOME=$TCI_HOME/ext/shared
+		fi
+		
+		echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
+					
 		for name in $(find $pluginFolder -type f); 
-		do	
+		do
 			# filter out hidden files
-			if [[ "$(basename $name )" != .* ]]; then
-		   		unzip -q -o $name -d $BWCE_HOME/plugintmp/
-				mkdir -p $BWCE_HOME/tibco.home/addons/runtime/plugins/ && mv $BWCE_HOME/plugintmp/runtime/plugins/* "$_"
-				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${name##*/}.ini
-				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.jar "$_" 2> /dev/null || true
-				mkdir -p $BWCE_HOME/tibco.home/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
+			if [[  "$(basename $name )" != .* ]];then
+				unzip -q -o $name -d $BWCE_HOME/plugintmp/
+				mkdir -p $HOME/addons/runtime/plugins/ && mv $BWCE_HOME/plugintmp/runtime/plugins/* "$_"
+                mkdir -p $HOME/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${name##*/}.ini
+				mkdir -p $HOME/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.jar "$_" 2> /dev/null || true
+				mkdir -p $HOME/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
 				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} / \; 2> /dev/null
 				rm -rf $BWCE_HOME/plugintmp/
 			fi
@@ -283,21 +285,17 @@ checkCerts()
 checkAgents()
 {
 	agentFolder=/resources/addons/monitor-agents
-
 	if [ -d ${agentFolder} ] && [ "$(ls $agentFolder)" ]; then 
 		print_Debug "Adding monitoring jars"
-
 		for name in $(find $agentFolder -type f); 
-do	
-	# filter out hidden files
-	if [[  "$(basename $name )" != .* ]];then
-		mkdir -p $BWCE_HOME/agent/
-   		unzip -q $name -d $BWCE_HOME/agent/
+		do	
+			# filter out hidden files
+			if [[  "$(basename $name )" != .* ]];then
+				mkdir -p $BWCE_HOME/agent/
+				unzip -q $name -d $BWCE_HOME/agent/
+			fi
+		done
 	fi
-done
-		
-	fi
-
 }
 
 memoryCalculator()
@@ -308,6 +306,18 @@ memoryCalculator()
 		thread_Stack=$((memory_Number))
 		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
 		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
+	fi
+}
+
+applyDefaultJVMHeapParams()
+{
+
+	DEFAULT_JVM_HEAP_PARAMS="-Xmx1024M -Xms128M"
+
+	if [[ ${BW_JAVA_OPTS} && ${BW_JAVA_OPTS} != *"Xm"* ||  -z ${BW_JAVA_OPTS} ]]; then
+		
+		export BW_JAVA_OPTS=$DEFAULT_JVM_HEAP_PARAMS" "$BW_JAVA_OPTS
+
 	fi
 }
 
@@ -337,11 +347,11 @@ checkJavaGCConfig()
 
 checkJAVAHOME()
 {
-		if [[ ${JAVA_HOME}  ]]; then
- 			print_Debug $JAVA_HOME
- 		else
- 			export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/1.8.0
- 		fi
+	if [[ ${JAVA_HOME}  ]]; then
+		print_Debug $JAVA_HOME
+	else
+		export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/1.8.0
+	fi
 }
 
 checkThirdPartyInstallations()
@@ -415,27 +425,79 @@ then
 	  		cp -r /resources/addons/jars/* `echo $BWCE_HOME/tibco.home/bw*/*`/system/hotfix/shared
 		fi
 	fi
-	ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
-	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
+	if [ $TCI_BW_EDITION != "ipaas" ]; then
+		ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
+		sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
+		unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
+	fi
 	setLogLevel
 	memoryCalculator
-	checkEnvSubstituteConfig
+	applyDefaultJVMHeapParams	
 fi
 
-checkProfile
 checkPolicy
 setupThirdPartyInstallationEnvironment
 
-if [ -f /*.substvar ]; then
-	cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
-else
-	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
+if [ $TCI_BW_EDITION != "ipaas" ]; then
+	checkEnvSubstituteConfig
+	checkProfile
+	if [ -f /*.substvar ]; then
+		cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
+	else
+		cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
+	fi
+	$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+	STATUS=$?
+	if [ $STATUS == "1" ]; then
+		exit 1 # terminate and indicate error
+	fi
 fi
 
-$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+if [ $TCI_BW_EDITION == "ipaas" ];
+then
+    echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment start #######################"
+	tci_java_home="/usr/lib/jvm/java"
+	BW_VERSION=`ls $BWCE_HOME/tibco.home/bw*/`
+    
+	#copy runtime zip in TCI_HOME	
+	if [ -d $BWCE_HOME/tibco.home/bwce/${BW_VERSION} ]; then
+		yes | cp -r $BWCE_HOME/tibco.home/bwce/${BW_VERSION}/* $TCI_HOME
+	fi
+	if [ -d $BWCE_HOME/tibco.home/addons/lib ]; then
+		yes | cp -r $BWCE_HOME/tibco.home/addons/lib $TCI_HOME/ext/shared
+	fi
 
-STATUS=$?
-if [ $STATUS == "1" ]; then
-    exit 1 # terminate and indicate error
+	echo "$(date "+%H:%M:%S.000") INFO Copied runtime zip in TCI home: " $TCI_HOME
+    
+	#Modify TRA files to use new TCI home = /opt/tibco/bwcloud/<cloudversion>
+	cd $TCI_HOME/bin
+		
+	#TODO: check without tra modification
+	#Modify bwappnode & bwappnode.tra file in runtime zip
+	echo -e "\nexport TIBCO_JAVA_HOME=${tci_java_home} \ntibco.include.tra=${TCI_HOME}/bin/bwcommon.tra" >> bwappnode
+	sed -i "s+$APPDIR/tibco.home+/opt/tibco+g" bwappnode
+	sed -i "s+bwce/${BW_VERSION}+bwcloud/${CLOUD_VERSION}+g" bwappnode 
+	
+	#Change paths in bwcommon.tra file. check if FTL home need to be added in the path
+	sed -i "s+%APPDIR%/tibco.home+/opt/tibco+g" bwcommon.tra
+	sed -i "s+tibco.product.folder=bwce/${BW_VERSION}+tibco.product.folder=bwcloud/${CLOUD_VERSION}+g" bwcommon.tra 
+	sed -i 's+tibco.env.product.type=bwce+tibco.env.product.type=bwcloud+g' bwcommon.tra
+	
+	#Modify appnode_config.ini
+	sed -i 's+osgi.console.ssh=1122+osgi.console=1122+g' $TCI_HOME/config/appnode_config.ini
+	sed -i 's+osgi.console.enable.builtin=false+# osgi.console.enable.builtin=false+g' $TCI_HOME/config/appnode_config.ini
+	sed -i 's+osgi.console.ssh.useDefaultSecureStorage=true+# osgi.console.ssh.useDefaultSecureStorage=true+g' $TCI_HOME/config/appnode_config.ini
+	sed -i "s+java.security.auth.login.config=_APPDIR_/tibco.home/bwce/${BW_VERSION}/config/equinox.console.jass.login.conf+# java.security.auth.login.config=_APPDIR_/tibco.home/bwce/${BW_VERSION}/config/equinox.console.jass.login.conf+g" $TCI_HOME/config/appnode_config.ini
+	sed -i "s+ssh.server.keystore=_APPDIR_/tibco.home/bwce/${BW_VERSION}/repo/hostkey.ser+# ssh.server.keystore=_APPDIR_/tibco.home/bwce/${BW_VERSION}/repo/hostkey.ser+g" $TCI_HOME/config/appnode_config.ini
+	sed -i "s+org.eclipse.equinox.console.jaas.file=_APPDIR_/tibco.home/bwce/${BW_VERSION}/repo/store+# org.eclipse.equinox.console.jaas.file=_APPDIR_/tibco.home/bwce/${BW_VERSION}/repo/store+g" $TCI_HOME/config/appnode_config.ini
+	sed -i 's+org.eclipse.equinox.http.jetty.autostart=true+# org.eclipse.equinox.http.jetty.autostart=true+g' $TCI_HOME/config/appnode_config.ini
+	sed -i 's+bw.frwk.event.subscriber.metrics.enabled=false+# bw.frwk.event.subscriber.metrics.enabled=false+g' $TCI_HOME/config/appnode_config.ini
+	sed -i 's+_APPDIR_/tibco.home+/opt/tibco+g' $TCI_HOME/config/appnode_config.ini
+	
+	#Clean up
+	rm -rf $TCI_HOME/bin/startBWAppNode.sh
+    rm -rf $TCI_HOME/bin/bwappnode.script.sh
+	rm -rf $TCI_HOME/bin/bwappnode.tra
+	echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment end #######################"
+	
 fi
