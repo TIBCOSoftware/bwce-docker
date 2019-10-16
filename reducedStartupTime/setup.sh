@@ -192,18 +192,18 @@ checkEnvSubstituteConfig()
 		fi
 	fi
 	if [[ ${BW_COMPONENT_JOB_FLOWLIMIT} ]]; then
-        if [ -e ${appnodeConfigFile} ]; then
-            IFS=';' # space is set as delimiter
-            read -ra processConfigurationList <<< "${BW_COMPONENT_JOB_FLOWLIMIT}" # str is read into an array as tokens separated by IFS
-            for process in "${processConfigurationList[@]}"; do # access each element of array
-                echo "Setting flow limit for $process"
-                IFS=':' # space is set as delimiter
-                read -ra processConfiguration <<< "$process" # str is read into an array as tokens separated by IFS
-                printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]}=${processConfiguration[1]}" >> $appnodeConfigFile
-                print_Debug "set bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]} to ${processConfiguration[1]}"
-            done            
-        fi
-    fi
+		if [ -e ${appnodeConfigFile} ]; then
+			IFS=';' # space is set as delimiter
+			read -ra processConfigurationList <<< "${BW_COMPONENT_JOB_FLOWLIMIT}" # str is read into an array as tokens separated by IFS
+			for process in "${processConfigurationList[@]}"; do # access each element of array
+				echo "Setting flow limit for $process"
+				IFS=':' # space is set as delimiter
+				read -ra processConfiguration <<< "$process" # str is read into an array as tokens separated by IFS
+				printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]}=${processConfiguration[1]}" >> $appnodeConfigFile
+				print_Debug "set bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]} to ${processConfiguration[1]}"
+			done			
+		fi
+	fi
 	if [[ ${BW_APP_MONITORING_CONFIG} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
@@ -240,7 +240,7 @@ checkPlugins()
 			if [[  "$(basename $name )" != .* ]];then
 				unzip -q -o $name -d $BWCE_HOME/plugintmp/
 				mkdir -p $HOME/addons/runtime/plugins/ && mv $BWCE_HOME/plugintmp/runtime/plugins/* "$_"
-                mkdir -p $HOME/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${name##*/}.ini
+                		mkdir -p $HOME/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${name##*/}.ini
 				mkdir -p $HOME/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.jar "$_" 2> /dev/null || true
 				mkdir -p $HOME/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
 				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} / \; 2> /dev/null
@@ -456,7 +456,7 @@ fi
 
 if [ $TCI_BW_EDITION == "ipaas" ];
 then
-    echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment start #######################"
+    	echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment start #######################"
 	tci_java_home="/usr/lib/jvm/java"
 	BW_VERSION=`ls $BWCE_HOME/tibco.home/bw*/`
     
@@ -473,7 +473,6 @@ then
 	#Modify TRA files to use new TCI home = /opt/tibco/bwcloud/<cloudversion>
 	cd $TCI_HOME/bin
 		
-	#TODO: check without tra modification
 	#Modify bwappnode & bwappnode.tra file in runtime zip
 	echo -e "\nexport TIBCO_JAVA_HOME=${tci_java_home} \ntibco.include.tra=${TCI_HOME}/bin/bwcommon.tra" >> bwappnode
 	sed -i "s+$APPDIR/tibco.home+/opt/tibco+g" bwappnode
@@ -497,7 +496,7 @@ then
 	
 	#Clean up
 	rm -rf $TCI_HOME/bin/startBWAppNode.sh
-    rm -rf $TCI_HOME/bin/bwappnode.script.sh
+    	rm -rf $TCI_HOME/bin/bwappnode.script.sh
 	rm -rf $TCI_HOME/bin/bwappnode.tra
 	echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment end #######################"
 	
