@@ -6,9 +6,9 @@
 # This software is confidential and proprietary information of
 # TIBCO Software Inc.
 #
-#
+#Use this setup.sh script to unzip the bwce-runitme zip while creating the base image.
 
-#Variables coming from TCI scripts
+#Variables coming from TCI startup.sh & BWCE start.sh
 TCI_BW_EDITION=$1
 TCI_HOME=$2
 CLOUD_VERSION=$3
@@ -104,7 +104,8 @@ checkProfile()
 		defaultProfile=$x;;esac	
 	done
 
-	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
+	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then 
+		echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
 	else 
 		case $BW_PROFILE in
  		*.substvar ) ;;
@@ -190,6 +191,19 @@ checkEnvSubstituteConfig()
 			print_Debug "set BW_APPLICATION_JOB_FLOWLIMIT to $BW_APPLICATION_JOB_FLOWLIMIT"
 		fi
 	fi
+	if [[ ${BW_COMPONENT_JOB_FLOWLIMIT} ]]; then
+        if [ -e ${appnodeConfigFile} ]; then
+            IFS=';' # space is set as delimiter
+            read -ra processConfigurationList <<< "${BW_COMPONENT_JOB_FLOWLIMIT}" # str is read into an array as tokens separated by IFS
+            for process in "${processConfigurationList[@]}"; do # access each element of array
+                echo "Setting flow limit for $process"
+                IFS=':' # space is set as delimiter
+                read -ra processConfiguration <<< "$process" # str is read into an array as tokens separated by IFS
+                printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]}=${processConfiguration[1]}" >> $appnodeConfigFile
+                print_Debug "set bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]} to ${processConfiguration[1]}"
+            done            
+        fi
+    fi
 	if [[ ${BW_APP_MONITORING_CONFIG} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
@@ -309,18 +323,6 @@ memoryCalculator()
 	fi
 }
 
-applyDefaultJVMHeapParams()
-{
-
-	DEFAULT_JVM_HEAP_PARAMS="-Xmx1024M -Xms128M"
-
-	if [[ ${BW_JAVA_OPTS} && ${BW_JAVA_OPTS} != *"Xm"* ||  -z ${BW_JAVA_OPTS} ]]; then
-		
-		export BW_JAVA_OPTS=$DEFAULT_JVM_HEAP_PARAMS" "$BW_JAVA_OPTS
-
-	fi
-}
-
 checkJMXConfig()
 {
 	if [[ ${BW_JMX_CONFIG} ]]; then
@@ -431,8 +433,7 @@ then
 		unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	fi
 	setLogLevel
-	memoryCalculator
-	applyDefaultJVMHeapParams	
+	memoryCalculator	
 fi
 
 checkPolicy
