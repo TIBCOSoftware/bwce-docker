@@ -8,7 +8,7 @@
 #
 #Use this setup.sh script to unzip the bwce-runitme zip while creating the base image.
 
-#Variables coming from TCI startup.sh & BWCE start.sh
+#Variables coming from TCI scripts
 TCI_BW_EDITION=$1
 TCI_HOME=$2
 CLOUD_VERSION=$3
@@ -104,8 +104,7 @@ checkProfile()
 		defaultProfile=$x;;esac	
 	done
 
-	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then 
-		echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
+	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
 	else 
 		case $BW_PROFILE in
  		*.substvar ) ;;
@@ -232,10 +231,9 @@ checkPlugins()
 			HOME=$TCI_HOME/ext/shared
 		fi
 		
-		echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
-					
+		echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$HOME/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link					
 		for name in $(find $pluginFolder -type f); 
-		do
+		do	
 			# filter out hidden files
 			if [[  "$(basename $name )" != .* ]];then
 				unzip -q -o $name -d $BWCE_HOME/plugintmp/
@@ -440,8 +438,8 @@ checkPolicy
 setupThirdPartyInstallationEnvironment
 
 if [ $TCI_BW_EDITION != "ipaas" ]; then
-	checkEnvSubstituteConfig
-	checkProfile
+	checkEnvSubstituteConfig	
+	checkProfile	
 	if [ -f /*.substvar ]; then
 		cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
 	else
@@ -456,7 +454,7 @@ fi
 
 if [ $TCI_BW_EDITION == "ipaas" ];
 then
-    	echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment start #######################"
+    echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment start #######################"
 	tci_java_home="/usr/lib/jvm/java"
 	BW_VERSION=`ls $BWCE_HOME/tibco.home/bw*/`
     
@@ -473,6 +471,7 @@ then
 	#Modify TRA files to use new TCI home = /opt/tibco/bwcloud/<cloudversion>
 	cd $TCI_HOME/bin
 		
+	#TODO: check without tra modification
 	#Modify bwappnode & bwappnode.tra file in runtime zip
 	echo -e "\nexport TIBCO_JAVA_HOME=${tci_java_home} \ntibco.include.tra=${TCI_HOME}/bin/bwcommon.tra" >> bwappnode
 	sed -i "s+$APPDIR/tibco.home+/opt/tibco+g" bwappnode
@@ -496,8 +495,9 @@ then
 	
 	#Clean up
 	rm -rf $TCI_HOME/bin/startBWAppNode.sh
-    	rm -rf $TCI_HOME/bin/bwappnode.script.sh
+    rm -rf $TCI_HOME/bin/bwappnode.script.sh
 	rm -rf $TCI_HOME/bin/bwappnode.tra
 	echo "$(date "+%H:%M:%S.000") INFO ######################## Setting up TCI environment end #######################"
 	
 fi
+
