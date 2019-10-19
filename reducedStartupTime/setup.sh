@@ -241,7 +241,11 @@ checkPlugins()
                 		mkdir -p $HOME/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${name##*/}.ini
 				mkdir -p $HOME/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.jar "$_" 2> /dev/null || true
 				mkdir -p $HOME/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
-				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} / \; 2> /dev/null
+				if [ $TCI_BW_EDITION != "ipaas" ]; then
+					find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} /tmp \; 2> /dev/null
+				else
+					find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} /opt/tibco \; 2> /dev/null
+				fi
 				rm -rf $BWCE_HOME/plugintmp/
 			fi
 		done
@@ -429,17 +433,16 @@ then
 		ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
 		sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 		unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
+		setLogLevel
+		memoryCalculator	
+		checkEnvSubstituteConfig	
 	fi
-	setLogLevel
-	memoryCalculator	
 fi
 
-checkPolicy
-setupThirdPartyInstallationEnvironment
-
 if [ $TCI_BW_EDITION != "ipaas" ]; then
-	checkEnvSubstituteConfig	
 	checkProfile	
+	checkPolicy
+	setupThirdPartyInstallationEnvironment
 	if [ -f /*.substvar ]; then
 		cp -f /*.substvar $BWCE_HOME/tmp/pcf.substvar # User provided profile
 	else
