@@ -476,7 +476,6 @@ then
 		
 	#TODO: check without tra modification
 	#Modify bwappnode & bwappnode.tra file in runtime zip
-	echo -e "\nexport TIBCO_JAVA_HOME=${tci_java_home} \ntibco.include.tra=${TCI_HOME}/bin/bwcommon.tra" >> bwappnode
 	sed -i "s+$APPDIR/tibco.home+/opt/tibco+g" bwappnode
 	sed -i "s+bwce/${BW_VERSION}+bwcloud/${CLOUD_VERSION}+g" bwappnode 
 	
