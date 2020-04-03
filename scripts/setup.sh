@@ -312,7 +312,6 @@ memoryCalculator()
 	fi
 }
 
-
 applyDefaultJVMHeapParams(){
 
 	DEFAULT_JVM_HEAP_PARAMS="-Xmx1024M -Xms128M"
