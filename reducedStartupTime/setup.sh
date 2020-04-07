@@ -316,8 +316,9 @@ checkAgents()
 
 memoryCalculator()
 {
-	if [[ ${MEMORY_LIMIT} ]]; then
-		memory_Number=`echo $MEMORY_LIMIT | sed 's/m$//I'`
+	MEM_LIMIT=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
+	if [ $MEM_LIMIT -ne 9223372036854771712 ] && [ $MEM_LIMIT -gt 0 ] ; then
+		memory_Number=$(expr $MEM_LIMIT / 1024 / 1024)
 		configured_MEM=$((($memory_Number*67+50)/100))
 		thread_Stack=$((memory_Number))
 		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
