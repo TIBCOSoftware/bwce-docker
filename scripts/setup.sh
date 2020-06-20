@@ -398,6 +398,20 @@ setupThirdPartyInstallationEnvironment()
 	fi
 }
 
+setupKerberosFiles()
+{
+	BWCE_CONFIG_DIR=`echo $BWCE_HOME/tibco.home/bw*/*`/config
+	if [ -f /krb5.conf ]; then
+		mv $BWCE_CONFIG_DIR/krb5.conf $BWCE_CONFIG_DIR/krb5.conf.orig
+		cp -f /krb5.conf $BWCE_CONFIG_DIR/krb5.conf # User provided profile
+	fi
+
+	if [ -f /login.conf ]; then
+		mv $BWCE_CONFIG_DIR/login.conf $BWCE_CONFIG_DIR/login.conf.orig
+		cp -f /login.conf $BWCE_CONFIG_DIR/login.conf # User provided profile
+	fi
+}
+
 appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 POLICY_ENABLED="false"
 checkJAVAHOME
@@ -447,6 +461,9 @@ if [ -f /*.substvar ]; then
 else
 	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
+
+#Setup Kerberos files if they exist
+setupKerberosFiles
 
 $JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
 
