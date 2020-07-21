@@ -219,7 +219,7 @@ checkEnvSubstituteConfig()
 
 	if [[ ${HYBRID_AGENT_URL} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
-			sed -i 's/bw.frwk.event.subscriber.instrumentation.enabled=false/bw.frwk.event.subscriber.instrumentation.enabled=true/g' $appnodeConfigFile
+			printf '%s\n' "bw.frwk.event.subscriber.instrumentation.enabled=true" >> $appnodeConfigFile
 			print_Debug "set bw.frwk.event.subscriber.instrumentation.enabled to true"
 		fi
 	fi
