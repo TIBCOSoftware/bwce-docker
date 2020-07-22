@@ -217,6 +217,20 @@ checkEnvSubstituteConfig()
 		echo "---------------------------------------"
 		fi
 	fi
+
+	if [[ ${BW_APP_MONITORING_CONFIG} ]] || [[ ${HYBRID_AGENT_URL} ]]; then
+		if [ -e ${appnodeConfigFile} ]; then
+			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
+			print_Debug "set bw.frwk.event.subscriber.metrics.enabled to true"
+		fi
+	fi
+
+	if [[ ${HYBRID_AGENT_URL} ]]; then
+		if [ -e ${appnodeConfigFile} ]; then
+			printf '%s\n' "bw.frwk.event.subscriber.instrumentation.enabled=true" >> $appnodeConfigFile
+			print_Debug "set bw.frwk.event.subscriber.instrumentation.enabled to true"
+		fi
+	fi
 }
 
 checkPlugins()
