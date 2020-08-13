@@ -329,13 +329,13 @@ function Check-EnvSubstituteConfig {
 				Print-Debug ("set BW_APPLICATION_JOB_FLOWLIMIT to $env:BW_APPLICATION_JOB_FLOWLIMIT")
 			}
 		}
-		if ($env:BW_APP_MONITORING_CONFIG -or $env:HYBRID_AGENT_URL) {
+		if ($env:BW_APP_MONITORING_CONFIG -or ($env:TCI_HYBRID_AGENT_HOST -and $env:TCI_HYBRID_AGENT_PORT)) {
 			if ((Test-Path -Path $appnodeConfigFile -PathType leaf)) {
 				(Get-Content $appnodeConfigFile | ForEach-Object { $_ -replace "bw.frwk.event.subscriber.metrics.enabled=false","bw.frwk.event.subscriber.metrics.enabled=true" }) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
 				Print-Debug ("set bw.frwk.event.subscriber.metrics.enabled to true")
 			}
 		}
-		if ($env:HYBRID_AGENT_URL) {
+		if ($env:TCI_HYBRID_AGENT_HOST -and $env:TCI_HYBRID_AGENT_PORT) {
 			if (Test-Path -Path $appnodeConfigFile -PathType leaf) {
 				Add-Content -Path $appnodeConfigFile -Value "`r`nbw.frwk.event.subscriber.instrumentation.enabled=true"
 				Print-Debug ("set bw.frwk.event.subscriber.instrumentation.enabled to true")
