@@ -203,32 +203,25 @@ checkEnvSubstituteConfig()
 			done			
 		fi
 	fi
-	if [[ ${BW_APP_MONITORING_CONFIG} ]]; then
+	if [[ ${BW_APP_MONITORING_CONFIG} || ( ${TCI_HYBRID_AGENT_HOST} && ${TCI_HYBRID_AGENT_PORT}) ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
 			print_Debug "set bw.frwk.event.subscriber.metrics.enabled to true"
 		fi
 	fi
 
+	if [[ ${TCI_HYBRID_AGENT_HOST} ]] && [[ ${TCI_HYBRID_AGENT_PORT} ]]; then
+		if [ -e ${appnodeConfigFile} ]; then
+			printf '%s\n' "bw.frwk.event.subscriber.instrumentation.enabled=true" >> $appnodeConfigFile
+			print_Debug "set bw.frwk.event.subscriber.instrumentation.enabled to true"
+		fi
+	fi
+ 
 	if [[  $BW_LOGLEVEL = "DEBUG" ]]; then
 		if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]] || [[ ${BW_ENGINE_STEPCOUNT} ]] || [[ ${BW_ENGINE_THREADCOUNT} ]] || [[ ${BW_APP_MONITORING_CONFIG} ]]; then
 		echo "---------------------------------------"
 		cat $appnodeConfigFile
 		echo "---------------------------------------"
-		fi
-	fi
-
-	if [[ ${BW_APP_MONITORING_CONFIG} ]] || [[ ${HYBRID_AGENT_URL} ]]; then
-		if [ -e ${appnodeConfigFile} ]; then
-			sed -i 's/bw.frwk.event.subscriber.metrics.enabled=false/bw.frwk.event.subscriber.metrics.enabled=true/g' $appnodeConfigFile
-			print_Debug "set bw.frwk.event.subscriber.metrics.enabled to true"
-		fi
-	fi
-
-	if [[ ${HYBRID_AGENT_URL} ]]; then
-		if [ -e ${appnodeConfigFile} ]; then
-			printf '%s\n' "bw.frwk.event.subscriber.instrumentation.enabled=true" >> $appnodeConfigFile
-			print_Debug "set bw.frwk.event.subscriber.instrumentation.enabled to true"
 		fi
 	fi
 }
