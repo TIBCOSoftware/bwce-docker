@@ -412,7 +412,7 @@ checkAnalyzerConfig()
 			ANALYZER_HOST=${BW_ANALYZER_CONFIG%%:*}
 			ANALYZER_PORT=${BW_ANALYZER_CONFIG#*:}
 			JAVA_AGENT="-javaagent:"`echo $BWCE_HOME/tibco.home/bw*/*/system/lib/com.tibco.bw.thor.admin.node_*.jar`
-			BW_ANALYZER_CONFIG=$JAVA_AGENT" -Dbw.engine.debug.mode.enabled=true -Dbw.engine.debug.udp.host="$ANALYZER_HOST" -Dbw.engine.debug.udp.port="$ANALYZER_PORT
+			BW_ANALYZER_CONFIG=$JAVA_AGENT" -Dbw.engine.analyzer.subscriber.enabled=true -Dbw.engine.analyzer.udp.host="$ANALYZER_HOST" -Dbw.engine.analyzer.udp.port="$ANALYZER_PORT
 			export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$BW_ANALYZER_CONFIG
 		fi
 	fi
@@ -487,6 +487,7 @@ else
 fi
 
 $JAVA_HOME/bin/java $BW_ENCRYPTED_PROFILE_CONFIG -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.security.tibcrypt_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.encryption.util_*`/lib/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error

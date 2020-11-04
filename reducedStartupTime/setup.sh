@@ -408,6 +408,34 @@ setupThirdPartyInstallationEnvironment()
 	fi
 }
 
+checkAnalyzerConfig()
+{
+	if [[ ${BW_ANALYZER_CONFIG} ]]; then
+		if [[ $BW_ANALYZER_CONFIG == *":"* ]]; then
+			ANALYZER_HOST=${BW_ANALYZER_CONFIG%%:*}
+			ANALYZER_PORT=${BW_ANALYZER_CONFIG#*:}
+			JAVA_AGENT="-javaagent:"`echo $BWCE_HOME/tibco.home/bw*/*/system/lib/com.tibco.bw.thor.admin.node_*.jar`
+			BW_ANALYZER_CONFIG=$JAVA_AGENT" -Dbw.engine.analyzer.subscriber.enabled=true -Dbw.engine.analyzer.udp.host="$ANALYZER_HOST" -Dbw.engine.analyzer.udp.port="$ANALYZER_PORT
+			export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$BW_ANALYZER_CONFIG
+		fi
+	fi
+} 
+
+checkBWProfileEncryptionConfig()
+{
+	if [[ ${BW_PROFILE_ENCRYPTION_KEYSTORE} ]]; then
+			certsFolder=/resources/addons/certs
+			KEYSTORETYPE=${BW_PROFILE_ENCRYPTION_KEYSTORETYPE}
+			KEYSTORE=${BW_PROFILE_ENCRYPTION_KEYSTORE}
+			KEYSTOREPASSWORD=${BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD}
+			KEYALIAS=${BW_PROFILE_ENCRYPTION_KEYALIAS}
+			KEYALIASPASSOWRD=${BW_PROFILE_ENCRYPTION_KEYALIASPASSWORD}
+			BW_ENCRYPTED_PROFILE_CONFIG=" -Dbw.encryptedprofile.keystoreType="$KEYSTORETYPE" -Dbw.encryptedprofile.keystore="$certsFolder"/"$KEYSTORE" -Dbw.encryptedprofile.keystorePassword="$KEYSTOREPASSWORD" -Dbw.encryptedprofile.keyAlias="$KEYALIAS" -Dbw.encryptedprofile.keyAliasPassword="$KEYALIASPASSOWRD
+			export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$BW_ENCRYPTED_PROFILE_CONFIG
+	fi
+} 
+
+
 appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 POLICY_ENABLED="false"
 checkJAVAHOME
@@ -443,7 +471,9 @@ then
 		unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 		setLogLevel
 		memoryCalculator	
-		checkEnvSubstituteConfig	
+		checkEnvSubstituteConfig
+		checkAnalyzerConfig
+		checkBWProfileEncryptionConfig	
 	fi
 fi
 
@@ -456,7 +486,7 @@ if [ $TCI_BW_EDITION != "ipaas" ]; then
 	else
 		cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 	fi
-	$JAVA_HOME/bin/java -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+	$JAVA_HOME/bin/java $BW_ENCRYPTED_PROFILE_CONFIG -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.security.tibcrypt_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.encryption.util_*`/lib/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
 	STATUS=$?
 	if [ $STATUS == "1" ]; then
 		exit 1 # terminate and indicate error
