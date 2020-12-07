@@ -790,7 +790,7 @@ function Setup-ThirdPartyInstallationEnvironment {
 }
 
 $global:BW_ENCRYPTED_PROFILE_CONFIG=""
-function checkBWProfileEncryptionConfig {
+function Check-BWProfileEncryptionConfig {
 
 	[CmdletBinding()]
 	param()
@@ -814,7 +814,7 @@ function checkBWProfileEncryptionConfig {
 	}
 }
 
-function checkAnalyzerConfig {
+function Check-AnalyzerConfig {
 
 	[CmdletBinding()]
 	param()
@@ -901,8 +901,8 @@ try {
 
 		Set-LogLevel
 		Memory-Calculator
-		checkAnalyzerConfig
-		checkBWProfileEncryptionConfig	
+		Check-AnalyzerConfig
+		Check-BWProfileEncryptionConfig	
 		Check-EnvSubstituteConfig
 
 	}
