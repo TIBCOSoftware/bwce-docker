@@ -789,6 +789,55 @@ function Setup-ThirdPartyInstallationEnvironment {
 
 }
 
+$global:BW_ENCRYPTED_PROFILE_CONFIG=""
+function Check-BWProfileEncryptionConfig {
+
+	[CmdletBinding()]
+	param()
+
+	try {
+			Write-Output ("Calling profile encrypt function")
+
+		if ($env:BW_PROFILE_ENCRYPTION_KEYSTORE) {
+			$certsFolder="c:\\resources\\addons\\certs"
+			$KEYSTORETYPE="$env:BW_PROFILE_ENCRYPTION_KEYSTORETYPE"
+			$KEYSTORE="$env:BW_PROFILE_ENCRYPTION_KEYSTORE"
+			$KEYSTOREPASSWORD="$env:BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD"
+			$KEYALIAS="$env:BW_PROFILE_ENCRYPTION_KEYALIAS"
+			$KEYALIASPASSOWRD="$env:BW_PROFILE_ENCRYPTION_KEYALIASPASSWORD"
+			$global:BW_ENCRYPTED_PROFILE_CONFIG="-Dbw.encryptedprofile.keystoreType=$KEYSTORETYPE -Dbw.encryptedprofile.keystore=$certsFolder\\$KEYSTORE -Dbw.encryptedprofile.keystorePassword=$KEYSTOREPASSWORD -Dbw.encryptedprofile.keyAlias=$KEYALIAS -Dbw.encryptedprofile.keyAliasPassword=$KEYALIASPASSOWRD "
+			$env:BW_JAVA_OPTS = "$env:BW_JAVA_OPTS $BW_ENCRYPTED_PROFILE_CONFIG"
+		}		
+	} catch {
+		Print-Debug ("Error in setting profile encryption config")
+		Write-Error -Exception $PSItem -ErrorAction Stop
+	}
+}
+
+function Check-AnalyzerConfig {
+
+	[CmdletBinding()]
+	param()
+
+	try {
+		if ($env:BW_ANALYZER_CONFIG) {
+			if ($env:BW_ANALYZER_CONFIG -like '*:*') {
+				$ANALYZER_HOST = $env:BW_ANALYZER_CONFIG.Split(":")[0]
+				$ANALYZER_PORT = $env:BW_ANALYZER_CONFIG.Split(":")[1]
+				$JAVA_AGENT="-javaagent:" -join $(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar")
+				$BW_ANALYZER_CONFIG="$JAVA_AGENT -Dbw.engine.debug.mode.enabled=true -Dbw.engine.debug.udp.host=$ANALYZER_HOST -Dbw.engine.debug.udp.port=$ANALYZER_PORT"
+				$env:BW_JAVA_OPTS = "$env:BW_JAVA_OPTS $BW_ANALYZER_CONFIG"
+			}
+		}
+	} catch {
+
+		Print-Debug ("Error in setting analyser configuration")
+		Write-Error -Exception $PSItem -ErrorAction Stop
+
+	}
+}
+
+
 
 $appnodeConfigFile = "$env:BWCE_HOME\tibco.home\bw*\*\config\appnode_config.ini"
 $POLICY_ENABLED = "false"
@@ -852,6 +901,8 @@ try {
 
 		Set-LogLevel
 		Memory-Calculator
+		Check-AnalyzerConfig
+		Check-BWProfileEncryptionConfig	
 		Check-EnvSubstituteConfig
 
 	}
@@ -868,8 +919,9 @@ try {
 
 		Copy-Item $env:BWCE_HOME\META-INF\$env:BW_PROFILE -Destination $env:BWCE_HOME\tmp\pcf.substvar
 	}
+	$BW_ENCR= $global:BW_ENCRYPTED_PROFILE_CONFIG -split " "
 
-	. $env:JAVA_HOME\bin\java -cp "$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.security.tibcrypt_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.encryption.util_*\lib\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*");$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
+	. $env:JAVA_HOME\bin\java $BW_ENCR -cp "$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.security.tibcrypt_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.encryption.util_*\lib\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*");$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
 
 
 } catch {
