@@ -159,7 +159,7 @@ checkEnvSubstituteConfig()
 	fi
 	if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
-			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
+			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA 2> /dev/null
 			print_Debug "Appended $BW_JAVA_OPTS to java.extend.properties"
 		fi
 	fi
@@ -468,6 +468,7 @@ then
 	ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
+	export BW_JAVA_OPTS=$BW_JAVA_OPTS' --add-opens java.management/sun.management=ALL-UNNAMED '
 	setLogLevel
 	memoryCalculator
 	applyDefaultJVMHeapParams
