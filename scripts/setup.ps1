@@ -459,7 +459,7 @@ function Check-JAVAHOME {
 
 		} else {
 			Print-Debug ("set java home")
-			$env:JAVA_HOME = $env:BWCE_HOME + "\tibco.home\tibcojre64\1.8.0"
+			$env:JAVA_HOME = $env:BWCE_HOME + "\tibco.home\tibcojre64\11"
 
 		}
 
