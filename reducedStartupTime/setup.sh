@@ -471,13 +471,14 @@ then
 		unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 		setLogLevel
 		memoryCalculator	
-		checkEnvSubstituteConfig
 		checkAnalyzerConfig
 		checkBWProfileEncryptionConfig	
 	fi
 fi
 
 if [ $TCI_BW_EDITION != "ipaas" ]; then
+	export BW_JAVA_OPTS=$BW_JAVA_OPTS' --add-opens java.management/sun.management=ALL-UNNAMED '
+	checkEnvSubstituteConfig
 	checkProfile	
 	checkPolicy
 	setupThirdPartyInstallationEnvironment
