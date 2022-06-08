@@ -254,7 +254,7 @@ checkPlugins()
 					find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} /opt/tibco \; 2> /dev/null
 				fi
 				rm -rf $BWCE_HOME/plugintmp/
-				mkdir -p $BWCE_HOME/plugintmp
+				mkdir $BWCE_HOME/plugintmp
 			fi
 		done
 	fi
