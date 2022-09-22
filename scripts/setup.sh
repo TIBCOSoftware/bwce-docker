@@ -432,7 +432,35 @@ checkBWProfileEncryptionConfig()
 	fi
 } 
 
+overrideBWLoggers() {
 
+    # capture the overrides as XML, first making sure we have newlines separating the overrides,
+    #  then removing the "=" from each so the read works
+    logback="$BWCE_HOME/tibco.home/bw"*"/"*"/config"
+    echo "$1" | tr ' ' '\n' |  sed 's/=/ /1' |\
+      {
+          echo "<loggers xmlns='http://loggers'>"
+          while read name value; do
+            if [ -n "$name" ]; then
+              value=$( echo $value | tr '[:lower:]' '[:upper:]' )
+              echo "<loggerOverride name='$name'>$value</loggerOverride>"
+            fi
+          done
+          echo "</loggers>"
+      } > /tmp/loggerOverrides.xml || \
+      {
+        echo "$(date "+%H:%M:%S.000") ERROR %%%% Failed to parse TCI BW LOGGER OVERRIDES: $1"
+        # don't interrupt the app start just because we cannot override loggers
+        exit 0
+      }
+    
+    # merge the overrides with the existing logback.xml 
+    logfile=${logback}"/logback.xml"
+
+    mv ${logback}"/logback.xml"  $(echo $logback)/logback-orig.xml
+    xsltproc --stringparam overrides /tmp/loggerOverrides.xml -o $(echo $logback)/logback.xml /scripts/overrideLoggers.xsl ${logback}"/logback-orig.xml" \
+     2>&1 >/dev/null | while read line; do echo "$(date "+%H:%M:%S.000") INFO %%%% $line"; done
+}
 
 appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 POLICY_ENABLED="false"
@@ -474,6 +502,13 @@ then
 fi
 
 export BW_JAVA_OPTS=$BW_JAVA_OPTS' --add-opens java.management/sun.management=ALL-UNNAMED '
+
+if [ -n "$BW_LOGGER_OVERRIDES" ] && [ "$BW_LOGGER_OVERRIDES" != "na" ]; then
+    LOGGER_VALUES="$BW_LOGGER_OVERRIDES"
+    echo "$(date "+%H:%M:%S.000") INFO %%%% TCI BW LOGGER OVERRIDES - Setting Logger properties from UI - BW_LOGGER_OVERRIDES"
+    overrideBWLoggers "$LOGGER_VALUES" 
+fi
+
 checkProfile
 checkPolicy
 setupThirdPartyInstallationEnvironment
