@@ -167,7 +167,7 @@ checkEnvSubstituteConfig()
 
 	if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
-			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA
+			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA 2> /dev/null
 			print_Debug "Appended $BW_JAVA_OPTS to java.extend.properties"
 		fi
 	fi
@@ -362,7 +362,7 @@ checkJAVAHOME()
 	if [[ ${JAVA_HOME}  ]]; then
 		print_Debug $JAVA_HOME
 	else
-		export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/1.8.0
+		export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/11
 	fi
 }
 
