@@ -67,17 +67,9 @@ checkProfile()
 				unzip -o -q $name -d $BUILD_DIR/temp
 				MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
 
-				bwcePaletteStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.rv'`
-				palette_res=$?
-
 				bwcePolicyStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid'`
 				policy_res=$?
 				rm -rf $BUILD_DIR/temp
-
-				if [ ${palette_res} -eq 0 ]; then
-	 				echo "ERROR: Application [$bwBundleAppName] is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
-	 				exit 1
-				fi
 
 				if [ ${policy_res} -eq 0 ]; then
 					POLICY_ENABLED="true"
