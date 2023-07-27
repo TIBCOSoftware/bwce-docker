@@ -1,6 +1,5 @@
-FROM openjdk:8-jdk-alpine
+FROM eclipse-temurin:11-alpine
 LABEL maintainer="TIBCO Software Inc."
 ADD . /
-RUN chmod 755 /scripts/*.sh && apk update && apk add unzip openssh net-tools
-RUN apk add --no-cache bash
+RUN chmod 755 /scripts/*.sh && apk update && apk add unzip openssh net-tools && apk add --no-cache bash
 ENTRYPOINT ["/scripts/start.sh"]
