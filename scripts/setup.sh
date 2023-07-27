@@ -67,17 +67,9 @@ checkProfile()
 				unzip -o -q $name -d $BUILD_DIR/temp
 				MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
 
-				bwcePaletteStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.rv'`
-				palette_res=$?
-
 				bwcePolicyStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid'`
 				policy_res=$?
 				rm -rf $BUILD_DIR/temp
-
-				if [ ${palette_res} -eq 0 ]; then
-	 				echo "ERROR: Application [$bwBundleAppName] is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
-	 				exit 1
-				fi
 
 				if [ ${policy_res} -eq 0 ]; then
 					POLICY_ENABLED="true"
@@ -359,7 +351,7 @@ checkJAVAHOME()
 		if [[ ${JAVA_HOME}  ]]; then
  			print_Debug $JAVA_HOME
  		else
- 			export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/1.8.0
+ 			export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/11
  		fi
 }
 
@@ -422,8 +414,14 @@ checkBWProfileEncryptionConfig()
 {
 	if [[ ${BW_PROFILE_ENCRYPTION_KEYSTORE} ]]; then
 			certsFolder=/resources/addons/certs
-			KEYSTORETYPE=${BW_PROFILE_ENCRYPTION_KEYSTORETYPE}
 			KEYSTORE=${BW_PROFILE_ENCRYPTION_KEYSTORE}
+			if [[ $name == *.jks ]]; then
+				KEYSTORETYPE=JKS
+			elif [[ $name == *.jceks ]]; then
+				KEYSTORETYPE=JCEKS
+			elif [[ $name == *.p12 ]]; then
+				KEYSTORETYPE=PKCS12
+			fi
 			KEYSTOREPASSWORD=${BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD}
 			KEYALIAS=${BW_PROFILE_ENCRYPTION_KEYALIAS}
 			KEYALIASPASSOWRD=${BW_PROFILE_ENCRYPTION_KEYALIASPASSWORD}
