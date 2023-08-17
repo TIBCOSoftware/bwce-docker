@@ -116,19 +116,12 @@ function Check-Profile {
 					Expand-Archive -Path $BUILD_DIR\tibco.home\$name -DestinationPath $BUILD_DIR\temp -Force
 					$MANIFESTMF = "$BUILD_DIR\temp\META-INF\MANIFEST.MF"
 					#need to check if we have to handle any special cases here as well(shell script had a long command)
-					$bwcePaletteStr = Select-String -Quiet 'bw.rv' $MANIFESTMF
 
 					$bwcePolicyPatternArray = "bw.authxml","bw.cred","bw.ldap","bw.wss","bw.dbauth","bw.kerberos","bw.realmdb","bw.ldaprealm","bw.userid"
 					$bwcePolicyStr = Select-String -Quiet $bwcePolicyPatternArray $MANIFESTMF
 
 					#check if this condition works properly
 					Remove-Item $BUILD_DIR\temp -Force -Recurse
-
-					if ($bwcePaletteStr) {
-
-						Write-Output "ERROR: Application $bwBundleAppName is using unsupported RV palette and can not be deployed in Docker. Rebuild your application for Docker using TIBCO Business Studio Container Edition."
-						exit 1
-					}
 
 					if ($bwcePolicyStr) {
 						#check this boolean assignment as well, and set it globally
@@ -800,8 +793,14 @@ function Check-BWProfileEncryptionConfig {
 
 		if ($env:BW_PROFILE_ENCRYPTION_KEYSTORE) {
 			$certsFolder="c:\\resources\\addons\\certs"
-			$KEYSTORETYPE="$env:BW_PROFILE_ENCRYPTION_KEYSTORETYPE"
 			$KEYSTORE="$env:BW_PROFILE_ENCRYPTION_KEYSTORE"
+			if($name -like "*.jks") {
+				$KEYSTORETYPE = JKS
+			}elseif($name -like "*.jceks") {
+				$KEYSTORETYPE = JCEKS
+			}elseif($name -like "*.p12") {
+				$KEYSTORETYPE = PKCS12
+			}
 			$KEYSTOREPASSWORD="$env:BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD"
 			$KEYALIAS="$env:BW_PROFILE_ENCRYPTION_KEYALIAS"
 			$KEYALIASPASSOWRD="$env:BW_PROFILE_ENCRYPTION_KEYALIASPASSWORD"
