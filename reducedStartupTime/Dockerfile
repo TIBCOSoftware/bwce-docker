@@ -1,5 +1,5 @@
 #Use this dockerfile to unzip the bwce-runtime zip while creating the base image.
-FROM debian:buster-slim
+FROM debian:bookworm-slim
 LABEL maintainer="TIBCO Software Inc."
 ADD . /
 RUN chmod 755 /scripts/*.sh && apt-get update && apt-get --no-install-recommends -y install unzip ssh net-tools && apt-get clean && rm -rf /var/lib/apt/lists/*
