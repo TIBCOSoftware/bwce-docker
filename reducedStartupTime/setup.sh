@@ -18,7 +18,7 @@ echo "INFO Variables received :" $TCI_BW_EDITION, $TCI_HOME, $CLOUD_VERSION, $BW
 
 print_Debug()
 {
-		if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
+		if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}" = "debug" ]]; then
  			echo $1 
  		fi
 }
