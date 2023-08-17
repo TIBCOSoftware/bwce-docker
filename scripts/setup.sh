@@ -10,7 +10,7 @@
 
 print_Debug()
 {
-		if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
+		if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}" = "debug" ]]; then
  			echo $1 
  		fi
 }
