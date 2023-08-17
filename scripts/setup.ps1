@@ -795,11 +795,11 @@ function Check-BWProfileEncryptionConfig {
 			$certsFolder="c:\\resources\\addons\\certs"
 			$KEYSTORE="$env:BW_PROFILE_ENCRYPTION_KEYSTORE"
 			if($name -like "*.jks") {
-				$KEYSTORETYPE = JKS
+				$KEYSTORETYPE = "JKS"
 			}elseif($name -like "*.jceks") {
-				$KEYSTORETYPE = JCEKS
+				$KEYSTORETYPE = "JCEKS"
 			}elseif($name -like "*.p12") {
-				$KEYSTORETYPE = PKCS12
+				$KEYSTORETYPE = "PKCS12"
 			}
 			$KEYSTOREPASSWORD="$env:BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD"
 			$KEYALIAS="$env:BW_PROFILE_ENCRYPTION_KEYALIAS"
