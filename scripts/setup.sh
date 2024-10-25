@@ -299,18 +299,6 @@ done
 
 }
 
-memoryCalculator()
-{		
-	MEM_LIMIT=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
-	if [ $MEM_LIMIT -ne 9223372036854771712 ] && [ $MEM_LIMIT -gt 0 ] ; then
-		memory_Number=$(expr $MEM_LIMIT / 1024 / 1024)
-		configured_MEM=$((($memory_Number*67+50)/100))
-		thread_Stack=$((memory_Number))
-		JAVA_PARAM="-Xmx"$configured_MEM"M -Xms128M -Xss512K"
-		export BW_JAVA_OPTS=$JAVA_PARAM" "$BW_JAVA_OPTS
-	fi
-}
-
 applyDefaultJVMHeapParams(){
 
 	DEFAULT_JVM_HEAP_PARAMS="-Xmx1024M -Xms128M"
@@ -351,7 +339,7 @@ checkJAVAHOME()
 		if [[ ${JAVA_HOME}  ]]; then
  			print_Debug $JAVA_HOME
  		else
- 			export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/11
+ 			export JAVA_HOME=$BWCE_HOME/tibco.home/tibcojre64/17
  		fi
 }
 
@@ -470,10 +458,9 @@ if [ ! -d $BWCE_HOME/tibco.home ];
 then
 	unzip -qq /resources/bwce-runtime/bwce*.zip -d $BWCE_HOME
 	rm -rf /resources/bwce-runtime/bwce*.zip 2> /dev/null
+	rm -rf $BWCE_HOME/tibco.home/tibcojre64 2> /dev/null
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/javac
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $BWCE_HOME/keys.properties
@@ -495,11 +482,10 @@ then
 	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	setLogLevel
-	memoryCalculator
 	applyDefaultJVMHeapParams
 fi
 
-export BW_JAVA_OPTS=$BW_JAVA_OPTS' --add-opens java.management/sun.management=ALL-UNNAMED '
+export BW_JAVA_OPTS=$BW_JAVA_OPTS' --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED '
 
 if [ -n "$BW_LOGGER_OVERRIDES" ] && [ "$BW_LOGGER_OVERRIDES" != "na" ]; then
     LOGGER_VALUES="$BW_LOGGER_OVERRIDES"

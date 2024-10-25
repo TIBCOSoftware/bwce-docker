@@ -1,10 +1,10 @@
-FROM debian:bookworm-slim
-LABEL maintainer="TIBCO Software Inc."
-ADD . /
-RUN chmod 755 /scripts/*.sh && apt-get update && apt-get --no-install-recommends -y install unzip ssh net-tools && apt-get -y install xsltproc && apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN groupadd -g 2001 bwce \
-&& useradd -m -d /home/bwce -r -u 2001 -g bwce bwce
+FROM eclipse-temurin:17-jre-alpine
+LABEL maintainer="Cloud Software Group, Inc."
+RUN apk update && apk add unzip openssh net-tools jq libxslt && apk add --no-cache bash
+RUN addgroup -S bwce -g 2001 && adduser -S bwce -G bwce -u 2001
+RUN chown bwce:bwce /etc
 USER bwce
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
+ADD --chown=2001:2001 --chmod=0775  . /
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 ENTRYPOINT ["/scripts/start.sh"]
