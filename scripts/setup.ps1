@@ -287,9 +287,14 @@ function Check-EnvSubstituteConfig {
 				$NewContent = Get-Content -Path $bwappnodeTRA |
 				ForEach-Object {
 
-					if ($_ -match 'java.extended.properties=.*') {
+					if ($_ -match "java\.extended\.properties=") {
 
-						$_ + " $env:BW_JAVA_OPTS"
+						if ($_ -match  "^#java\.extended\.properties="){
+							$_ -replace '(^#java\.extended\.properties=)(.*)',"`$1$env:BW_JAVA_OPTS `$2"
+						}else{
+							$_ -replace '(^java\.extended\.properties=)(.*)',"`$1$env:BW_JAVA_OPTS `$2"
+
+						}
 
 					} else {
 
@@ -452,7 +457,7 @@ function Check-JAVAHOME {
 
 		} else {
 			Print-Debug ("set java home")
-			$env:JAVA_HOME = $env:BWCE_HOME + "\tibco.home\tibcojre64\11"
+			$env:JAVA_HOME = $env:BWCE_HOME + "\tibco.home\tibcojre64\17"
 
 		}
 
@@ -897,6 +902,8 @@ try {
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.ear") -NewName bwapp.zip | Out-Null
 		Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.zip -DestinationPath C:\tmp -Force | Out-Null
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip") -NewName bwapp.ear | Out-Null
+
+		$env:BW_JAVA_OPTS=" --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED  $env:BW_JAVA_OPTS "	
 
 		Set-LogLevel
 		Memory-Calculator
