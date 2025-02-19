@@ -1,4 +1,13 @@
 #!/bin/bash
+
+#
+# Copyright 2012 - 2025 by TIBCO Software Inc. 
+# All rights reserved.
+#
+# This software is confidential and proprietary information of
+# TIBCO Software Inc.
+#
+
 #Set ENV Variables
 export BWCE_HOME=/tmp
 export APPDIR=${BWCE_HOME}
@@ -7,6 +16,11 @@ export MALLOC_MMAP_THRESHOLD_=1024
 export MALLOC_TRIM_THRESHOLD_=1024
 export MALLOC_MMAP_MAX_=65536
 export BW_KEYSTORE_PATH=/resources/addons/certs
+export CUSTOM_LOGBACK=true
+export LOGBACK_MAX_INDEX=${BW_LOGBACK_MAX_INDEX:-2}
+export LOGBACK_FILE_SIZE=${BW_LOGBACK_FILE_SIZE:-10MB}
+mkdir -p /app/logs/${HOSTNAME}/bwapp
+../scripts/artifactshandler.sh
 . ./scripts/setup.sh
 STATUS=$?
 if [ $STATUS == "1" ]; then

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true">
+  
+  <!-- *=============================================================* -->
+  <!-- *  APPENDER: Console Appender                                 * -->
+  <!-- *=============================================================* -->  
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <if condition='isDefined("BW_LOG_LIMIT")'>
+          <then>
+            <pattern>%d{"yyyy-MM-dd'T'HH:mm:ss,SSS"} %-5level [%thread] %logger{36} - %.-${BW_LOG_LIMIT}msg%n</pattern>
+          </then>
+          <else>
+            <pattern>%d{"yyyy-MM-dd'T'HH:mm:ss,SSS"} %-5level [%thread] %logger{36} - %msg%n</pattern>
+          </else>
+      </if>
+    </encoder>
+  </appender>
+
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>/app/logs/${HOSTNAME}/bwapp/otel.log</file>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+      <fileNamePattern>/app/logs/${HOSTNAME}/bwapp/otel.log.%i</fileNamePattern>
+      <minIndex>1</minIndex>
+      <maxIndex>${LOGBACK_MAX_INDEX}</maxIndex>
+    </rollingPolicy>
+    
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+      <maxFileSize>${LOGBACK_FILE_SIZE}</maxFileSize>
+    </triggeringPolicy>
+    
+    <encoder>
+      <if condition='isDefined("BW_LOG_LIMIT")'>
+          <then>
+            <pattern>%d{"yyyy-MM-dd'T'HH:mm:ss,SSS"} %-5level [%thread] %logger{36} - %.-${BW_LOG_LIMIT}msg%n</pattern>
+          </then>
+          <else>
+            <pattern>%d{"yyyy-MM-dd'T'HH:mm:ss,SSS"} %-5level [%thread] %logger{36} - %msg%n</pattern>
+          </else>
+      </if>
+    </encoder>
+  </appender>
+
+  <property name="BW_LOG_FORMAT" value="${BW_LOG_FORMAT}"/>
+ 
+  <appender name="JSON-STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+      <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+        <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
+ 
+        <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
+        <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+          <prettyPrint>true</prettyPrint>
+        </jsonFormatter>
+      </layout>
+      </encoder>
+  </appender>
+
+ <appender name="JSON-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <file>/app/logs/${HOSTNAME}/bwapp/otelJson.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+        <fileNamePattern>/app/logs/${HOSTNAME}/bwapp/otelJson.log.%i</fileNamePattern>
+        <minIndex>1</minIndex>
+        <maxIndex>${LOGBACK_MAX_INDEX}</maxIndex>
+    </rollingPolicy>
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+         <maxFileSize>${LOGBACK_FILE_SIZE}</maxFileSize>
+    </triggeringPolicy>
+
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+        <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+            <timestampFormat>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampFormat>
+            <timestampFormatTimezoneId>Etc/UTC</timestampFormatTimezoneId>
+            <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter">
+                <prettyPrint>true</prettyPrint>
+            </jsonFormatter>
+        </layout>
+    </encoder>
+  </appender>
+ 
+  <appender name="LOGSTASH-JSON-STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+    </encoder>
+  </appender> 
+
+  <appender name="LOGSTASH-JSON-FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>/app/logs/${HOSTNAME}/bwapp/otelLogstash.log</file>
+      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+          <fileNamePattern>/app/logs/${HOSTNAME}/bwapp/otelLogstash.log.%i</fileNamePattern>
+          <minIndex>1</minIndex>
+          <maxIndex>${LOGBACK_MAX_INDEX}</maxIndex>
+      </rollingPolicy>
+      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+           <maxFileSize>${LOGBACK_FILE_SIZE}</maxFileSize>
+     </triggeringPolicy>  
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+    </encoder>
+  </appender>
+
+  
+
+
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: Thor Framework loggers                              * -->
+  <!-- *=============================================================* -->
+  <logger name="com.tibco.thor.frwk">
+    <level value="INFO"/>
+  </logger>
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: Statistics loggers                              * -->
+  <!-- *=============================================================* -->
+  <logger name="com.tibco.bw.statistics.activity" additivity="false">
+    <level value="INFO"/>
+    <appender-ref ref="STDOUT" />
+  </logger>
+
+  <!-- Process Execution Statistics -->
+  <logger name="com.tibco.bw.statistics.processinstance" additivity="false">
+    <level value="INFO"/>
+    <appender-ref ref="STDOUT" />
+  </logger>
+  
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Framework loggers                     * -->
+  <!-- *=============================================================* -->
+  <logger name="com.tibco.bw.frwk">
+  </logger>  
+  
+  <logger name="com.tibco.bw.frwk.engine">
+    <level value="INFO"/>
+  </logger>   
+  
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Engine loggers                        * -->
+  <!-- *=============================================================* --> 
+  <logger name="com.tibco.bw.core">
+  </logger>
+  
+  <logger name="com.tibco.bx">
+  </logger>
+
+  <logger name="com.tibco.pvm">
+  </logger>
+  
+  
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Palette and Activity loggers          * -->
+  <!-- *=============================================================* -->
+  
+  <!-- Default Log activity logger -->
+  <logger name="com.tibco.bw.palette.generalactivities.Log">
+    <level value="DEBUG"/>
+  </logger>
+  
+  <logger name="com.tibco.bw.palette">
+  </logger>
+
+  
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Binding loggers                       * -->
+  <!-- *=============================================================* -->
+  
+  <!-- SOAP Binding logger -->
+  <logger name="com.tibco.bw.binding.soap">
+  </logger>
+  
+  <!-- REST Binding logger -->
+  <logger name="com.tibco.bw.binding.rest">
+  </logger>
+  
+  
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Shared Resource loggers               * -->
+  <!-- *=============================================================* --> 
+  <logger name="com.tibco.bw.sharedresource">
+  </logger>
+  
+  
+   
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Schema Cache loggers                  * -->
+  <!-- *=============================================================* -->
+  <logger name="com.tibco.bw.cache.runtime.xsd">
+  </logger> 
+  
+  <logger name="com.tibco.bw.cache.runtime.wsdl">
+  </logger> 
+  
+    
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Governance loggers                    * -->
+  <!-- *=============================================================* -->  
+  <!-- Governance: Policy Director logger1 --> 
+  <logger name="com.tibco.governance">
+  </logger>
+   
+  <!-- Governance: Policy Director logger2 -->
+  <logger name="com.tibco.governance.pa.action.runtime.PolicyProperties">
+  </logger>
+  
+  <!-- Governance: SPM logger1 -->
+  <logger name="com.tibco.governance.spm">
+  </logger>
+  
+  <!-- Governance: SPM logger2 -->
+  <logger name="rta.client">
+  </logger>
+  
+  
+    
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: BusinessWorks Miscellaneous Loggers                 * -->
+  <!-- *=============================================================* --> 
+  <logger name="com.tibco.bw.platformservices">
+    <level value="INFO"/>
+  </logger>
+  
+  <logger name="com.tibco.bw.core.runtime.statistics">
+  </logger>
+  
+
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: Other loggers                                       * -->
+  <!-- *=============================================================* -->  
+  <logger name="org.apache.axis2">
+  </logger>
+
+  <logger name="org.eclipse">
+  </logger>
+  
+  <logger name="org.quartz">
+  </logger>
+  
+  <logger name="org.apache.commons.httpclient.util.IdleConnectionHandler">
+  </logger>
+  
+  
+  
+  <!-- *=============================================================* -->
+  <!-- * LOGGER: User loggers.  User's custom loggers should be      * -->
+  <!-- *         configured in this section.                         * -->
+  <!-- *=============================================================* -->
+
+  <!-- *=============================================================* -->
+  <!-- * ROOT                                                        * -->
+  <!-- *=============================================================* --> 
+  <root level="ERROR">
+    <if condition='property("BW_LOG_FORMAT").equalsIgnoreCase("Logstash JSON")'>
+        <then>
+          <appender-ref ref="LOGSTASH-JSON-STDOUT" />
+          <appender-ref ref="LOGSTASH-JSON-FILE" /> 
+        </then>
+        <else>
+          <if condition='property("BW_LOG_FORMAT").equalsIgnoreCase("JSON")'>
+            <then>
+                <appender-ref ref="JSON-STDOUT" />
+                <appender-ref ref="JSON-FILE" />
+            </then>
+            <else>
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="FILE"   />
+            </else>
+          </if>
+        </else>
+    </if>
+  </root>
+  
+</configuration>
+

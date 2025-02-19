@@ -1,6 +1,6 @@
-#!/bin/bash
+#/bin/bash
 #
-# Copyright 2012 - 2016 by TIBCO Software Inc. 
+# Copyright 2012 - 2025 by TIBCO Software Inc. 
 # All rights reserved.
 #
 # This software is confidential and proprietary information of
@@ -11,9 +11,23 @@
 print_Debug()
 {
 		if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}" = "debug" ]]; then
- 			echo $1 
+		    echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") DEBUG $1"
+ 			echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") DEBUG $1"  >> $logLocation
  		fi
 }
+
+print_Info()
+{
+	    echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") INFO $1"
+ 		echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") INFO $1"   >> $logLocation
+}
+
+print_Error()
+{
+	    echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") ERROR $1"
+ 		echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") ERROR $1"   >> $logLocation
+}
+
 extract ()
 {
 if [ -f $1 ] ; then
@@ -28,10 +42,10 @@ if [ -f $1 ] ; then
     *.tbz2)    tar xvjf $1;;
     *.zip)     unzip -q $1;;
     *.Z)       uncompress $1;;
-    *)         echo "can't extract from $1";;
+    *)         print_Error "can't extract from $1";;
   esac
 else
-  echo "no file called $1"
+  print_Error "no file called $1"
 fi
 }
 
@@ -53,18 +67,18 @@ checkProfile()
 			if [ ${res} -eq 0 ]; then
 				print_Debug " "
 			else
-				echo "ERROR: Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO Business Studio Container Edition. Refer Conversion Guide for more details."
+				print_Error "ERROR: Application [$bwBundleAppName] is not supported in TIBCO BusinessWorks Container Edition. Convert this application to TIBCO BusinessWorks Container Edition using TIBCO Business Studio Container Edition. Refer Conversion Guide for more details."
 				exit 1
 			fi
 		else
 			print_Debug "BWCE EAR Validation disabled."
 		fi
 
-		for bwVarName in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
+		for name in $(find $BUILD_DIR -path $BUILD_DIR/tibco.home -prune -o -type f -iname "*.jar");
 		do
-			if [[ $bwVarName == *.jar ]]; then
+			if [[ $name == *.jar ]]; then
 				mkdir -p $BUILD_DIR/temp 
-				unzip -o -q $bwVarName -d $BUILD_DIR/temp
+				unzip -o -q $name -d $BUILD_DIR/temp
 				MANIFESTMF=$BUILD_DIR/temp/META-INF/MANIFEST.MF
 
 				bwcePolicyStr=`tr -d '\n\r ' < ${MANIFESTMF} | grep -E 'bw.authxml|bw.cred|bw.ldap|bw.wss|bw.dbauth|bw.kerberos|bw.realmdb|bw.ldaprealm|bw.userid'`
@@ -87,12 +101,12 @@ checkProfile()
 		defaultProfile=$x;;esac	
 	done
 
-	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then echo "BW_PROFILE is unset. Set it to $defaultProfile"; 
+	if [ -z ${BW_PROFILE:=${defaultProfile}} ]; then print_Info "BW_PROFILE is unset. Set it to $defaultProfile"; 
 	else 
 		case $BW_PROFILE in
  		*.substvar ) ;;
 		* ) BW_PROFILE="${BW_PROFILE}.substvar";;esac
-		echo "BW_PROFILE is set to '$BW_PROFILE'";
+		print_Info "BW_PROFILE is set to '$BW_PROFILE'";
 	fi
 }
 
@@ -114,16 +128,16 @@ setLogLevel()
 	         logback_custom=/resources/addons/custom-logback/logback.xml
 		 if [ -e ${logback_custom} ]; then
 			cp ${logback} `ls $logback`.original.bak && cp -f ${logback_custom}  ${logback}  
-			echo "Using Custom Logback file"
+			print_Info "Using Custom Logback file"
 		else
-			echo "Custom Logback file not found. Using the default logback file"
+			print_Info "Custom Logback file not found. Using the default logback file"
 		fi	
 	fi
 
 	if [[ ${BW_LOGLEVEL} && "${BW_LOGLEVEL,,}"="debug" ]]; then
 		if [ -e ${logback} ]; then
 			sed -i.bak "/<root/ s/\".*\"/\"$BW_LOGLEVEL\"/Ig" $logback
-			echo "The loglevel is set to $BW_LOGLEVEL level"
+			print_Info "The loglevel is set to $BW_LOGLEVEL level"
 		fi
 	else
 			sed -i.bak "/<root/ s/\".*\"/\"ERROR\"/Ig" $logback
@@ -178,7 +192,7 @@ checkEnvSubstituteConfig()
 			IFS=';' # space is set as delimiter
 			read -ra processConfigurationList <<< "${BW_COMPONENT_JOB_FLOWLIMIT}" # str is read into an array as tokens separated by IFS
 			for process in "${processConfigurationList[@]}"; do # access each element of array
-				echo "Setting flow limit for $process"
+				print_Info "Setting flow limit for $process"
 				IFS=':' # space is set as delimiter
 				read -ra processConfiguration <<< "$process" # str is read into an array as tokens separated by IFS
 				printf '%s\n' "bw.application.job.flowlimit.$bwBundleAppName.${processConfiguration[0]}=${processConfiguration[1]}" >> $appnodeConfigFile
@@ -187,7 +201,7 @@ checkEnvSubstituteConfig()
 		fi
 	fi
 
-	# Otel env vars
+    # Otel env vars
 	if [[ ${BW_OTEL_ENABLED} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.engine.opentelemetry.enable=$BW_OTEL_ENABLED" >> $appnodeConfigFile
@@ -205,9 +219,21 @@ checkEnvSubstituteConfig()
 	fi
 
 	if [[ ${BW_OTEL_TRACES_ENABLED} ]]; then
-		 if [ -e ${appnodeConfigFile} ]; then
+		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.engine.opentelemetry.trace.enable=$BW_OTEL_TRACES_ENABLED" >> $appnodeConfigFile
 			print_Debug "set bw.engine.opentelemetry.trace.enable to $BW_OTEL_TRACES_ENABLED"
+		fi
+	fi
+
+	if [[ ${BW_OTEL_RESTRICT_ATTRIBUTE_LIST} ]]; then
+		if [ -e ${appnodeConfigFile} ]; then
+			printf '%s\n' "bw.engine.opentelemetry.restrict.attribute.list=$BW_OTEL_RESTRICT_ATTRIBUTE_LIST" >> $appnodeConfigFile
+			print_Debug "set bw.engine.opentelemetry.restrict.attribute.list to $BW_OTEL_RESTRICT_ATTRIBUTE_LIST"
+		fi
+	else
+		if [ -e ${appnodeConfigFile} ]; then
+			printf '%s\n' "bw.engine.opentelemetry.restrict.attribute.list=AppNode,AppSpace,Application_Name,Application_Version,BwHome,Domain,ProcessID" >> $appnodeConfigFile
+			print_Debug "set bw.engine.opentelemetry.restrict.attribute.list to AppNode,AppSpace,Application_Name,Application_Version,BwHome,Domain,ProcessID"
 		fi
 	fi
 	
@@ -218,39 +244,20 @@ checkEnvSubstituteConfig()
 		fi
 	fi
 
-	if [[ ${TCI_HYBRID_AGENT_HOST} ]] && [[ ${TCI_HYBRID_AGENT_PORT} ]]; then
+	#if [[ ${TCI_HYBRID_AGENT_HOST} ]] && [[ ${TCI_HYBRID_AGENT_PORT} ]]; then
 		if [ -e ${appnodeConfigFile} ]; then
 			printf '%s\n' "bw.frwk.event.subscriber.instrumentation.enabled=true" >> $appnodeConfigFile
 			print_Debug "set bw.frwk.event.subscriber.instrumentation.enabled to true"
+			printf '%s\n' "bw.engine.enable.audit.events=true" >> $appnodeConfigFile
+			print_Debug "set bw.engine.enable.audit.events to true"
 		fi
-	fi
-
-	if [[ ${BW_OSGI_SSH_PORT} ]]; then
-		if [ -e ${appnodeConfigFile} ]; then
-			sed -i "s/osgi.console.ssh=.*/osgi.console.ssh=${BW_OSGI_SSH_PORT}/"  $appnodeConfigFile
-			print_Debug "set BW_OSGI_SSH_PORT to $BW_OSGI_SSH_PORT"
-		fi
-	fi
-
-	if [[ ${BW_OSGI_SERVICE_PORT} ]]; then
-		if [ -e ${appnodeConfigFile} ]; then
-  			sed -i "s/org.osgi.service.http.port=.*/org.osgi.service.http.port=${BW_OSGI_SERVICE_PORT}/"  $appnodeConfigFile
-  			print_Debug "set BW_OSGI_SERVICE_PORT to $BW_OSGI_SERVICE_PORT"
- 		fi
-	fi
-
-	if [[ ${BW_REST_DOCAPI_PORT} ]]; then
-		if [ -e ${appnodeConfigFile} ]; then
-				sed -i "s/bw.rest.docApi.port=.*/bw.rest.docApi.port=${BW_REST_DOCAPI_PORT}/"  $appnodeConfigFile
-				print_Debug "set BW_REST_DOCAPI_PORT to $BW_REST_DOCAPI_PORT"        
-		fi
-	fi
+	#fi
 
 	if [[  $BW_LOGLEVEL = "DEBUG" ]]; then
 		if [[ ${BW_APPLICATION_JOB_FLOWLIMIT} ]] || [[ ${BW_ENGINE_STEPCOUNT} ]] || [[ ${BW_ENGINE_THREADCOUNT} ]] || [[ ${BW_APP_MONITORING_CONFIG} ]]; then
-		echo "---------------------------------------"
+		print_Debug "---------------------------------------"
 		cat $appnodeConfigFile
-		echo "---------------------------------------"
+		print_Debug "---------------------------------------"
 		fi
 	fi
 }
@@ -261,13 +268,13 @@ checkPlugins()
 	if [ -d ${pluginFolder} ] && [ "$(ls $pluginFolder)" ]; then 
 		print_Debug "Adding Plug-in Jars"
 		echo -e "name=Addons Factory\ntype=bw6\nlayout=bw6ext\nlocation=$BWCE_HOME/tibco.home/addons" > `echo $BWCE_HOME/tibco.home/bw*/*/ext/shared`/addons.link
-		for bwVarName in $(find $pluginFolder -type f); 
+		for name in $(find $pluginFolder -type f); 
 		do	
 			# filter out hidden files
-			if [[  "$(basename $bwVarName )" != .* ]];then
-				unzip -q -o $bwVarName -d $BWCE_HOME/plugintmp/
+			if [[  "$(basename $name )" != .* ]];then
+				unzip -q -o $name -d $BWCE_HOME/plugintmp/
 				mkdir -p $BWCE_HOME/tibco.home/addons/runtime/plugins/ && mv $BWCE_HOME/plugintmp/runtime/plugins/* "$_"
-                    		mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${bwVarName##*/}.ini
+                    		mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${name##*/}.ini
 				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.jar "$_" 2> /dev/null || true
 				mkdir -p $BWCE_HOME/tibco.home/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
 				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} /tmp \; 2> /dev/null
@@ -283,19 +290,17 @@ checkLibs()
 	libFolder=/resources/addons/lib
 	if [ -d ${libFolder} ] && [ "$(ls $libFolder)" ]; then
 		print_Debug "Adding additional libs"
-		for bwVarName in $(find $libFolder -type f); 
+		for name in $(find $libFolder -type f); 
 		do	
-			if [[ "$(basename $bwVarName)" = 'libsunec.so' ]]; then 
+			if [[ "$(basename $name)" = 'libsunec.so' ]]; then 
 				print_Debug "libsunec.so File found..."		
-				JRE_VERSION=`ls $BWCE_HOME/tibco.home/tibcojre64/`
-				JRE_LOCATION=$BWCE_HOME/tibco.home/tibcojre64/$JRE_VERSION
-				SUNEC_LOCATION=$JRE_LOCATION/lib/amd64
-				cp -vf $bwVarName $SUNEC_LOCATION
+				SUNEC_LOCATION=$JAVA_HOME/lib/amd64
+				cp -vf $name $SUNEC_LOCATION
 			else
 				# filter out hidden files
-				if [[  "$(basename $bwVarName )" != .* ]]; then
+				if [[  "$(basename $name )" != .* ]]; then
 					mkdir -p $BWCE_HOME/tibco.home/addons/lib/ 
-   					unzip -q $bwVarName -d $BWCE_HOME/tibco.home/addons/lib/ 
+   					unzip -q $name -d $BWCE_HOME/tibco.home/addons/lib/ 
    				fi
 			fi
 		done
@@ -306,18 +311,16 @@ checkCerts()
 {
 	certsFolder=/resources/addons/certs
 	if [ -d ${certsFolder} ] && [ "$(ls $certsFolder)" ]; then 
-		JRE_VERSION=`ls $BWCE_HOME/tibco.home/tibcojre64/`
-		JRE_LOCATION=$BWCE_HOME/tibco.home/tibcojre64/$JRE_VERSION
-		certsStore=$JRE_LOCATION/lib/security/cacerts
-		chmod +x $JRE_LOCATION/bin/keytool
-		for bwVarName in $(find $certsFolder -type f); 
+		certsStore=$JAVA_HOME/lib/security/cacerts
+		chmod +x $JAVA_HOME/bin/keytool
+		for name in $(find $certsFolder -type f); 
 		do	
 			# filter out hidden files
-			if [[ "$(basename $bwVarName )" != .* && "$(basename $bwVarName )" != *.jks ]]; then
-				certsFile=$(basename $bwVarName )
+			if [[ "$(basename $name )" != .* && "$(basename $name )" != *.jks ]]; then
+				certsFile=$(basename $name )
  			 	print_Debug "Importing $certsFile into java truststore"
   				aliasName="${certsFile%.*}"
-				$JRE_LOCATION/bin/keytool -import -trustcacerts -keystore $certsStore -storepass changeit -noprompt -alias $aliasName -file $bwVarName
+				$JRE_LOCATION/bin/keytool -import -trustcacerts -keystore $certsStore -storepass changeit -noprompt -alias $aliasName -file $name
 			fi
 		done
 	fi
@@ -328,12 +331,12 @@ checkAgents()
 	agentFolder=/resources/addons/monitor-agents
 	if [ -d ${agentFolder} ] && [ "$(ls $agentFolder)" ]; then 
 		print_Debug "Adding monitoring jars"
-		for bwVarName in $(find $agentFolder -type f); 
+		for name in $(find $agentFolder -type f); 
 		do	
 			# filter out hidden files
-			if [[  "$(basename $bwVarName )" != .* ]];then
+			if [[  "$(basename $name )" != .* ]];then
 				mkdir -p $BWCE_HOME/agent/
-				unzip -q $bwVarName -d $BWCE_HOME/agent/
+				unzip -q $name -d $BWCE_HOME/agent/
 			fi
 		done
 	fi
@@ -398,7 +401,7 @@ checkThirdPartyInstallations()
               	then
                     unzip -q "$f" -d $BWCE_HOME/tibco.home/thirdparty-installs/$(basename "$f" .zip);
                 else
-                   echo "Can not unzip $f. Not a valid ZIP file"    
+                   print_Error "Can not unzip $f. Not a valid ZIP file"    
               	fi
       		fi
 		done;
@@ -444,11 +447,11 @@ checkBWProfileEncryptionConfig()
 	if [[ ${BW_PROFILE_ENCRYPTION_KEYSTORE} ]]; then
 			certsFolder=/resources/addons/certs
 			KEYSTORE=${BW_PROFILE_ENCRYPTION_KEYSTORE}
-			if [[ $bwVarName == *.jks ]]; then
+			if [[ $name == *.jks ]]; then
 				KEYSTORETYPE=JKS
-			elif [[ $bwVarName == *.jceks ]]; then
+			elif [[ $name == *.jceks ]]; then
 				KEYSTORETYPE=JCEKS
-			elif [[ $bwVarName == *.p12 ]]; then
+			elif [[ $name == *.p12 ]]; then
 				KEYSTORETYPE=PKCS12
 			fi
 			KEYSTOREPASSWORD=${BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD}
@@ -467,16 +470,16 @@ overrideBWLoggers() {
     echo "$1" | tr ' ' '\n' |  sed 's/=/ /1' |\
       {
           echo "<loggers xmlns='http://loggers'>"
-          while read bwVarName value; do
-            if [ -n "$bwVarName" ]; then
+          while read name value; do
+            if [ -n "$name" ]; then
               value=$( echo $value | tr '[:lower:]' '[:upper:]' )
-              echo "<loggerOverride name='$bwVarName'>$value</loggerOverride>"
+              echo "<loggerOverride name='$name'>$value</loggerOverride>"
             fi
           done
           echo "</loggers>"
       } > /tmp/loggerOverrides.xml || \
       {
-        echo "$(date "+%H:%M:%S.000") ERROR %%%% Failed to parse TCI BW LOGGER OVERRIDES: $1"
+        echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") ERROR %%%% Failed to parse TCI BW LOGGER OVERRIDES: $1"
         # don't interrupt the app start just because we cannot override loggers
         exit 0
       }
@@ -486,12 +489,13 @@ overrideBWLoggers() {
 
     mv ${logback}"/logback.xml"  $(echo $logback)/logback-orig.xml
     xsltproc --stringparam overrides /tmp/loggerOverrides.xml -o $(echo $logback)/logback.xml /scripts/overrideLoggers.xsl ${logback}"/logback-orig.xml" \
-     2>&1 >/dev/null | while read line; do echo "$(date "+%H:%M:%S.000") INFO %%%% $line"; done
+     2>&1 >/dev/null | while read line; do echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") INFO %%%% $line"; done
 }
 
 
 
 appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
+logLocation="/app/logs/${HOSTNAME}/bwapp/otel.log"
 POLICY_ENABLED="false"
 checkJAVAHOME
 checkJMXConfig
@@ -503,8 +507,8 @@ then
 	rm -rf /resources/bwce-runtime/bwce*.zip 2> /dev/null
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/javac
+	chmod 755 $JAVA_HOME/bin/java
+	chmod 755 $JAVA_HOME/bin/javac
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $BWCE_HOME/keys.properties
@@ -522,21 +526,19 @@ then
 	  		cp -r /resources/addons/jars/* `echo $BWCE_HOME/tibco.home/bw*/*`/system/hotfix/shared
 		fi
 	fi
-	ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
+	ln -s /app/artifacts/*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
 	
 	setLogLevel
-        if [[ ${BW_DEFAULT_JVM_HEAP_PARAMS} ]]; then
-          applyDefaultJVMHeapParams
-        fi
+	applyDefaultJVMHeapParams	
 fi
 
 export BW_JAVA_OPTS=$BW_JAVA_OPTS' --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED '
 
 if [ -n "$BW_LOGGER_OVERRIDES" ] && [ "$BW_LOGGER_OVERRIDES" != "na" ]; then
     LOGGER_VALUES="$BW_LOGGER_OVERRIDES"
-    echo "$(date "+%H:%M:%S.000") INFO %%%% TCI BW LOGGER OVERRIDES - Setting Logger properties from UI - BW_LOGGER_OVERRIDES"
+    print_Info "BW LOGGER OVERRIDES - Setting Logger properties from UI - BW_LOGGER_OVERRIDES"
     overrideBWLoggers "$LOGGER_VALUES" 
 fi
 
@@ -547,8 +549,8 @@ checkEnvSubstituteConfig
 checkAnalyzerConfig
 checkBWProfileEncryptionConfig
 
-if [ -f /$BW_PROFILE ]; then
-	cp -f /$BW_PROFILE  $BWCE_HOME/tmp/pcf.substvar # User provided profile
+if [ -f /app/artifacts/$BW_PROFILE ]; then
+	cp -f /app/artifacts/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
 	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
