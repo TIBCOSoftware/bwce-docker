@@ -51,7 +51,7 @@ fi
 
 checkProfile()
 {
-	BUILD_DIR=/tmp
+	BUILD_DIR=$BWCE_HOME
 	defaultProfile=default.substvar
 	manifest=$BUILD_DIR/META-INF/MANIFEST.MF
 	bwAppConfig="TIBCO-BW-ConfigProfile"
@@ -149,7 +149,7 @@ checkEnvSubstituteConfig()
 	bwappnodeTRA=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	bwappnodeFile=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	#appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-	manifest=/tmp/META-INF/MANIFEST.MF
+	manifest=$BWCE_HOME/META-INF/MANIFEST.MF
 	bwAppNameHeader="Bundle-SymbolicName"
 	bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
 	export BWCE_APP_NAME=$bwBundleAppName
@@ -277,7 +277,7 @@ checkPlugins()
                     		mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${name##*/}.ini
 				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.jar "$_" 2> /dev/null || true
 				mkdir -p $BWCE_HOME/tibco.home/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
-				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} /tmp \; 2> /dev/null
+				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} $BWCE_HOME \; 2> /dev/null
 				rm -rf $BWCE_HOME/plugintmp/
 			fi
 		done
@@ -477,7 +477,7 @@ overrideBWLoggers() {
             fi
           done
           echo "</loggers>"
-      } > /tmp/loggerOverrides.xml || \
+      } > $BWCE_HOME/loggerOverrides.xml || \
       {
         echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") ERROR %%%% Failed to parse TCI BW LOGGER OVERRIDES: $1"
         # don't interrupt the app start just because we cannot override loggers
@@ -488,7 +488,7 @@ overrideBWLoggers() {
     logfile=${logback}"/logback.xml"
 
     mv ${logback}"/logback.xml"  $(echo $logback)/logback-orig.xml
-    xsltproc --stringparam overrides /tmp/loggerOverrides.xml -o $(echo $logback)/logback.xml /scripts/overrideLoggers.xsl ${logback}"/logback-orig.xml" \
+    xsltproc --stringparam overrides $BWCE_HOME/loggerOverrides.xml -o $(echo $logback)/logback.xml /scripts/overrideLoggers.xsl ${logback}"/logback-orig.xml" \
      2>&1 >/dev/null | while read line; do echo "$(date "+%Y-%m-%dT%H:%M:%S,%3N") INFO %%%% $line"; done
 }
 
@@ -528,7 +528,7 @@ then
 	fi
 	ln -s /app/artifacts/*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
+	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d $BWCE_HOME
 	
 	setLogLevel
 	applyDefaultJVMHeapParams	
@@ -552,7 +552,7 @@ checkBWProfileEncryptionConfig
 if [ -f /app/artifacts/$BW_PROFILE ]; then
 	cp -f /app/artifacts/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
-	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
+	cp -f $BWCE_HOME/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
 
 $JAVA_HOME/bin/java $BW_ENCRYPTED_PROFILE_CONFIG -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.security.tibcrypt_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.encryption.util_*`/lib/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver

@@ -9,7 +9,7 @@
 #
 
 #Set ENV Variables
-export BWCE_HOME=/tmp
+export BWCE_HOME=${BW_APP_DIR:-/tmp}
 export APPDIR=${BWCE_HOME}
 export MALLOC_ARENA_MAX=2
 export MALLOC_MMAP_THRESHOLD_=1024
