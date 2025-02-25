@@ -10,9 +10,10 @@ Download the appropriate TIBCO BusinessWorks Container Edition artifacts from [T
      
 ## Create TIBCO BusinessWorks Container Edition Base Docker Image
    1. Clone this repository onto your local machine.
-   2. Locate the `bwce-runtime-<version>.zip` (e.g. bwce-runtime-2.10.0.zip) file from the downloaded artifacts and copy it under ./resources/bwce-runtime folder
-   3. Run `docker build -t tp-bwce-base:<tag> .` command and push image to your custom container registry configured for your dataplane.
-   4. Invoke `/v1/dp/bwceversions/{version}/custombaseimage` TIBCO BusinessWorks™ Container Edition Capability public API to register the custom base image.
+   2. Locate the `bwce-runtime-<version>.zip` (e.g. bwce-runtime-2.10.0.zip) file from the downloaded artifacts and copy it under ./resources/bwce-runtime folder.
+   3. If you are using windows, please ensure CRLF chars are replaced with LF in all script files before building the docker image, Otherwise you may see error `exec /scripts/start.sh: no such file or directory`
+   4. Run `docker build -t tp-bwce-base:<tag> .` command and push image to your custom container registry configured for your dataplane.
+   5. Invoke `/v1/dp/bwceversions/{version}/custombaseimage` TIBCO BusinessWorks™ Container Edition Capability public API to register the custom base image.
 
 ## License
 These buildpack scripts are released under a [3-clause BSD-type](License.md) license.
