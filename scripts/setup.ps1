@@ -903,7 +903,8 @@ try {
 		Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.zip -DestinationPath C:\tmp -Force | Out-Null
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip") -NewName bwapp.ear | Out-Null
 
-		$env:BW_JAVA_OPTS=" --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED  $env:BW_JAVA_OPTS "	
+		$env:BW_OPTS=" --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED "
+		$env:BW_JAVA_OPTS="$BW_JAVA_OPTS $BW_OPTS"	
 
 		Set-LogLevel
 		Memory-Calculator
@@ -927,7 +928,7 @@ try {
 	}
 	$BW_ENCR= $global:BW_ENCRYPTED_PROFILE_CONFIG -split " "
 
-	. $env:JAVA_HOME\bin\java $BW_ENCR -cp "$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.security.tibcrypt_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.encryption.util_*\lib\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*");$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
+	. $env:JAVA_HOME\bin\java $BW_OPTS -cp "$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.security.tibcrypt_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.encryption.util_*\lib\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.logback_*\*");$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver *> $null
 
 
 } catch {
