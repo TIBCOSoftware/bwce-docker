@@ -904,7 +904,7 @@ try {
 		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip") -NewName bwapp.ear | Out-Null
 
 		$env:BW_OPTS=" --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED "
-		$env:BW_JAVA_OPTS="$BW_JAVA_OPTS $BW_OPTS"	
+		$env:BW_JAVA_OPTS="$env:BW_JAVA_OPTS $env:BW_OPTS"
 
 		Set-LogLevel
 		Memory-Calculator
