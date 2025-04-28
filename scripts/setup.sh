@@ -509,6 +509,7 @@ then
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $JAVA_HOME/bin/java
 	chmod 755 $JAVA_HOME/bin/javac
+	chmod 755 $JAVA_HOME/lib/jspawnhelper
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $BWCE_HOME/keys.properties
