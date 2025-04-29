@@ -149,6 +149,10 @@ checkEnvSubstituteConfig()
 		sed -i 's?-Djava.class.path=?-Djava.class.path=$ADDONS_HOME/lib:?' $bwappnodeFile
 		print_Debug "Appended ADDONS_HOME/lib in bwappnode file"
 	fi
+	if [ -e ${appnodeConfigFile} ]; then
+		printf '%s\n' "bw.shutdown.system.onstartfailed=true" >> $appnodeConfigFile
+		print_Debug "set bw.shutdown.system.onstartfailed to true"
+	fi
 	if [[ ${BW_JAVA_OPTS} ]]; then
 		if [ -e ${bwappnodeTRA} ]; then
 			sed -i.bak "/java.extended.properties/s/$/ ${BW_JAVA_OPTS}/" $bwappnodeTRA 2> /dev/null
