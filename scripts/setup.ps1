@@ -281,6 +281,11 @@ function Check-EnvSubstituteConfig {
 		#    print_Debug "Appended ADDONS_HOME/lib in bwappnode.tra file"
 		#} 
 
+		if (Test-Path -Path $appnodeConfigFile -PathType leaf) {
+			Add-Content -Path $appnodeConfigFile -Value "`r`nbw.shutdown.system.onstartfailed=true"
+			Print-Debug ("set bw.shutdown.system.onstartfailed to true")
+		}
+
 		if ($env:BW_JAVA_OPTS) {
 			if (Test-Path -Path $bwappnodeTRA -PathType leaf) {
 				Copy-Item $(Get-ChildItem $bwappnodeTRA) "$(Get-ChildItem $bwappnodeTRA).bak"
