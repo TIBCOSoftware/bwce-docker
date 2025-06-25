@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 #
 # Copyright 2012 - 2016 by TIBCO Software Inc. 
 # All rights reserved.
@@ -37,7 +37,8 @@ fi
 
 checkProfile()
 {
-	BUILD_DIR=/tmp
+	BUILD_DIR=$BWCE_HOME
+	appnodeConfigFile=$(find "$BWCE_HOME" -type f -path "*/tibco.home/bw*/*/config/appnode_config.ini" 2>/dev/null | head -n 1)
 	defaultProfile=default.substvar
 	manifest=$BUILD_DIR/META-INF/MANIFEST.MF
 	bwAppConfig="TIBCO-BW-ConfigProfile"
@@ -98,10 +99,29 @@ checkProfile()
 
 checkPolicy()
 {
-	if [[ $POLICY_ENABLED = "true" ]]; then
-		if [ -e ${appnodeConfigFile} ]; then
-			printf '%s\n' "bw.governance.enabled=true" >> $appnodeConfigFile
-			print_Debug "Set bw.governance.enabled=true"
+	local governance_value=""
+	if [[ -n "$BW_GOVERNANCE_ENABLED" ]]; then
+		if [[ "$BW_GOVERNANCE_ENABLED" == "true" || "$BW_GOVERNANCE_ENABLED" == "false" ]]; then
+			governance_value="$BW_GOVERNANCE_ENABLED"
+		else
+			print_Debug "Invalid value for BW_GOVERNANCE_ENABLED: $BW_GOVERNANCE_ENABLED. Expected 'true' or 'false'."
+		fi
+	fi
+	
+	if [[ -z "governance_value" ]]; then
+		if [[ "$POLICY_ENABLED" == "true" ]]; then
+			governance_value = "true"
+		fi
+	fi
+	
+	echo $governance_value
+	
+	if [[ -n "governance_value" ]]; then
+		if [[ -e "$appnodeConfigFile" ]]; then
+			printf "%s\n" "bw.governance.enabled=$governance_value" >> "$appnodeConfigFile"
+			print_Debug "Set bw.governance.enabled=$governance_value"
+		else
+			print_Debug "Config file $appnodeConfigFile does not exist."
 		fi
 	fi
 }
@@ -135,7 +155,7 @@ checkEnvSubstituteConfig()
 	bwappnodeTRA=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	bwappnodeFile=$BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	#appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-	manifest=/tmp/META-INF/MANIFEST.MF
+	manifest=$BWCE_HOME/META-INF/MANIFEST.MF
 	bwAppNameHeader="Bundle-SymbolicName"
 	bwBundleAppName=`while read line; do printf "%q\n" "$line"; done<${manifest} | awk '/.*:/{printf "%s%s", (NR==1)?"":RS,$0;next}{printf "%s", FS $0}END{print ""}' | grep -o $bwAppNameHeader.* | cut -d ":" -f2 | tr -d '[[:space:]]' | sed "s/\\\\\r'//g" | sed "s/$'//g"`
 	export BWCE_APP_NAME=$bwBundleAppName
@@ -147,7 +167,6 @@ checkEnvSubstituteConfig()
 		sed -i 's?-Djava.class.path=?-Djava.class.path=$ADDONS_HOME/lib:?' $bwappnodeFile
 		print_Debug "Appended ADDONS_HOME/lib in bwappnode file"
 	fi
-
 	if [ -e ${appnodeConfigFile} ]; then
 		printf '%s\n' "bw.shutdown.system.onstartfailed=true" >> $appnodeConfigFile
 		print_Debug "set bw.shutdown.system.onstartfailed to true"
@@ -275,7 +294,7 @@ checkPlugins()
                     		mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.ini "$_"${bwVarName##*/}.ini
 				mkdir -p $BWCE_HOME/tibco.home/addons/lib/ && mv $BWCE_HOME/plugintmp/lib/*.jar "$_" 2> /dev/null || true
 				mkdir -p $BWCE_HOME/tibco.home/addons/bin/ && mv $BWCE_HOME/plugintmp/bin/* "$_" 2> /dev/null || true
-				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} /tmp \; 2> /dev/null
+				find  $BWCE_HOME/plugintmp/*  -type d ! \( -name "runtime" -o -name "bin" -o -name "lib" \)  -exec mv {} $BWCE_HOME \; 2> /dev/null
 				rm -rf $BWCE_HOME/plugintmp/
 			fi
 		done
@@ -431,67 +450,43 @@ setupThirdPartyInstallationEnvironment()
 	fi
 }
 
-checkAnalyzerConfig()
-{
-	if [[ ${BW_ANALYZER_CONFIG} ]]; then
-		if [[ $BW_ANALYZER_CONFIG == *":"* ]]; then
-			ANALYZER_HOST=${BW_ANALYZER_CONFIG%%:*}
-			ANALYZER_PORT=${BW_ANALYZER_CONFIG#*:}
-			JAVA_AGENT="-javaagent:"`echo $BWCE_HOME/tibco.home/bw*/*/system/lib/com.tibco.bw.thor.admin.node_*.jar`
-			BW_ANALYZER_CONFIG=$JAVA_AGENT" -Dbw.engine.analyzer.subscriber.enabled=true -Dbw.engine.analyzer.udp.host="$ANALYZER_HOST" -Dbw.engine.analyzer.udp.port="$ANALYZER_PORT
-			export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$BW_ANALYZER_CONFIG
-		fi
-	fi
-} 
-
-checkBWProfileEncryptionConfig()
-{
-	if [[ ${BW_PROFILE_ENCRYPTION_KEYSTORE} ]]; then
-			certsFolder=/resources/addons/certs
-			KEYSTORE=${BW_PROFILE_ENCRYPTION_KEYSTORE}
-			if [[ $bwVarName == *.jks ]]; then
-				KEYSTORETYPE=JKS
-			elif [[ $bwVarName == *.jceks ]]; then
-				KEYSTORETYPE=JCEKS
-			elif [[ $bwVarName == *.p12 ]]; then
-				KEYSTORETYPE=PKCS12
-			fi
-			KEYSTOREPASSWORD=${BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD}
-			KEYALIAS=${BW_PROFILE_ENCRYPTION_KEYALIAS}
-			KEYALIASPASSOWRD=${BW_PROFILE_ENCRYPTION_KEYALIASPASSWORD}
-			BW_ENCRYPTED_PROFILE_CONFIG=" -Dbw.encryptedprofile.keystoreType="$KEYSTORETYPE" -Dbw.encryptedprofile.keystore="$certsFolder"/"$KEYSTORE" -Dbw.encryptedprofile.keystorePassword="$KEYSTOREPASSWORD" -Dbw.encryptedprofile.keyAlias="$KEYALIAS" -Dbw.encryptedprofile.keyAliasPassword="$KEYALIASPASSOWRD
-			export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$BW_ENCRYPTED_PROFILE_CONFIG
-	fi
-} 
-
 overrideBWLoggers() {
+	logback=$(find $BWCE_HOME -path "$BWCE_HOME/tibco.home/bw*/*/config/logback.xml" -type f 2>/dev/null | head -n 1)
+   
+	if [[ ${BW_LOGGER_OVERRIDES} ]]; then
+		print_Debug "Updating the loggers as provided in BW_LOGGERS_OVERRIDES"
+		for override in $BW_LOGGER_OVERRIDES; do
+			if [[ "$override" != *=* ]]; then
+				echo "Skipping invalid format '$override'. Expected format: logger_name=level"
+				continue
+			fi
 
-    # capture the overrides as XML, first making sure we have newlines separating the overrides,
-    #  then removing the "=" from each so the read works
-    logback="$BWCE_HOME/tibco.home/bw"*"/"*"/config"
-    echo "$1" | tr ' ' '\n' |  sed 's/=/ /1' |\
-      {
-          echo "<loggers xmlns='http://loggers'>"
-          while read bwVarName value; do
-            if [ -n "$bwVarName" ]; then
-              value=$( echo $value | tr '[:lower:]' '[:upper:]' )
-              echo "<loggerOverride name='$bwVarName'>$value</loggerOverride>"
-            fi
-          done
-          echo "</loggers>"
-      } > /tmp/loggerOverrides.xml || \
-      {
-        echo "$(date "+%H:%M:%S.000") ERROR %%%% Failed to parse TCI BW LOGGER OVERRIDES: $1"
-        # don't interrupt the app start just because we cannot override loggers
-        exit 0
-      }
-    
-    # merge the overrides with the existing logback.xml 
-    logfile=${logback}"/logback.xml"
+			logger_name=$(echo "$override" | cut -d'=' -f1 | xargs)  # Trim spaces
+			log_level=$(echo "$override" | cut -d'=' -f2 | tr '[:lower:]' '[:upper:]' | xargs)
+			print_Debug " Updating the logger $logger_name to $log_level"
 
-    mv ${logback}"/logback.xml"  $(echo $logback)/logback-orig.xml
-    xsltproc --stringparam overrides /tmp/loggerOverrides.xml -o $(echo $logback)/logback.xml /scripts/overrideLoggers.xsl ${logback}"/logback-orig.xml" \
-     2>&1 >/dev/null | while read line; do echo "$(date "+%H:%M:%S.000") INFO %%%% $line"; done
+			if [ "$logger_name" == "root" ]; then
+				if grep -q "<root level=" "$logback"; then
+					sed -i "s|<root level=\"[^\"]*\"|<root level=\"$log_level\"|" "$logback"
+				else
+					echo "Root logger not found in '$logback'. Skipping."
+				fi
+				continue
+			fi
+
+			# Check if logger exists and update it else add a new logger
+			if grep -q "<logger name=\"$logger_name\"" "$logback"; then
+			# Check if <level> exists within the logger block update it else insert level if missing
+				if sed -n "/<logger name=\"$logger_name\"/,/<\/logger>/p" "$logback" | grep -q "<level "; then
+					sed -i "/<logger name=\"$logger_name\"/,/<\/logger>/s|<level[^>]*>|<level value=\"$log_level\"/>|" "$logback"
+				else
+					sed -i "/<logger name=\"$logger_name\"/a \ \ \ \ <level value=\"$log_level\"/>" "$logback"
+				fi
+			else
+ 				sed -i "/<\/configuration>/i \ \ \ \ <logger name=\"$logger_name\">\n \ \ \ \ \ \ <level value=\"$log_level\"/>\n \ \ \ \ </logger>" "$logback"
+			fi
+	 done
+   fi
 }
 
 
@@ -509,7 +504,6 @@ then
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/javac
 	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/lib/jspawnhelper
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
@@ -530,7 +524,7 @@ then
 	fi
 	ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
 	sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
-	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
+	unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d $BWCE_HOME
 	
 	setLogLevel
         if [[ ${BW_DEFAULT_JVM_HEAP_PARAMS} ]]; then
@@ -538,28 +532,22 @@ then
         fi
 fi
 
-export BW_JAVA_OPTS=$BW_JAVA_OPTS' --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED '
+export BW_OPTS=' --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED '
+export BW_JAVA_OPTS="$BW_JAVA_OPTS $BW_OPTS"
 
-if [ -n "$BW_LOGGER_OVERRIDES" ] && [ "$BW_LOGGER_OVERRIDES" != "na" ]; then
-    LOGGER_VALUES="$BW_LOGGER_OVERRIDES"
-    echo "$(date "+%H:%M:%S.000") INFO %%%% TCI BW LOGGER OVERRIDES - Setting Logger properties from UI - BW_LOGGER_OVERRIDES"
-    overrideBWLoggers "$LOGGER_VALUES" 
-fi
-
+overrideBWLoggers
 checkProfile
 checkPolicy
 setupThirdPartyInstallationEnvironment
 checkEnvSubstituteConfig
-checkAnalyzerConfig
-checkBWProfileEncryptionConfig
 
 if [ -f /$BW_PROFILE ]; then
 	cp -f /$BW_PROFILE  $BWCE_HOME/tmp/pcf.substvar # User provided profile
 else
-	cp -f /tmp/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
+	cp -f $BWCE_HOME/META-INF/$BW_PROFILE $BWCE_HOME/tmp/pcf.substvar
 fi
 
-$JAVA_HOME/bin/java $BW_ENCRYPTED_PROFILE_CONFIG -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.security.tibcrypt_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.encryption.util_*`/lib/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName com.tibco.bwce.profile.resolver.Resolver
+$JAVA_HOME/bin/java $BW_OPTS -cp `echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bwce.profile.resolver_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.security.tibcrypt_*.jar`:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.com.fasterxml.jackson_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.encryption.util_*`/lib/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.bw.tpcl.org.codehaus.jettison_*`/*:`echo $BWCE_HOME/tibco.home/bw*/*/system/shared/com.tibco.tpcl.logback_*`/*:$BWCE_HOME:$JAVA_HOME/lib -DBWCE_APP_NAME=$bwBundleAppName  com.tibco.bwce.profile.resolver.Resolver  1>/dev/null 2>&1
 STATUS=$?
 if [ $STATUS == "1" ]; then
     exit 1 # terminate and indicate error
