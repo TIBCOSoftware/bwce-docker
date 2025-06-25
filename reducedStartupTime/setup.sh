@@ -437,68 +437,46 @@ setupThirdPartyInstallationEnvironment()
 		done;
 	fi
 }
-checkAnalyzerConfig()
-{
-	if [[ ${BW_ANALYZER_CONFIG} ]]; then
-		if [[ $BW_ANALYZER_CONFIG == *":"* ]]; then
-			ANALYZER_HOST=${BW_ANALYZER_CONFIG%%:*}
-			ANALYZER_PORT=${BW_ANALYZER_CONFIG#*:}
-			JAVA_AGENT="-javaagent:"`echo $BWCE_HOME/tibco.home/bw*/*/system/lib/com.tibco.bw.thor.admin.node_*.jar`
-			BW_ANALYZER_CONFIG=$JAVA_AGENT" -Dbw.engine.analyzer.subscriber.enabled=true -Dbw.engine.analyzer.udp.host="$ANALYZER_HOST" -Dbw.engine.analyzer.udp.port="$ANALYZER_PORT
-			export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$BW_ANALYZER_CONFIG
-		fi
-	fi
-} 
-
-checkBWProfileEncryptionConfig()
-{
-	if [[ ${BW_PROFILE_ENCRYPTION_KEYSTORE} ]]; then
-			certsFolder=/resources/addons/certs
-			KEYSTORE=${BW_PROFILE_ENCRYPTION_KEYSTORE}
-			if [[ $bwVarName == *.jks ]]; then
-				KEYSTORETYPE=JKS
-			elif [[ $bwVarName == *.jceks ]]; then
-				KEYSTORETYPE=JCEKS
-			elif [[ $bwVarName == *.p12 ]]; then
-				KEYSTORETYPE=PKCS12
-			fi
-			KEYSTOREPASSWORD=${BW_PROFILE_ENCRYPTION_KEYSTOREPASSWORD}
-			KEYALIAS=${BW_PROFILE_ENCRYPTION_KEYALIAS}
-			KEYALIASPASSOWRD=${BW_PROFILE_ENCRYPTION_KEYALIASPASSWORD}
-			BW_ENCRYPTED_PROFILE_CONFIG=" -Dbw.encryptedprofile.keystoreType="$KEYSTORETYPE" -Dbw.encryptedprofile.keystore="$certsFolder"/"$KEYSTORE" -Dbw.encryptedprofile.keystorePassword="$KEYSTOREPASSWORD" -Dbw.encryptedprofile.keyAlias="$KEYALIAS" -Dbw.encryptedprofile.keyAliasPassword="$KEYALIASPASSOWRD
-			export BW_JAVA_OPTS=$BW_JAVA_OPTS" "$BW_ENCRYPTED_PROFILE_CONFIG
-	fi
-} 
 
 overrideBWLoggers() {
+	logback=$(find $BWCE_HOME -path "$BWCE_HOME/tibco.home/bw*/*/config/logback.xml" -type f 2>/dev/null | head -n 1)
+   
+	if [[ ${BW_LOGGER_OVERRIDES} ]]; then
+		print_Debug "Updating the loggers as provided in BW_LOGGERS_OVERRIDES"
+		for override in $BW_LOGGER_OVERRIDES; do
+			if [[ "$override" != *=* ]]; then
+				echo "Skipping invalid format '$override'. Expected format: logger_name=level"
+				continue
+			fi
 
-    # capture the overrides as XML, first making sure we have newlines separating the overrides,
-    #  then removing the "=" from each so the read works
-    logback="$BWCE_HOME/tibco.home/bw"*"/"*"/config"
-    echo "$1" | tr ' ' '\n' |  sed 's/=/ /1' |\
-      {
-          echo "<loggers xmlns='http://loggers'>"
-          while read bwVarName value; do
-            if [ -n "$bwVarName" ]; then
-              value=$( echo $value | tr '[:lower:]' '[:upper:]' )
-              echo "<loggerOverride name='$bwVarName'>$value</loggerOverride>"
-            fi
-          done
-          echo "</loggers>"
-      } > /tmp/loggerOverrides.xml || \
-      {
-        echo "$(date "+%H:%M:%S.000") ERROR %%%% Failed to parse TCI BW LOGGER OVERRIDES: $1"
-        # don't interrupt the app start just because we cannot override loggers
-        exit 0
-      }
-    
-    # merge the overrides with the existing logback.xml 
-    logfile=${logback}"/logback.xml"
+			logger_name=$(echo "$override" | cut -d'=' -f1 | xargs)  # Trim spaces
+			log_level=$(echo "$override" | cut -d'=' -f2 | tr '[:lower:]' '[:upper:]' | xargs)
+			print_Debug " Updating the logger $logger_name to $log_level"
 
-    mv ${logback}"/logback.xml"  $(echo $logback)/logback-orig.xml
-    xsltproc --stringparam overrides /tmp/loggerOverrides.xml -o $(echo $logback)/logback.xml /scripts/overrideLoggers.xsl ${logback}"/logback-orig.xml" \
-     2>&1 >/dev/null | while read line; do echo "$(date "+%H:%M:%S.000") INFO %%%% $line"; done
+			if [ "$logger_name" == "root" ]; then
+				if grep -q "<root level=" "$logback"; then
+					sed -i "s|<root level=\"[^\"]*\"|<root level=\"$log_level\"|" "$logback"
+				else
+					echo "Root logger not found in '$logback'. Skipping."
+				fi
+				continue
+			fi
+
+			# Check if logger exists and update it else add a new logger
+			if grep -q "<logger name=\"$logger_name\"" "$logback"; then
+			# Check if <level> exists within the logger block update it else insert level if missing
+				if sed -n "/<logger name=\"$logger_name\"/,/<\/logger>/p" "$logback" | grep -q "<level "; then
+					sed -i "/<logger name=\"$logger_name\"/,/<\/logger>/s|<level[^>]*>|<level value=\"$log_level\"/>|" "$logback"
+				else
+					sed -i "/<logger name=\"$logger_name\"/a \ \ \ \ <level value=\"$log_level\"/>" "$logback"
+				fi
+			else
+ 				sed -i "/<\/configuration>/i \ \ \ \ <logger name=\"$logger_name\">\n \ \ \ \ \ \ <level value=\"$log_level\"/>\n \ \ \ \ </logger>" "$logback"
+			fi
+	 done
+   fi
 }
+
 
 appnodeConfigFile=$BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 POLICY_ENABLED="false"
@@ -511,7 +489,6 @@ then
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/javac
 	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/lib/jspawnhelper
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
@@ -534,20 +511,16 @@ then
 		ln -s /*.ear `echo $BWCE_HOME/tibco.home/bw*/*/bin`/bwapp.ear
 		sed -i.bak "s#_APPDIR_#$BWCE_HOME#g" $BWCE_HOME/tibco.home/bw*/*/config/appnode_config.ini
 		unzip -qq `echo $BWCE_HOME/tibco.home/bw*/*/bin/bwapp.ear` -d /tmp
-		setLogLevel
-		checkAnalyzerConfig
-		checkBWProfileEncryptionConfig			
+		setLogLevel		
 	fi
 fi
 export BW_OPTS=' --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED '
 export BW_JAVA_OPTS="$BW_JAVA_OPTS $BW_OPTS"
 
 if [ $TCI_BW_EDITION != "ipaas" ]; then
-	if [ -n "$BW_LOGGER_OVERRIDES" ] && [ "$BW_LOGGER_OVERRIDES" != "na" ]; then
-        LOGGER_VALUES="$BW_LOGGER_OVERRIDES"
-        echo "$(date "+%H:%M:%S.000") INFO %%%% TCI BW LOGGER OVERRIDES - Setting Logger properties from UI - BW_LOGGER_OVERRIDES"
-        overrideBWLoggers "$LOGGER_VALUES" 
-    fi
+	export BW_OPTS=' --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED '
+	export BW_JAVA_OPTS="$BW_JAVA_OPTS $BW_OPTS"
+	overrideBWLoggers
 	checkEnvSubstituteConfig
 	checkProfile	
 	checkPolicy

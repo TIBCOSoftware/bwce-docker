@@ -11,7 +11,8 @@ These Docker scripts are subject to the license shared as part of the repository
   * For TIBCO BusinessWorks Container Edition 2.3.2 and prior versions, use the bwce-docker script from branch [2.3.2](https://github.com/TIBCOSoftware/bwce-docker/tree/2.3.2).
   * For TIBCO BusinessWorks Container Edition 2.6.3 and prior versions up to 2.3.3, use the bwce-docker script from branch [2.6.3](https://github.com/TIBCOSoftware/bwce-docker/tree/2.6.3).
   * For TIBCO BusinessWorks Container Edition 2.7.0 and later versions up to 2.9.2, use the bwce-docker script from branch [2.7.0](https://github.com/TIBCOSoftware/bwce-docker/tree/2.7.0).
-  * For TIBCO BusinessWorks Container Edition 2.10.0 and later versions, use the bwce-docker script from branch [master](https://github.com/TIBCOSoftware/bwce-docker/).
+  * For TIBCO BusinessWorks Container Edition 2.10.0 use the bwce-docker script from branch [2.10.0](https://github.com/TIBCOSoftware/bwce-docker/tree/2.10.0)
+  * For TIBCO BusinessWorks Container Edition 6.12.0 and later versions, use the bwce-docker script from branch [master](https://github.com/TIBCOSoftware/bwce-docker/).
 
 ## Prerequisite
   * Access to [TIBCO® eDelivery](https://edelivery.tibco.com)
