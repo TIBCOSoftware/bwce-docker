@@ -2,15 +2,6 @@
 set -e
 REDUCED="${REDUCED_STARTUP_TIME:-false}"
 
-# If not reduced startup and all exclude flags are false, skip processing
-if [ "$REDUCED" != "true" ] && \
-   [ "$EXCLUDE_GOVERNANCE" = "false" ] && \
-   [ "$EXCLUDE_CONFIG_MANAGEMENT" = "false" ] && \
-   [ "$EXCLUDE_JDBC" = "false" ]; then
-  echo "No changes required to runtime zip. Skipping customization."
-  exit 0
-fi
-
 for f in /app/resources/bwce-runtime/bwce-runtime*.zip; do
   unzip "$f" -d bwce-runtime-unzipped
 
@@ -34,6 +25,10 @@ for f in /app/resources/bwce-runtime/bwce-runtime*.zip; do
     find bwce-runtime-unzipped -depth -type d -name 'com.tibco.bw.tpcl.jdbc.datasourcefactory.oracle*' -exec rm -rv {} \;
   fi
 
+
+  find bwce-runtime-unzipped -depth -type d -name 'tibcojre64' -exec rm -rv {} \;
+ echo " reduced startup time is $REDUCED"
+
   # Re-zip the modified runtime if reduced startup time is false
   if [ "$REDUCED" != "true" ]; then
     echo "reduced startup time is false"
@@ -44,3 +39,6 @@ for f in /app/resources/bwce-runtime/bwce-runtime*.zip; do
     rm -rf bwce-runtime-unzipped
   fi
 done
+
+#create custom jre
+$JAVA_HOME/bin/jlink --module-path $JAVA_HOME/jmods --add-modules java.base,java.datatransfer,java.desktop,java.instrument,java.logging,java.management,java.management.rmi,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.se,java.security.jgss,java.security.sasl,java.sql,java.sql.rowset,java.transaction.xa,java.xml,java.xml.crypto,jdk.attach,jdk.charsets,jdk.crypto.cryptoki,jdk.crypto.ec,jdk.dynalink,jdk.hotspot.agent,jdk.httpserver,jdk.internal.ed,jdk.internal.jvmstat,jdk.internal.le,jdk.internal.opt,jdk.jcmd,jdk.jdi,jdk.jdwp.agent,jdk.jfr,jdk.jsobject,jdk.jstatd,jdk.localedata,jdk.management,jdk.management.agent,jdk.management.jfr,jdk.naming.dns,jdk.naming.rmi,jdk.net,jdk.sctp,jdk.security.auth,jdk.security.jgss,jdk.unsupported,jdk.unsupported.desktop,jdk.xml.dom,jdk.zipfs --output /opt/custom-java --strip-debug --compress=1 --no-man-pages --no-header-files

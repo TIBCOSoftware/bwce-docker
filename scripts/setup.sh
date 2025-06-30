@@ -503,8 +503,6 @@ then
 	rm -rf /resources/bwce-runtime/bwce*.zip 2> /dev/null
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/startBWAppNode.sh
 	chmod 755 $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/bin/java
-	chmod 755 $BWCE_HOME/tibco.home/tibcojre64/*/lib/jspawnhelper
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra
 	sed -i "s#_APPDIR_#$APPDIR#g" $BWCE_HOME/tibco.home/bw*/*/bin/bwappnode
 	touch $BWCE_HOME/keys.properties
