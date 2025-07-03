@@ -1,19 +1,19 @@
-FROM mcr.microsoft.com/windows/nanoserver:10.0.14393.1066 AS builder
+FROM mcr.microsoft.com/powershell:nanoserver-ltsc2022 AS builder
 LABEL maintainer="Cloud Software Group, Inc."
 WORKDIR C:/app
 COPY . .
 
-ARG EXCLUDE_GOVERNANCE=true
-ARG EXCLUDE_CONFIG_MANAGEMENT=true
-ARG EXCLUDE_JDBC=true
+ARG EXCLUDE_GOVERNANCE=false
+ARG EXCLUDE_CONFIG_MANAGEMENT=false
+ARG EXCLUDE_JDBC=false
 
-RUN powershell.exe -File C:/app/scripts/customize-runtime.ps1
+RUN pwsh.exe -File C:/app/scripts/customize-runtime.ps1
 
 # Final stage
-FROM mcr.microsoft.com/windows/nanoserver:10.0.14393.1066 AS final
+FROM mcr.microsoft.com/powershell:nanoserver-ltsc2022 AS final
 LABEL maintainer="Cloud Software Group, Inc."
 COPY --from=builder C:/app/resources C:/resources
 COPY --from=builder C:/app/scripts C:/scripts
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
-ENTRYPOINT ["powershell.exe", "C:/scripts/start.ps1"]
+ENTRYPOINT ["pwsh.exe", "C:/scripts/start.ps1"]
