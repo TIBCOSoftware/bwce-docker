@@ -883,7 +883,13 @@ try {
 
 		}
 
-		New-Item -ItemType SymbolicLink -Path $(Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\bin\") -Name bwapp.ear -Target C:\*.ear | Out-Null
+        $bwappEarSource = Get-ChildItem -Path "C:\*.ear" | Select-Object -First 1
+        $bwappEarDestDir = Get-ChildItem -Path "$env:BWCE_HOME\tibco.home\bw*\*\bin" | Select-Object -First 1
+        if ($bwappEarSource -and $bwappEarDestDir) {
+            Copy-Item $bwappEarSource.FullName -Destination (Join-Path $bwappEarDestDir.FullName "bwapp.ear") -Force
+        } else {
+            Write-Output "bwapp.ear source or destination not found, skipping copy."
+        }
 
 		Copy-Item $(Get-ChildItem $appnodeConfigFile) "$(Get-ChildItem $appnodeConfigFile).bak"
 
@@ -899,9 +905,21 @@ try {
 
 		(Get-Content $appnodeConfigFile | ForEach-Object { $_ -ireplace "_APPDIR_","$env:BWCE_HOME" }) -join "`n" | Set-Content -NoNewline -Force $appnodeConfigFile
 
-		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.ear") -NewName bwapp.zip | Out-Null
-		Expand-Archive -Path $env:BWCE_HOME\tibco.home\bw*\*\bin\bwapp.zip -DestinationPath C:\tmp -Force | Out-Null
-		Rename-Item $(Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip") -NewName bwapp.ear | Out-Null
+		# Rename bwapp.ear to bwapp.zip if it exists
+		$earFile = Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.ear" | Select-Object -First 1
+		if ($earFile) {
+			Rename-Item $earFile.FullName -NewName "bwapp.zip" | Out-Null
+		} else {
+			Write-Output "bwapp.ear not found for renaming."
+		}
+		# Safely expand and rename back if bwapp.zip exists
+		$zipFile = Get-ChildItem "C:\tmp\tibco.home\bw*\*\bin\bwapp.zip" | Select-Object -First 1
+		if ($zipFile) {
+			Expand-Archive -Path $zipFile.FullName -DestinationPath C:\tmp -Force | Out-Null
+			Rename-Item $zipFile.FullName -NewName "bwapp.ear" | Out-Null
+		} else {
+			Write-Output "bwapp.zip not found for expanding/renaming."
+	}
 
 		$env:BW_JAVA_OPTS=" --add-opens java.management/sun.management=ALL-UNNAMED --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-exports java.base/sun.security.ssl=ALL-UNNAMED --add-exports java.base/com.sun.crypto.provider=ALL-UNNAMED --add-exports java.management/com.sun.jmx.mbeanserver=ALL-UNNAMED  $env:BW_JAVA_OPTS "	
 
@@ -927,8 +945,7 @@ try {
 	}
 	$BW_ENCR= $global:BW_ENCRYPTED_PROFILE_CONFIG -split " "
 
-	. $env:JAVA_HOME\bin\java $BW_ENCR -cp "$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.security.tibcrypt_*.jar");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.encryption.util_*\lib\*");$(Get-ChildItem "c:\tmp\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*");$env:BWCE_HOME;$env:JAVA_HOME\lib" -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
-
+	& "$env:JAVA_HOME\bin\java" $BW_OPTS -cp ((Get-ChildItem "$env:BWCE_HOME\tibco.home\bw*\*\system\shared\com.tibco.bwce.profile.resolver_*.jar","$env:BWCE_HOME\tibco.home\bw*\*\system\shared\com.tibco.security.tibcrypt_*.jar","$env:BWCE_HOME\tibco.home\bw*\*\system\shared\com.tibco.tpcl.com.fasterxml.jackson_*\*.jar","$env:BWCE_HOME\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.encryption.util_*\lib\*.jar","$env:BWCE_HOME\tibco.home\bw*\*\system\shared\com.tibco.bw.tpcl.org.codehaus.jettison_*\*.jar","$env:BWCE_HOME\tibco.home\bw*\*\system\shared\com.tibco.tpcl.logback_*\*.jar" -Recurse | ForEach-Object { $_.FullName }) -join ";") -DBWCE_APP_NAME="$env:bwBundleAppName" com.tibco.bwce.profile.resolver.Resolver
 
 } catch {
 	#$pscmdlet.ThrowTerminatingError($_)
