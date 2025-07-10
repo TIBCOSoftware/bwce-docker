@@ -22,7 +22,7 @@ COPY --from=builder /opt/custom-java /opt/java
 RUN chmod 755 /scripts/*.sh
 ENV JAVA_HOME=/opt/java
 ENV PATH="$JAVA_HOME/bin:$PATH"
-RUN apk update && apk add --no-cache unzip  && apk add --no-cache bash && apk add --no-cache binutils
+RUN apk update && apk add --no-cache unzip jq bash
 RUN addgroup -S bwce -g 2001 && adduser -S bwce -G bwce -u 2001
 RUN chown bwce:bwce /etc
 USER bwce
