@@ -19,14 +19,14 @@ Get-ChildItem -Path "C:/app/resources/bwce-runtime/bwce-runtime*.zip" | ForEach-
 
     # Remove governance features if exclude is true
     if ($env:EXCLUDE_GOVERNANCE -eq "true") {
-        Get-ChildItem -Path "tmp" -Recurse -Directory -Filter "com.tibco.governance*" | Remove-Item -Recurse -Force 
-        Get-ChildItem -Path "tmp" -Recurse -File -Filter "com.tibco.governance*" | Remove-Item -Force
-        Get-ChildItem -Path "tmp" -Recurse -Directory -Filter "org.hsqldb*" | Remove-Item -Recurse -Force
+        Get-ChildItem -Path "tmp" -Recurse -Directory -Filter "com.tibco.governance*" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path "tmp" -Recurse -File -Filter "com.tibco.governance*" -ErrorAction SilentlyContinue| Remove-Item -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path "tmp" -Recurse -Directory -Filter "org.hsqldb*" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     # Remove config management features if exclude is true
     if ($env:EXCLUDE_CONFIG_MANAGEMENT -eq "true") {
-        Get-ChildItem -Path "tmp" -Recurse -File -Filter "com.tibco.configuration.management.services*" | Remove-Item -Force
+        Get-ChildItem -Path "tmp" -Recurse -File -Filter "com.tibco.configuration.management.services*" -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
     }
 
     #Remove all JDBC drivers if exclude is true
@@ -38,7 +38,7 @@ Get-ChildItem -Path "C:/app/resources/bwce-runtime/bwce-runtime*.zip" | ForEach-
             "com.tibco.bw.tpcl.jdbc.datasourcefactory.oracle*"
         )
         foreach ($pattern in $jdbcDirs) {
-            Get-ChildItem -Path "tmp" -Recurse -Directory -Filter $pattern | Remove-Item -Recurse -Force
+            Get-ChildItem -Path "tmp" -Recurse -Directory -Filter $pattern -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
         }
     }
 
