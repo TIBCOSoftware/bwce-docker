@@ -25,9 +25,11 @@ for f in /app/resources/bwce-runtime/bwce-runtime*.zip; do
     find bwce-runtime-unzipped -depth -type d -name 'com.tibco.bw.tpcl.jdbc.datasourcefactory.oracle*' -exec rm -rv {} \;
   fi
 
+  rm -f bwce-runtime-unzipped/tibco.home/bw*/*/system/lib/license/libFlx* 2> /dev/null || true
+  rm -f bwce-runtime-unzipped/tibco.home/bw*/*/system/hotfix/lib/license/libFlx* 2> /dev/null || true
 
   find bwce-runtime-unzipped -depth -type d -name 'tibcojre64' -exec rm -rv {} \;
- echo " reduced startup time is $REDUCED"
+  echo " reduced startup time is $REDUCED"
 
   # Re-zip the modified runtime if reduced startup time is false
   if [ "$REDUCED" != "true" ]; then
