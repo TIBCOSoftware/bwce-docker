@@ -2,15 +2,6 @@
 set -e
 REDUCED="${REDUCED_STARTUP_TIME:-false}"
 
-# If not reduced startup and all exclude flags are false, skip processing
-if [ "$REDUCED" != "true" ] && \
-   [ "$EXCLUDE_GOVERNANCE" = "false" ] && \
-   [ "$EXCLUDE_CONFIG_MANAGEMENT" = "false" ] && \
-   [ "$EXCLUDE_JDBC" = "false" ]; then
-  echo "No changes required to runtime zip. Skipping customization."
-  exit 0
-fi
-
 for f in /app/resources/bwce-runtime/bwce-runtime*.zip; do
   unzip "$f" -d bwce-runtime-unzipped
 
@@ -33,6 +24,10 @@ for f in /app/resources/bwce-runtime/bwce-runtime*.zip; do
     find bwce-runtime-unzipped -depth -type d -name 'com.tibco.bw.tpcl.jdbc.datasourcefactory.sqlserver*' -exec rm -rv {} \;
     find bwce-runtime-unzipped -depth -type d -name 'com.tibco.bw.tpcl.jdbc.datasourcefactory.oracle*' -exec rm -rv {} \;
   fi
+
+  # Remove Alpine-specific FlexNet libraries
+  rm -rf bwce-runtime-unzipped/tibco.home/bw*/*/system/lib/license/alpine 2> /dev/null || true
+  rm -rf bwce-runtime-unzipped/tibco.home/bw*/*/system/hotfix/lib/license/alpine 2> /dev/null || true
 
   # Re-zip the modified runtime if reduced startup time is false
   if [ "$REDUCED" != "true" ]; then
