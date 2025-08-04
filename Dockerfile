@@ -17,7 +17,7 @@ LABEL maintainer="Cloud Software Group, Inc."
 RUN rm -rf /opt/java && mkdir -p /opt/java
 COPY --from=builder /app/resources  /resources
 COPY --from=builder /app/scripts /scripts
-COPY --from=builder /opt/custom-java /opt/java
+COPY --chown=2001:2001 --from=builder /opt/custom-java /opt/java
 
 RUN chmod 755 /scripts/*.sh
 ENV JAVA_HOME=/opt/java
