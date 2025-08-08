@@ -17,9 +17,11 @@ FROM debian:bookworm-slim
 LABEL maintainer="Cloud Software Group, Inc."
 RUN apt-get update && apt-get --no-install-recommends -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN groupadd -g 2001 bwce && useradd -m -d /home/bwce -r -u 2001 -g bwce bwce
-COPY --chown=2001:2001 --from=builder /app/resources/addons  /resources/addons
+COPY --from=builder /app/resources/addons  /resources/addons
 COPY --from=builder /app/scripts /scripts
-COPY --chown=2001:2001 --from=builder /app/bwce-runtime-unzipped /tmp
+COPY --from=builder /app/bwce-runtime-unzipped /tmp
+RUN chmod -R 777 /tmp /scripts /resources/addons && mkdir -p /home/default && chmod 777 /home/default
+ENV HOME=/home/default
 USER bwce
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
