@@ -13,6 +13,7 @@ LABEL maintainer="Cloud Software Group, Inc."
 RUN apk update && apk add unzip openssh net-tools jq libxslt && apk add --no-cache bash
 RUN addgroup -g 2001 bwce && \
     adduser -h /home/bwce -s /bin/sh -G bwce -D -u 2001 bwce
+RUN chown bwce:bwce /etc && chown -R bwce:bwce $JAVA_HOME/lib/security
 COPY --chown=2001:2001 --from=builder  /tmp /tmp/
 COPY --chown=2001:2001 --from=builder  /resources/addons /resources/addons/
 COPY --from=builder  /scripts /scripts/

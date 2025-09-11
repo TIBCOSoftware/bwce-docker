@@ -10,7 +10,8 @@ FROM eclipse-temurin:17-jre-alpine
 LABEL maintainer="Cloud Software Group, Inc."
 RUN apk update && apk add unzip openssh net-tools jq libxslt && apk add --no-cache bash
 RUN addgroup -S bwce -g 2001 && adduser -S bwce -G bwce -u 2001
-RUN chown bwce:bwce /etc
+RUN chown bwce:bwce /etc && \
+    chown -R bwce:bwce $JAVA_HOME/lib/security
 COPY --chown=2001:2001 --chmod=0775 --from=builder /app/resources  /resources
 COPY --chown=2001:2001 --chmod=0775 --from=builder /app/scripts /scripts
 USER bwce
