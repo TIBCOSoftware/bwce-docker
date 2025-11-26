@@ -280,10 +280,8 @@ checkCerts()
 {
 	certsFolder=/resources/addons/certs
 	if [ -d ${certsFolder} ] && [ "$(ls $certsFolder)" ]; then 
-		JRE_VERSION=`ls $BWCE_HOME/tibco.home/tibcojre64/`
-		JRE_LOCATION=$BWCE_HOME/tibco.home/tibcojre64/$JRE_VERSION
-		certsStore=$JRE_LOCATION/lib/security/cacerts
-		chmod +x $JRE_LOCATION/bin/keytool
+		certsStore=$JAVA_HOME/lib/security/cacerts
+		chmod +x $JAVA_HOME/bin/keytool
 		for name in $(find $certsFolder -type f); 
 		do	
 			# filter out hidden files
@@ -291,7 +289,7 @@ checkCerts()
 				certsFile=$(basename $name )
  			 	print_Debug "Importing $certsFile into java truststore"
   				aliasName="${certsFile%.*}"
-				$JRE_LOCATION/bin/keytool -import -trustcacerts -keystore $certsStore -storepass changeit -noprompt -alias $aliasName -file $name
+				$JAVA_HOME/bin/keytool -import -trustcacerts -keystore $certsStore -storepass changeit -noprompt -alias $aliasName -file $name
 			fi
 		done
 	fi
