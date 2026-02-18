@@ -280,8 +280,7 @@ checkCerts()
 {
 	certsFolder=/resources/addons/certs
 	if [ -d ${certsFolder} ] && [ "$(ls $certsFolder)" ]; then 
-		certsStore=$JAVA_HOME/lib/security/cacerts
-		chmod +x $JAVA_HOME/bin/keytool
+		chmod +x $JAVA_HOME/bin/keytool >/dev/null 2>&1 || true
 		for name in $(find $certsFolder -type f); 
 		do	
 			# filter out hidden files
@@ -289,7 +288,7 @@ checkCerts()
 				certsFile=$(basename $name )
  			 	print_Debug "Importing $certsFile into java truststore"
   				aliasName="${certsFile%.*}"
-				$JAVA_HOME/bin/keytool -import -trustcacerts -keystore $certsStore -storepass changeit -noprompt -alias $aliasName -file $name
+				$JAVA_HOME/bin/keytool -import -trustcacerts -cacerts -storepass changeit -noprompt -alias $aliasName -file $name 2>&1 || echo "Warning: Failed to import $certsFile - may not be a valid X.509 certificate"
 			fi
 		done
 	fi
