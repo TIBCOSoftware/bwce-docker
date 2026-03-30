@@ -11,7 +11,7 @@ ARG EXCLUDE_JDBC=false
 RUN chmod 755 /app/scripts/*.sh && /app/scripts/customize-runtime.sh
 
 #final stage
-FROM alpine:3.19 AS final
+FROM alpine:3.23 AS final
 LABEL maintainer="Cloud Software Group, Inc."
 
 RUN rm -rf /opt/java && mkdir -p /opt/java
