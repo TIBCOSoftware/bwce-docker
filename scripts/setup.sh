@@ -101,22 +101,21 @@ checkPolicy()
 {
 	local governance_value=""
 	if [[ -n "$BW_GOVERNANCE_ENABLED" ]]; then
-		if [[ "$BW_GOVERNANCE_ENABLED" == "true" || "$BW_GOVERNANCE_ENABLED" == "false" ]]; then
-			governance_value="$BW_GOVERNANCE_ENABLED"
+		local bw_gov_lower="${BW_GOVERNANCE_ENABLED,,}"
+		if [[ "$bw_gov_lower" == "true" || "$bw_gov_lower" == "false" ]]; then
+			governance_value="$bw_gov_lower"
 		else
 			print_Debug "Invalid value for BW_GOVERNANCE_ENABLED: $BW_GOVERNANCE_ENABLED. Expected 'true' or 'false'."
 		fi
 	fi
-	
-	if [[ -z "governance_value" ]]; then
+
+	if [[ -z "$governance_value" ]]; then
 		if [[ "$POLICY_ENABLED" == "true" ]]; then
-			governance_value = "true"
+			governance_value="true"
 		fi
 	fi
-	
-	echo $governance_value
-	
-	if [[ -n "governance_value" ]]; then
+
+	if [[ -n "$governance_value" ]]; then
 		if [[ -e "$appnodeConfigFile" ]]; then
 			printf "%s\n" "bw.governance.enabled=$governance_value" >> "$appnodeConfigFile"
 			print_Debug "Set bw.governance.enabled=$governance_value"
