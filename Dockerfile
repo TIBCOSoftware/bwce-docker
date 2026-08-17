@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS builder
+FROM debian:trixie-slim AS builder
 LABEL maintainer="Cloud Software Group, Inc."
 WORKDIR /app
 COPY . .
@@ -12,7 +12,7 @@ ARG EXCLUDE_JDBC=false
 RUN chmod 755 /app/scripts/*.sh && /app/scripts/customize-runtime.sh
 
 #final stage
-FROM debian:bookworm-slim AS final
+FROM debian:trixie-slim AS final
 LABEL maintainer="Cloud Software Group, Inc."
 COPY --from=builder /app/resources  /resources
 COPY --from=builder /app/scripts /scripts

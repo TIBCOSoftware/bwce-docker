@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim AS builder
+FROM debian:trixie-slim AS builder
 LABEL maintainer="Cloud Software Group, Inc."
 WORKDIR /app
 COPY . .
@@ -13,7 +13,7 @@ ARG EXCLUDE_JDBC=false
 RUN  /app/scripts/customize-runtime.sh
 
 #final stage
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 LABEL maintainer="Cloud Software Group, Inc."
 RUN apt-get update && apt-get --no-install-recommends -y install unzip && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN groupadd -g 2001 bwce && useradd -m -d /home/bwce -r -u 2001 -g bwce bwce
