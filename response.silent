@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="acceptLicense">true</entry>
+  <entry key="installationRoot">/opt/tibco</entry>
+  <entry key="environmentName">TIBCO-HOME</entry>
+  <entry key="LGPLAssemblyLicenseAccepted">true</entry>
+  <entry key="LGPLAssemblyDownload">true</entry>
+  <entry key="LGPLAssemblyPath">/opt/tibco/thirdpartyDownload</entry>
+  <entry key="useInstallProfile">false</entry>
+  <entry key="feature_Design_BW">true</entry>
+  <entry key="feature_Runtime_BW">false</entry>
+  <entry key="feature_Maven Plugin_BW">true</entry>
+  <entry key="tibco.bw.backup.domains">false</entry>
+</properties>
