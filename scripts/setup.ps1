@@ -859,6 +859,17 @@ try {
 		Copy-Item $(Get-ChildItem "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra") "$(Get-ChildItem "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra").bak"
 		(Get-Content "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra" | ForEach-Object { $_ -ireplace "_APPDIR_","$env:APPDIR" }) -join "`n" | Set-Content -NoNewline -Force "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra"
 
+		# The zip ships a -javaagent path from the packaging machine; point it at the extracted filecompat jar
+		$traFile = Get-ChildItem "$env:BWCE_HOME/tibco.home/bw*/*/bin/bwappnode.tra"
+		$filecompatJar = Get-ChildItem "$env:BWCE_HOME\tibco.home\bw*\*\system\lib\com.tibco.bw.frwk.windows.filecompat_*.jar" | Select-Object -First 1
+		if ($filecompatJar) {
+			$agentPath = $filecompatJar.FullName -replace '\\','/'
+			(Get-Content $traFile | ForEach-Object { $_ -replace '-javaagent:\S*filecompat\S*\.jar',"-javaagent:$agentPath" }) -join "`n" | Set-Content -NoNewline -Force $traFile
+			Print-Debug ("Set filecompat javaagent to $agentPath")
+		} else {
+			Write-Output "filecompat jar not found under system\lib, leaving bwappnode.tra javaagent unchanged."
+		}
+
 		New-Item -ItemType file key.properties | Out-Null
 		New-Item -ItemType directory $env:BWCE_HOME\tmp | Out-Null
 
